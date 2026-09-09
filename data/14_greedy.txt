@@ -1,0 +1,499 @@
+@@PROBLEM
+@@NO: 77
+@@ID: 121
+@@TITLE: 买卖股票的最佳时机
+@@DIFF: 简单
+@@CATEGORY: 贪心算法
+@@TAGS: 数组;动态规划
+@@URL: https://leetcode.cn/problems/best-time-to-buy-and-sell-stock/
+@@DESC
+给定一个数组 prices，它的第 i 个元素 prices[i] 表示一支给定股票第 i 天的价格。
+
+你只能选择某一天买入这只股票，并选择在未来的某一个不同的日子卖出该股票。设计一个算法来计算你所能获取的最大利润。
+
+返回你可以从这笔交易中获取的最大利润。如果你不能获取任何利润，返回 0。
+
+示例 1：
+输入：prices = [7,1,5,3,6,4]
+输出：5
+解释：在第 2 天（股票价格 = 1）的时候买入，在第 5 天（股票价格 = 6）的时候卖出，最大利润 = 6-1 = 5。注意利润不能是 7-1 = 6，因为卖出价格需要大于买入价格；同时，你不能在买入前卖出股票。
+
+示例 2：
+输入：prices = [7,6,4,3,1]
+输出：0
+解释：在这种情况下, 没有交易完成，所以最大利润为 0。
+
+提示：
+1 <= prices.length <= 10^5
+0 <= prices[i] <= 10^4
+给定数组 prices，第 i 个元素是第 i 天的股票价格。只能选择某一天买入、之后某一天卖出，求最大利润；无法获利返回 0。
+示例：prices = [7,1,5,3,6,4] → 输出 5（第 2 天买、第 5 天卖）。
+@@SOLUTION: 方法一：一次扫描记录历史最低（推荐）
+@@IDEA
+一次扫描：维护历史最低价 minPrice，当天卖出的利润 = 当天价 - minPrice，取全局最大。O(n)/O(1)，贪心入门题。
+@@JAVA
+class Solution {
+    public int maxProfit(int[] prices) {
+        int minPrice = Integer.MAX_VALUE, best = 0;
+        for (int p : prices) {
+            minPrice = Math.min(minPrice, p);    // 历史最低
+            best = Math.max(best, p - minPrice); // 今天卖的利润
+        }
+        return best;
+    }
+}
+@@PY
+class Solution:
+    def maxProfit(self, prices: List[int]) -> int:
+        min_price = float('inf')
+        best = 0
+        for p in prices:
+            min_price = min(min_price, p)    # 历史最低
+            best = max(best, p - min_price)  # 今天卖的利润
+        return best
+@@SOLUTION: 方法二：动态规划（状态机）
+@@IDEA
+状态机 DP：hold 表示持股的最大收益（初始 -价格），sold 表示不持股；每天 sold = max(sold, hold+价)，hold = max(hold, -价)。答案为 sold。O(n)/O(1)，可扩展到多次交易。
+@@JAVA
+class Solution {
+    public int maxProfit(int[] prices) {
+        int n = prices.length;
+        int hold = -prices[0], sold = 0; // 持股 / 不持股
+        for (int i = 1; i < n; i++) {
+            sold = Math.max(sold, hold + prices[i]); // 今天卖或不动作
+            hold = Math.max(hold, -prices[i]);       // 今天买或不动作
+        }
+        return sold; // 最终不持股收益最大
+    }
+}
+@@PY
+class Solution:
+    def maxProfit(self, prices: List[int]) -> int:
+        hold = -prices[0]  # 持股
+        sold = 0           # 不持股
+        for p in prices[1:]:
+            sold = max(sold, hold + p)  # 今天卖或不动作
+            hold = max(hold, -p)        # 今天买或不动作
+        return sold
+@@SOLUTION: 方法三：后缀最大值数组
+@@IDEA
+后缀最大数组：suffix[i] = 第 i 天及之后的最高价，answer = max(suffix[i] - prices[i])。O(n)/O(n)，换视角的线性做法，帮助理解「买在 i 卖在最优后缀」。
+@@JAVA
+class Solution {
+    public int maxProfit(int[] prices) {
+        int n = prices.length;
+        int[] suffixMax = new int[n];
+        suffixMax[n - 1] = prices[n - 1];
+        for (int i = n - 2; i >= 0; i--) {        // 后缀最高价
+            suffixMax[i] = Math.max(suffixMax[i + 1], prices[i]);
+        }
+        int best = 0;
+        for (int i = 0; i < n; i++) {
+            best = Math.max(best, suffixMax[i] - prices[i]); // 今天买的最优卖价
+        }
+        return best;
+    }
+}
+@@PY
+class Solution:
+    def maxProfit(self, prices: List[int]) -> int:
+        n = len(prices)
+        suffix_max = [0] * n
+        suffix_max[-1] = prices[-1]
+        for i in range(n - 2, -1, -1):   # 后缀最高价
+            suffix_max[i] = max(suffix_max[i + 1], prices[i])
+        return max(suffix_max[i] - prices[i] for i in range(n))  # 今天买的最优卖价
+@@PROBLEM
+@@NO: 78
+@@ID: 55
+@@TITLE: 跳跃游戏
+@@DIFF: 中等
+@@CATEGORY: 贪心算法
+@@TAGS: 贪心;数组;动态规划
+@@URL: https://leetcode.cn/problems/jump-game/
+@@DESC
+给你一个非负整数数组 nums，你最初位于数组的第一个下标。数组中的每个元素代表你在该位置可以跳跃的最大长度。
+
+判断你是否能够到达最后一个下标，如果可以，返回 true；否则，返回 false。
+
+示例 1：
+输入：nums = [2,3,1,1,4]
+输出：true
+解释：可以先跳 1 步，从下标 0 到达下标 1，然后再从下标 1 跳 3 步到达最后一个下标。
+
+示例 2：
+输入：nums = [3,2,1,0,4]
+输出：false
+解释：无论怎样，总会到达下标为 3 的位置。但该下标的最大跳跃长度是 0，所以永远不可能到达最后一个下标。
+
+提示：
+1 <= nums.length <= 10^4
+0 <= nums[i] <= 10^5
+给定非负整数数组 nums，最初位于第一个下标，每个元素表示该位置最多能跳的步数。判断是否能到达最后一个下标。
+示例：nums = [2,3,1,1,4] → true；nums = [3,2,1,0,4] → false。
+@@SOLUTION: 方法一：贪心最远可达（推荐）
+@@IDEA
+贪心最远可达：farthest = max(farthest, i+nums[i])；若 i 超出 farthest 说明当前位置不可达返回 false；farthest ≥ n-1 提前成功。O(n)/O(1)。
+@@JAVA
+class Solution {
+    public boolean canJump(int[] nums) {
+        int farthest = 0;
+        for (int i = 0; i < nums.length; i++) {
+            if (i > farthest) return false;         // 当前不可达
+            farthest = Math.max(farthest, i + nums[i]);
+            if (farthest >= nums.length - 1) return true;
+        }
+        return true;
+    }
+}
+@@PY
+class Solution:
+    def canJump(self, nums: List[int]) -> bool:
+        farthest = 0
+        for i, x in enumerate(nums):
+            if i > farthest:
+                return False  # 当前不可达
+            farthest = max(farthest, i + x)
+            if farthest >= len(nums) - 1:
+                return True
+        return True
+@@SOLUTION: 方法二：动态规划（可达性 DP）
+@@IDEA
+可达性 DP：dp[i] 表示 i 是否可达，由之前任意可达 j 且 j+nums[j] ≥ i 转移。O(n²)，直观但慢，作对照。
+@@JAVA
+class Solution {
+    public boolean canJump(int[] nums) {
+        int n = nums.length;
+        boolean[] dp = new boolean[n];
+        dp[0] = true; // 起点可达
+        for (int i = 1; i < n; i++) {
+            for (int j = 0; j < i; j++) {
+                if (dp[j] && j + nums[j] >= i) { // 有可达位置能跳到 i
+                    dp[i] = true;
+                    break;
+                }
+            }
+        }
+        return dp[n - 1];
+    }
+}
+@@PY
+class Solution:
+    def canJump(self, nums: List[int]) -> bool:
+        n = len(nums)
+        dp = [False] * n
+        dp[0] = True  # 起点可达
+        for i in range(1, n):
+            for j in range(i):
+                if dp[j] and j + nums[j] >= i:  # 有可达位置能跳到 i
+                    dp[i] = True
+                    break
+        return dp[n - 1]
+@@SOLUTION: 方法三：倒推「必须位置」（从终点回推）
+@@IDEA
+倒推必须点：从最后一个下标回推 needReach，若 i+nums[i] ≥ needReach 则 i 必可达并更新 needReach=i；最终 needReach==0 即成功。O(n)/O(1)，视角独特。
+@@JAVA
+class Solution {
+    public boolean canJump(int[] nums) {
+        int needReach = nums.length - 1; // 当前必须可达的最左位置
+        for (int i = nums.length - 2; i >= 0; i--) {
+            if (i + nums[i] >= needReach) {
+                needReach = i; // i 可达，成为新的必须点
+            }
+        }
+        return needReach == 0;
+    }
+}
+@@PY
+class Solution:
+    def canJump(self, nums: List[int]) -> bool:
+        need_reach = len(nums) - 1  # 当前必须可达的最左位置
+        for i in range(len(nums) - 2, -1, -1):
+            if i + nums[i] >= need_reach:
+                need_reach = i  # i 可达，成为新的必须点
+        return need_reach == 0
+@@PROBLEM
+@@NO: 79
+@@ID: 45
+@@TITLE: 跳跃游戏 II
+@@DIFF: 中等
+@@CATEGORY: 贪心算法
+@@TAGS: 贪心;数组;动态规划
+@@URL: https://leetcode.cn/problems/jump-game-ii/
+@@DESC
+给定一个长度为 n 的 0 索引整数数组 nums。初始位置为 nums[0]。
+
+每个元素 nums[i] 表示从索引 i 向后跳转的最大长度。换句话说，如果你在 nums[i] 处，你可以跳转到任意 nums[i + j] 处（0 <= j <= nums[i] 且 i + j < n）。
+返回到达 nums[n - 1] 的最小跳跃次数。生成的测试用例可以到达 nums[n - 1]。
+
+示例 1：
+输入：nums = [2,3,1,1,4]
+输出：2
+解释：跳到最后一个位置的最小跳跃数是 2。从下标为 0 跳到下标为 1 的位置，跳 1 步，然后跳 3 步到达数组的最后一个位置。
+
+示例 2：
+输入：nums = [2,3,0,1,4]
+输出：2
+
+提示：
+1 <= nums.length <= 10^4
+0 <= nums[i] <= 1000
+题目保证可以到达 nums[n-1]
+给定非负整数数组 nums（保证可到达最后一个下标），返回到达最后一个下标的最少跳跃次数。
+示例：nums = [2,3,1,1,4] → 输出 2（跳到下标 1，再一步到底）。
+@@SOLUTION: 方法一：层次贪心（隐式 BFS，推荐）
+@@IDEA
+层次贪心（隐式 BFS）：curEnd 是当前层的最右边界，扫描中更新 farthest；i 触到 curEnd 时步数 +1 并把边界推到 farthest，覆盖终点即停。O(n)/O(1)。
+@@JAVA
+class Solution {
+    public int jump(int[] nums) {
+        int n = nums.length, steps = 0;
+        int curEnd = 0, farthest = 0;
+        for (int i = 0; i < n - 1; i++) {   // 不遍历最后一步
+            farthest = Math.max(farthest, i + nums[i]);
+            if (i == curEnd) {              // 走完当前层
+                steps++;
+                curEnd = farthest;
+                if (curEnd >= n - 1) break;
+            }
+        }
+        return steps;
+    }
+}
+@@PY
+class Solution:
+    def jump(self, nums: List[int]) -> int:
+        n = len(nums)
+        steps = cur_end = farthest = 0
+        for i in range(n - 1):   # 不遍历最后一步
+            farthest = max(farthest, i + nums[i])
+            if i == cur_end:     # 走完当前层
+                steps += 1
+                cur_end = farthest
+                if cur_end >= n - 1:
+                    break
+        return steps
+@@SOLUTION: 方法二：显式 BFS 分层
+@@IDEA
+显式 BFS：下标为节点，i 可跳到 [i+1, i+nums[i]]；逐层扩散计数，首次到达终点即最少步数。O(n)/O(n)，用图视角理解「最少跳数=最短层数」。
+@@JAVA
+class Solution {
+    public int jump(int[] nums) {
+        int n = nums.length;
+        if (n == 1) return 0;
+        boolean[] visited = new boolean[n];
+        Deque<Integer> queue = new ArrayDeque<>();
+        queue.offer(0);
+        visited[0] = true;
+        int steps = 0;
+        while (!queue.isEmpty()) {
+            steps++;
+            int size = queue.size();
+            for (int k = 0; k < size; k++) {
+                int i = queue.poll();
+                for (int j = i + 1; j <= Math.min(i + nums[i], n - 1); j++) {
+                    if (j == n - 1) return steps;  // 首次到达
+                    if (!visited[j]) {
+                        visited[j] = true;
+                        queue.offer(j);
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+}
+@@PY
+class Solution:
+    def jump(self, nums: List[int]) -> int:
+        n = len(nums)
+        if n == 1:
+            return 0
+        visited = [False] * n
+        queue = deque([0])
+        visited[0] = True
+        steps = 0
+        while queue:
+            steps += 1
+            for _ in range(len(queue)):
+                i = queue.popleft()
+                for j in range(i + 1, min(i + nums[i], n - 1) + 1):
+                    if j == n - 1:   # 首次到达
+                        return steps
+                    if not visited[j]:
+                        visited[j] = True
+                        queue.append(j)
+        return -1
+@@SOLUTION: 方法三：动态规划 O(n²)
+@@IDEA
+DP 对照：dp[i] = 到达 i 的最少步数，对每个 i 向后松弛可达位置。O(n²)，保证正确但慢，帮助建立 DP 直觉。
+@@JAVA
+class Solution {
+    public int jump(int[] nums) {
+        int n = nums.length;
+        int[] dp = new int[n];
+        Arrays.fill(dp, Integer.MAX_VALUE);
+        dp[0] = 0;
+        for (int i = 0; i < n; i++) {
+            for (int j = i + 1; j <= Math.min(i + nums[i], n - 1); j++) {
+                dp[j] = Math.min(dp[j], dp[i] + 1); // 松弛
+            }
+        }
+        return dp[n - 1];
+    }
+}
+@@PY
+class Solution:
+    def jump(self, nums: List[int]) -> int:
+        n = len(nums)
+        dp = [float('inf')] * n
+        dp[0] = 0
+        for i in range(n):
+            for j in range(i + 1, min(i + nums[i], n - 1) + 1):
+                dp[j] = min(dp[j], dp[i] + 1)  # 松弛
+        return dp[n - 1]
+@@PROBLEM
+@@NO: 80
+@@ID: 763
+@@TITLE: 划分字母区间
+@@DIFF: 中等
+@@CATEGORY: 贪心算法
+@@TAGS: 贪心;哈希表;双指针;字符串
+@@URL: https://leetcode.cn/problems/partition-labels/
+@@DESC
+给你一个字符串 s。请你把 s 分割成一些子串，使每个子串都是回文串，返回每个子串的边界位置列表。（力扣 763 划分字母区间：把 s 划分为尽可能多的片段，同一字母最多出现在一个片段中，返回每个片段的长度列表。）
+
+示例 1：
+输入：s = "ababcbacadefegdehijhklij"
+输出：[9,7,8]
+解释：划分结果为 "ababcbaca"、"defegde"、"hijhklij"。每个字母最多出现在一个片段中。
+
+示例 2：
+输入：s = "eccbbbbdec"
+输出：[10]
+
+提示：
+1 <= s.length <= 500
+s 仅由小写英文字母组成
+把字符串 s 划分为尽可能多的片段，使每个字母只出现在一个片段中，返回每段长度列表。
+示例：s = "ababcbacadefegdehijhklij" → 输出 [9,7,8]。
+@@SOLUTION: 方法一：最后出现位置 + 贪心扩展（推荐）
+@@IDEA
+最后出现位置 + 贪心扩展：记录每个字母最后出现的下标；扫描时窗口右端 end 被区间内字母的终点不断推远，i 追上 end 时即可切一段。O(n)/O(26)。
+@@JAVA
+class Solution {
+    public List<Integer> partitionLabels(String s) {
+        int[] last = new int[26]; // 每个字母最后出现位置
+        for (int i = 0; i < s.length(); i++) {
+            last[s.charAt(i) - 'a'] = i;
+        }
+        List<Integer> res = new ArrayList<>();
+        int start = 0, end = 0;
+        for (int i = 0; i < s.length(); i++) {
+            end = Math.max(end, last[s.charAt(i) - 'a']);
+            if (i == end) {          // 可以切一段
+                res.add(i - start + 1);
+                start = i + 1;
+            }
+        }
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def partitionLabels(self, s: str) -> List[int]:
+        last = {c: i for i, c in enumerate(s)}  # 每个字母最后出现位置
+        res = []
+        start = end = 0
+        for i, c in enumerate(s):
+            end = max(end, last[c])
+            if i == end:   # 可以切一段
+                res.append(i - start + 1)
+                start = i + 1
+        return res
+@@SOLUTION: 方法二：区间合并视角
+@@IDEA
+区间合并视角：每个字母是区间 [首次出现, 最后出现]，排序后合并相交区间，每个合并区间即一个片段。O(n log n)（n 大时），另解视角。
+@@JAVA
+class Solution {
+    public List<Integer> partitionLabels(String s) {
+        int[][] range = new int[26][2]; // 每字母 [首现, 末现]
+        for (int[] r : range) { r[0] = -1; r[1] = -1; }
+        for (int i = 0; i < s.length(); i++) {
+            int c = s.charAt(i) - 'a';
+            if (range[c][0] == -1) range[c][0] = i;
+            range[c][1] = i;
+        }
+        List<int[]> intervals = new ArrayList<>();
+        for (int[] r : range) {
+            if (r[0] != -1) intervals.add(r);
+        }
+        intervals.sort((a, b) -> a[0] - b[0]); // 按起点排序
+        List<Integer> res = new ArrayList<>();
+        int start = intervals.get(0)[0], end = intervals.get(0)[1];
+        for (int[] r : intervals) {
+            if (r[0] > end) {           // 不相交：结算一段
+                res.add(end - start + 1);
+                start = r[0];
+            }
+            end = Math.max(end, r[1]);  // 合并
+        }
+        res.add(end - start + 1);
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def partitionLabels(self, s: str) -> List[int]:
+        first, last = {}, {}
+        for i, c in enumerate(s):
+            first.setdefault(c, i)  # 首现
+            last[c] = i             # 末现
+        intervals = sorted((first[c], last[c]) for c in first)  # 按起点排序
+        res = []
+        start, end = intervals[0]
+        for l, r in intervals:
+            if l > end:          # 不相交：结算一段
+                res.append(end - start + 1)
+                start = l
+            end = max(end, r)    # 合并
+        res.append(end - start + 1)
+        return res
+@@SOLUTION: 方法三：集合判定切分点
+@@IDEA
+集合完结判定：维护当前段内字母集合 active，字母最后一次出现后从集合移除；集合为空时说明段内全部完结，可以切分。O(n)/O(26)。
+@@JAVA
+class Solution {
+    public List<Integer> partitionLabels(String s) {
+        int[] last = new int[26];
+        for (int i = 0; i < s.length(); i++) last[s.charAt(i) - 'a'] = i;
+        Set<Integer> active = new HashSet<>(); // 当前段内字母
+        List<Integer> res = new ArrayList<>();
+        int segStart = 0;
+        for (int i = 0; i < s.length(); i++) {
+            int c = s.charAt(i) - 'a';
+            active.add(c);
+            if (last[c] == i) active.remove(c); // 该字母在段内完结
+            if (active.isEmpty()) {             // 段内全部完结 → 切分
+                res.add(i - segStart + 1);
+                segStart = i + 1;
+            }
+        }
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def partitionLabels(self, s: str) -> List[int]:
+        last = {c: i for i, c in enumerate(s)}
+        active = set()  # 当前段内字母
+        res = []
+        seg_start = 0
+        for i, c in enumerate(s):
+            active.add(c)
+            if last[c] == i:      # 该字母在段内完结
+                active.discard(c)
+            if not active:        # 段内全部完结 → 切分
+                res.append(i - seg_start + 1)
+                seg_start = i + 1
+        return res

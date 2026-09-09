@@ -1,0 +1,678 @@
+@@PROBLEM
+@@NO: 91
+@@ID: 62
+@@TITLE: 不同路径
+@@DIFF: 中等
+@@CATEGORY: 多维动态规划
+@@TAGS: 数学;动态规划;组合数学
+@@URL: https://leetcode.cn/problems/unique-paths/
+@@DESC
+一个机器人位于一个 m x n 网格的左上角（起始点在下图中标记为 "Start"）。
+
+机器人每次只能向下或者向右移动一步。机器人试图达到网格的右下角（在下图中标记为 "Finish"）。
+
+问总共有多少条不同的路径？
+
+示例 1：
+输入：m = 3, n = 7
+输出：28
+
+示例 2：
+输入：m = 3, n = 2
+输出：3
+解释：从左上角开始，总共有 3 条路径可以到达右下角。1. 向右 -> 向下 -> 向下；2. 向下 -> 向右 -> 向下；3. 向下 -> 向下 -> 向右。
+
+示例 3：
+输入：m = 7, n = 3
+输出：28
+
+提示：
+1 <= m, n <= 100
+题目数据保证答案小于等于 2 * 10^9
+一个机器人位于 m x n 网格左上角，每次只能向下或向右移动一步，问到达右下角共有多少条不同路径。
+示例：m = 3, n = 7 → 输出 28。
+@@SOLUTION: 方法一：一维滚动 DP（推荐）
+@@IDEA
+一维滚动：dp[j] += dp[j-1]（上方+左方），首行全 1。O(mn)/O(n)。
+@@JAVA
+class Solution {
+    public int uniquePaths(int m, int n) {
+        int[] dp = new int[n];
+        java.util.Arrays.fill(dp, 1); // 首行全 1
+        for (int i = 1; i < m; i++) {
+            for (int j = 1; j < n; j++) {
+                dp[j] += dp[j - 1]; // 上方 dp[j] + 左方 dp[j-1]
+            }
+        }
+        return dp[n - 1];
+    }
+}
+@@PY
+class Solution:
+    def uniquePaths(self, m: int, n: int) -> int:
+        dp = [1] * n  # 首行全 1
+        for _ in range(1, m):
+            for j in range(1, n):
+                dp[j] += dp[j - 1]  # 上方 dp[j] + 左方 dp[j-1]
+        return dp[-1]
+@@SOLUTION: 方法二：二维 DP 表
+@@IDEA
+二维 DP 表：dp[i][j] = dp[i-1][j] + dp[i][j-1]，首行首列为 1。O(mn)/O(mn)，最直观，先写这版。
+@@JAVA
+class Solution {
+    public int uniquePaths(int m, int n) {
+        int[][] dp = new int[m][n];
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (i == 0 || j == 0) dp[i][j] = 1;  // 首行首列
+                else dp[i][j] = dp[i - 1][j] + dp[i][j - 1];
+            }
+        }
+        return dp[m - 1][n - 1];
+    }
+}
+@@PY
+class Solution:
+    def uniquePaths(self, m: int, n: int) -> int:
+        dp = [[1] * n for _ in range(m)]
+        for i in range(1, m):
+            for j in range(1, n):
+                dp[i][j] = dp[i - 1][j] + dp[i][j - 1]  # 上 + 左
+        return dp[m - 1][n - 1]
+@@SOLUTION: 方法三：组合数学公式
+@@IDEA
+组合数学：路径数 = C(m+n-2, m-1)（总步数里选向下步），边乘边除防溢出。O(min(m,n))/O(1)，数学最优解。
+@@JAVA
+class Solution {
+    public int uniquePaths(int m, int n) {
+        long ans = 1;
+        int k = Math.min(m, n) - 1, steps = m + n - 2;
+        for (int i = 1; i <= k; i++) {
+            ans = ans * (steps - k + i) / i; // C(steps, k) 边乘边除
+        }
+        return (int) ans;
+    }
+}
+@@PY
+class Solution:
+    def uniquePaths(self, m: int, n: int) -> int:
+        from math import comb
+        return comb(m + n - 2, m - 1)  # 组合数公式
+@@PROBLEM
+@@NO: 92
+@@ID: 64
+@@TITLE: 最小路径和
+@@DIFF: 中等
+@@CATEGORY: 多维动态规划
+@@TAGS: 数组;动态规划;矩阵
+@@URL: https://leetcode.cn/problems/minimum-path-sum/
+@@DESC
+给定一个包含非负整数的 m x n 网格 grid，请找出一条从左上角到右下角的路径，使得路径上的数字总和为最小。
+
+说明：每次只能向下或者向右移动一步。
+
+示例 1：
+输入：grid = [[1,3,1],[1,5,1],[4,2,1]]
+输出：7
+解释：因为路径 1→3→1→1→1 的总和最小。
+
+示例 2：
+输入：grid = [[1,2,3],[4,5,6]]
+输出：12
+
+提示：
+m == grid.length, n == grid[i].length
+1 <= m, n <= 200
+0 <= grid[i][j] <= 200
+给定非负整数网格 grid，找一条从左上角到右下角的路径，使路径上数字总和最小（只能向下或向右）。
+示例：grid = [[1,3,1],[1,5,1],[4,2,1]] → 输出 7（1→3→1→1→1）。
+@@SOLUTION: 方法一：原址 DP（推荐）
+@@IDEA
+原址 DP：grid[i][j] += min(上, 左)，首行首列分别累加；直接复用输入省空间。O(mn)/O(1) 额外。
+@@JAVA
+class Solution {
+    public int minPathSum(int[][] grid) {
+        int m = grid.length, n = grid[0].length;
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (i == 0 && j == 0) continue;
+                if (i == 0) grid[i][j] += grid[i][j - 1];   // 首行
+                else if (j == 0) grid[i][j] += grid[i - 1][j]; // 首列
+                else grid[i][j] += Math.min(grid[i - 1][j], grid[i][j - 1]);
+            }
+        }
+        return grid[m - 1][n - 1];
+    }
+}
+@@PY
+class Solution:
+    def minPathSum(self, grid: List[List[int]]) -> int:
+        m, n = len(grid), len(grid[0])
+        for i in range(m):
+            for j in range(n):
+                if i == 0 and j == 0:
+                    continue
+                if i == 0:
+                    grid[i][j] += grid[i][j - 1]   # 首行
+                elif j == 0:
+                    grid[i][j] += grid[i - 1][j]   # 首列
+                else:
+                    grid[i][j] += min(grid[i - 1][j], grid[i][j - 1])
+        return grid[m - 1][n - 1]
+@@SOLUTION: 方法二：一维滚动数组
+@@IDEA
+一维滚动：dp[j] = min(dp[j](上), dp[j-1](左)) + grid[i][j]，不修改输入数组。O(mn)/O(n)。
+@@JAVA
+class Solution {
+    public int minPathSum(int[][] grid) {
+        int m = grid.length, n = grid[0].length;
+        int[] dp = new int[n];
+        dp[0] = grid[0][0];
+        for (int j = 1; j < n; j++) dp[j] = dp[j - 1] + grid[0][j]; // 首行
+        for (int i = 1; i < m; i++) {
+            dp[0] += grid[i][0]; // 首列
+            for (int j = 1; j < n; j++) {
+                dp[j] = Math.min(dp[j], dp[j - 1]) + grid[i][j]; // 上/左取小
+            }
+        }
+        return dp[n - 1];
+    }
+}
+@@PY
+class Solution:
+    def minPathSum(self, grid: List[List[int]]) -> int:
+        m, n = len(grid), len(grid[0])
+        dp = [0] * n
+        dp[0] = grid[0][0]
+        for j in range(1, n):  # 首行
+            dp[j] = dp[j - 1] + grid[0][j]
+        for i in range(1, m):
+            dp[0] += grid[i][0]  # 首列
+            for j in range(1, n):
+                dp[j] = min(dp[j], dp[j - 1]) + grid[i][j]  # 上/左取小
+        return dp[-1]
+@@SOLUTION: 方法三：递归记忆化
+@@IDEA
+记忆化递归：dfs(i,j) = grid + min(dfs(i-1,j), dfs(i,j-1))，缓存结果。O(mn)/O(mn)，自顶向下视角。
+@@JAVA
+class Solution {
+    private int[][] grid;
+    private Integer[][] memo;
+
+    public int minPathSum(int[][] grid) {
+        this.grid = grid;
+        this.memo = new Integer[grid.length][grid[0].length];
+        return dfs(grid.length - 1, grid[0].length - 1);
+    }
+    private int dfs(int i, int j) {
+        if (i == 0 && j == 0) return grid[0][0];
+        if (memo[i][j] != null) return memo[i][j];
+        int best = Integer.MAX_VALUE;
+        if (i > 0) best = Math.min(best, dfs(i - 1, j)); // 上
+        if (j > 0) best = Math.min(best, dfs(i, j - 1)); // 左
+        return memo[i][j] = best + grid[i][j];
+    }
+}
+@@PY
+class Solution:
+    def minPathSum(self, grid: List[List[int]]) -> int:
+        from functools import lru_cache
+        m, n = len(grid), len(grid[0])
+
+        @lru_cache(maxsize=None)
+        def dfs(i, j):
+            if i == 0 and j == 0:
+                return grid[0][0]
+            best = float('inf')
+            if i > 0:
+                best = min(best, dfs(i - 1, j))  # 上
+            if j > 0:
+                best = min(best, dfs(i, j - 1))  # 左
+            return best + grid[i][j]
+
+        return dfs(m - 1, n - 1)
+@@PROBLEM
+@@NO: 93
+@@ID: 5
+@@TITLE: 最长回文子串
+@@DIFF: 中等
+@@CATEGORY: 多维动态规划
+@@TAGS: 字符串;动态规划
+@@URL: https://leetcode.cn/problems/longest-palindromic-substring/
+@@DESC
+给你一个字符串 s，找到 s 中最长的回文子串。
+
+如果字符串的反序与原始字符串相同，则该字符串称为回文字符串。
+
+示例 1：
+输入：s = "babad"
+输出："bab"
+解释："aba" 同样是符合题意的答案。
+
+示例 2：
+输入：s = "cbbd"
+输出："bb"
+
+提示：
+1 <= s.length <= 1000
+s 仅由数字和英文字母组成
+给定字符串 s，返回 s 中最长的回文子串。
+示例：s = "babad" → 输出 "bab"（"aba" 同样正确）；s = "cbbd" → 输出 "bb"。
+@@SOLUTION: 方法一：中心扩展（推荐）
+@@IDEA
+中心扩展：枚举 2n-1 个中心（单字符与字符间隙各算一个），向两侧扩展直到不相等，记录最长。O(n²)/O(1)，面试最常用的平衡解。
+@@JAVA
+class Solution {
+    public String longestPalindrome(String s) {
+        int start = 0, maxLen = 0;
+        for (int center = 0; center < 2 * s.length() - 1; center++) {
+            int l = center / 2, r = l + center % 2; // 奇偶两种中心
+            while (l >= 0 && r < s.length() && s.charAt(l) == s.charAt(r)) {
+                l--;
+                r++;
+            }
+            if (r - l - 1 > maxLen) { // 扩展过头，回退一步
+                maxLen = r - l - 1;
+                start = l + 1;
+            }
+        }
+        return s.substring(start, start + maxLen);
+    }
+}
+@@PY
+class Solution:
+    def longestPalindrome(self, s: str) -> str:
+        start = max_len = 0
+        for center in range(2 * len(s) - 1):
+            l, r = center // 2, center // 2 + center % 2  # 奇偶两种中心
+            while l >= 0 and r < len(s) and s[l] == s[r]:
+                l -= 1
+                r += 1
+            if r - l - 1 > max_len:  # 扩展过头，回退一步
+                max_len = r - l - 1
+                start = l + 1
+        return s[start:start + max_len]
+@@SOLUTION: 方法二：区间 DP
+@@IDEA
+区间 DP：dp[i][j] 表示 s[i..j] 是否回文（s[i]==s[j] 且内部回文），按长度从小到大填表取最长。O(n²)/O(n²)。
+@@JAVA
+class Solution {
+    public String longestPalindrome(String s) {
+        int n = s.length();
+        if (n == 0) return "";
+        boolean[][] dp = new boolean[n][n]; // dp[i][j]: s[i..j] 回文?
+        int start = 0, maxLen = 1;
+        for (int i = 0; i < n; i++) dp[i][i] = true; // 单字符
+        for (int len = 2; len <= n; len++) {         // 按长度枚举
+            for (int i = 0; i + len - 1 < n; i++) {
+                int j = i + len - 1;
+                if (s.charAt(i) == s.charAt(j) && (len == 2 || dp[i + 1][j - 1])) {
+                    dp[i][j] = true;
+                    if (len > maxLen) {
+                        maxLen = len;
+                        start = i;
+                    }
+                }
+            }
+        }
+        return s.substring(start, start + maxLen);
+    }
+}
+@@PY
+class Solution:
+    def longestPalindrome(self, s: str) -> str:
+        n = len(s)
+        dp = [[False] * n for _ in range(n)]  # dp[i][j]: s[i..j] 回文?
+        start, max_len = 0, 1
+        for i in range(n):
+            dp[i][i] = True  # 单字符
+        for length in range(2, n + 1):   # 按长度枚举
+            for i in range(n - length + 1):
+                j = i + length - 1
+                if s[i] == s[j] and (length == 2 or dp[i + 1][j - 1]):
+                    dp[i][j] = True
+                    if length > max_len:
+                        max_len = length
+                        start = i
+        return s[start:start + max_len]
+@@SOLUTION: 方法三：Manacher 算法（O(n)）
+@@IDEA
+Manacher 算法：插入 '#' 统一奇偶长度，利用已扩展最右边界与镜像加速每个位置的扩展。O(n)，本题理论最优，面试加分项。
+@@JAVA
+class Solution {
+    public String longestPalindrome(String s) {
+        StringBuilder t = new StringBuilder("^");
+        for (char c : s.toCharArray()) t.append('#').append(c);
+        t.append("#$");
+        int n = t.length();
+        int[] p = new int[n]; // 回文半径
+        int center = 0, right = 0;
+        for (int i = 1; i < n - 1; i++) {
+            int mirror = 2 * center - i;
+            if (i < right) p[i] = Math.min(right - i, p[mirror]); // 镜像加速
+            while (t.charAt(i + p[i] + 1) == t.charAt(i - p[i] - 1)) {
+                p[i]++; // 继续扩展
+            }
+            if (i + p[i] > right) { // 更新最右边界
+                center = i;
+                right = i + p[i];
+            }
+        }
+        int maxLen = 0, centerIdx = 0;
+        for (int i = 1; i < n - 1; i++) {
+            if (p[i] > maxLen) {
+                maxLen = p[i];
+                centerIdx = i;
+            }
+        }
+        int start = (centerIdx - maxLen) / 2; // 映射回原串
+        return s.substring(start, start + maxLen);
+    }
+}
+@@PY
+class Solution:
+    def longestPalindrome(self, s: str) -> str:
+        t = '^#' + '#'.join(s) + '#$'  # 插入哨兵统一奇偶
+        n = len(t)
+        p = [0] * n   # 回文半径
+        center = right = 0
+        for i in range(1, n - 1):
+            mirror = 2 * center - i
+            if i < right:
+                p[i] = min(right - i, p[mirror])  # 镜像加速
+            while t[i + p[i] + 1] == t[i - p[i] - 1]:  # 继续扩展
+                p[i] += 1
+            if i + p[i] > right:  # 更新最右边界
+                center, right = i, i + p[i]
+        max_len = max(p)
+        center_idx = p.index(max_len)
+        start = (center_idx - max_len) // 2  # 映射回原串
+        return s[start:start + max_len]
+@@PROBLEM
+@@NO: 94
+@@ID: 1143
+@@TITLE: 最长公共子序列
+@@DIFF: 中等
+@@CATEGORY: 多维动态规划
+@@TAGS: 字符串;动态规划
+@@URL: https://leetcode.cn/problems/longest-common-subsequence/
+@@DESC
+给定两个字符串 text1 和 text2，返回这两个字符串的最长 公共子序列 的长度。如果不存在公共子序列，返回 0。
+
+一个字符串的 子序列 是指这样一个新的字符串：它是由原字符串在不改变字符的相对顺序的情况下删除某些字符（也可以不删除任何字符）后组成的新字符串。
+
+例如，"ace" 是 "abcde" 的子序列，但 "aec" 不是 "abcde" 的子序列。
+两个字符串的 公共子序列 是这两个字符串所共同拥有的子序列。
+
+示例 1：
+输入：text1 = "abcde", text2 = "ace"
+输出：3
+解释：最长公共子序列是 "ace"，它的长度为 3。
+
+示例 2：
+输入：text1 = "abc", text2 = "abc"
+输出：3
+
+示例 3：
+输入：text1 = "abc", text2 = "def"
+输出：0
+
+提示：
+1 <= text1.length, text2.length <= 1000
+text1 和 text2 仅由小写英文字符组成
+给定两个字符串 text1 和 text2，返回它们最长公共子序列的长度；不存在返回 0（子序列可不连续）。
+示例：text1 = "abcde", text2 = "ace" → 输出 3（"ace"）。
+@@SOLUTION: 方法一：滚动数组 DP（推荐）
+@@IDEA
+滚动数组：dp[i][j] = 末字符相等 ? 左上+1 : max(上, 左)；只依赖上一行与本行左格，两行交替滚动。O(mn)/O(n)。
+@@JAVA
+class Solution {
+    public int longestCommonSubsequence(String s1, String s2) {
+        int m = s1.length(), n = s2.length();
+        int[] prev = new int[n + 1], cur = new int[n + 1]; // 滚动两行
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                if (s1.charAt(i - 1) == s2.charAt(j - 1)) {
+                    cur[j] = prev[j - 1] + 1;
+                } else {
+                    cur[j] = Math.max(prev[j], cur[j - 1]);
+                }
+            }
+            int[] t = prev; prev = cur; cur = t; // 交换滚动
+            java.util.Arrays.fill(cur, 0);
+        }
+        return prev[n];
+    }
+}
+@@PY
+class Solution:
+    def longestCommonSubsequence(self, text1: str, text2: str) -> int:
+        m, n = len(text1), len(text2)
+        prev = [0] * (n + 1)
+        for i in range(1, m + 1):
+            cur = [0] * (n + 1)
+            for j in range(1, n + 1):
+                if text1[i - 1] == text2[j - 1]:
+                    cur[j] = prev[j - 1] + 1
+                else:
+                    cur[j] = max(prev[j], cur[j - 1])
+            prev = cur
+        return prev[n]
+@@SOLUTION: 方法二：完整二维 DP 表
+@@IDEA
+完整二维表：不省空间的直接写法，dp 表还可回溯还原出具体的公共子序列。O(mn)/O(mn)。
+@@JAVA
+class Solution {
+    public int longestCommonSubsequence(String s1, String s2) {
+        int m = s1.length(), n = s2.length();
+        int[][] dp = new int[m + 1][n + 1];
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                if (s1.charAt(i - 1) == s2.charAt(j - 1)) {
+                    dp[i][j] = dp[i - 1][j - 1] + 1; // 取相同字符
+                } else {
+                    dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]); // 跳过一边
+                }
+            }
+        }
+        return dp[m][n];
+    }
+}
+@@PY
+class Solution:
+    def longestCommonSubsequence(self, text1: str, text2: str) -> int:
+        m, n = len(text1), len(text2)
+        dp = [[0] * (n + 1) for _ in range(m + 1)]
+        for i in range(1, m + 1):
+            for j in range(1, n + 1):
+                if text1[i - 1] == text2[j - 1]:
+                    dp[i][j] = dp[i - 1][j - 1] + 1  # 取相同字符
+                else:
+                    dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])  # 跳过一边
+        return dp[m][n]
+@@SOLUTION: 方法三：递归记忆化
+@@IDEA
+记忆化递归：dfs(i,j) 自顶向下按「末字符相等/不等」转移，lru_cache 缓存。O(mn)/O(mn)，与解法一同构。
+@@JAVA
+class Solution {
+    private String s1, s2;
+    private Integer[][] memo;
+
+    public int longestCommonSubsequence(String a, String b) {
+        s1 = a; s2 = b;
+        memo = new Integer[a.length()][b.length()];
+        return dfs(a.length() - 1, b.length() - 1);
+    }
+    private int dfs(int i, int j) {
+        if (i < 0 || j < 0) return 0;
+        if (memo[i][j] != null) return memo[i][j];
+        if (s1.charAt(i) == s2.charAt(j)) {
+            return memo[i][j] = dfs(i - 1, j - 1) + 1; // 取相同字符
+        }
+        return memo[i][j] = Math.max(dfs(i - 1, j), dfs(i, j - 1)); // 跳过一边
+    }
+}
+@@PY
+class Solution:
+    def longestCommonSubsequence(self, text1: str, text2: str) -> int:
+        from functools import lru_cache
+
+        @lru_cache(maxsize=None)
+        def dfs(i, j):
+            if i < 0 or j < 0:
+                return 0
+            if text1[i] == text2[j]:
+                return dfs(i - 1, j - 1) + 1  # 取相同字符
+            return max(dfs(i - 1, j), dfs(i, j - 1))  # 跳过一边
+
+        return dfs(len(text1) - 1, len(text2) - 1)
+@@PROBLEM
+@@NO: 95
+@@ID: 72
+@@TITLE: 编辑距离
+@@DIFF: 中等
+@@CATEGORY: 多维动态规划
+@@TAGS: 字符串;动态规划
+@@URL: https://leetcode.cn/problems/edit-distance/
+@@DESC
+给你两个单词 word1 和 word2，请返回将 word1 转换成 word2 所使用的最少操作数。
+
+你可以对一个单词进行如下三种操作：插入一个字符；删除一个字符；替换一个字符。
+
+示例 1：
+输入：word1 = "horse", word2 = "ros"
+输出：3
+解释：horse -> rorse（将 'h' 替换为 'r'）-> rose（删除 'r'）-> ros（删除 'e'）。
+
+示例 2：
+输入：word1 = "intention", word2 = "execution"
+输出：5
+解释：intention -> inention（删除 't'）-> enention（将 'i' 替换为 'e'）-> exention（将 'n' 替换为 'e'）-> exection（将 'n' 替换为 'c'）-> execution（插入 'u'）。
+
+提示：
+0 <= word1.length, word2.length <= 500
+word1 和 word2 由小写英文字母组成
+给定两个单词 word1 和 word2，返回将 word1 转换成 word2 所需的最少操作数（每次可插入、删除或替换一个字符）。
+示例：word1 = "horse", word2 = "ros" → 输出 3（替换 h→r、删除 r、删除 e）。
+@@SOLUTION: 方法一：二维 DP（推荐）
+@@IDEA
+二维 DP：dp[i][j] = 前缀 i 变前缀 j 的最少操作。字符相等取左上；否则 1 + min(替换 dp[i-1][j-1], 删除 dp[i-1][j], 插入 dp[i][j-1])。边界：全删/全插。O(mn)。
+@@JAVA
+class Solution {
+    public int minDistance(String w1, String w2) {
+        int m = w1.length(), n = w2.length();
+        int[][] dp = new int[m + 1][n + 1];
+        for (int i = 0; i <= m; i++) dp[i][0] = i; // 全删除
+        for (int j = 0; j <= n; j++) dp[0][j] = j; // 全插入
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                if (w1.charAt(i - 1) == w2.charAt(j - 1)) {
+                    dp[i][j] = dp[i - 1][j - 1];   // 免操作
+                } else {
+                    dp[i][j] = 1 + Math.min(dp[i - 1][j - 1], // 替换
+                                  Math.min(dp[i - 1][j],      // 删除
+                                           dp[i][j - 1]));    // 插入
+                }
+            }
+        }
+        return dp[m][n];
+    }
+}
+@@PY
+class Solution:
+    def minDistance(self, word1: str, word2: str) -> int:
+        m, n = len(word1), len(word2)
+        dp = [[0] * (n + 1) for _ in range(m + 1)]
+        for i in range(m + 1):
+            dp[i][0] = i  # 全删除
+        for j in range(n + 1):
+            dp[0][j] = j  # 全插入
+        for i in range(1, m + 1):
+            for j in range(1, n + 1):
+                if word1[i - 1] == word2[j - 1]:
+                    dp[i][j] = dp[i - 1][j - 1]  # 免操作
+                else:
+                    dp[i][j] = 1 + min(dp[i - 1][j - 1],  # 替换
+                                       dp[i - 1][j],      # 删除
+                                       dp[i][j - 1])      # 插入
+        return dp[m][n]
+@@SOLUTION: 方法二：两行滚动
+@@IDEA
+两行滚动：转移只依赖上一行与本行左格，两行数组交替即可。O(mn)/O(n)，空间优化版。
+@@JAVA
+class Solution {
+    public int minDistance(String w1, String w2) {
+        int m = w1.length(), n = w2.length();
+        int[] prev = new int[n + 1], cur = new int[n + 1];
+        for (int j = 0; j <= n; j++) prev[j] = j; // 第 0 行
+        for (int i = 1; i <= m; i++) {
+            cur[0] = i; // 第 i 行首
+            for (int j = 1; j <= n; j++) {
+                if (w1.charAt(i - 1) == w2.charAt(j - 1)) {
+                    cur[j] = prev[j - 1];
+                } else {
+                    cur[j] = 1 + Math.min(prev[j - 1], Math.min(prev[j], cur[j - 1]));
+                }
+            }
+            int[] t = prev; prev = cur; cur = t;
+        }
+        return prev[n];
+    }
+}
+@@PY
+class Solution:
+    def minDistance(self, word1: str, word2: str) -> int:
+        m, n = len(word1), len(word2)
+        prev = list(range(n + 1))  # 第 0 行
+        for i in range(1, m + 1):
+            cur = [i] + [0] * n    # 第 i 行首
+            for j in range(1, n + 1):
+                if word1[i - 1] == word2[j - 1]:
+                    cur[j] = prev[j - 1]
+                else:
+                    cur[j] = 1 + min(prev[j - 1], prev[j], cur[j - 1])
+            prev = cur
+        return prev[n]
+@@SOLUTION: 方法三：递归记忆化
+@@IDEA
+记忆化递归：dfs(i,j) 处理前缀，i<0 返回 j+1（全插入）、j<0 返回 i+1（全删除）；相等免操作否则三种操作取最小。O(mn)。
+@@JAVA
+class Solution {
+    private String w1, w2;
+    private Integer[][] memo;
+
+    public int minDistance(String a, String b) {
+        w1 = a; w2 = b;
+        memo = new Integer[a.length()][b.length()];
+        return dfs(a.length() - 1, b.length() - 1);
+    }
+    private int dfs(int i, int j) {
+        if (i < 0) return j + 1;  // 全插入
+        if (j < 0) return i + 1;  // 全删除
+        if (memo[i][j] != null) return memo[i][j];
+        if (w1.charAt(i) == w2.charAt(j)) {
+            return memo[i][j] = dfs(i - 1, j - 1); // 免操作
+        }
+        return memo[i][j] = 1 + Math.min(dfs(i - 1, j - 1),  // 替换
+                      Math.min(dfs(i - 1, j),                 // 删除
+                               dfs(i, j - 1)));               // 插入
+    }
+}
+@@PY
+class Solution:
+    def minDistance(self, word1: str, word2: str) -> int:
+        from functools import lru_cache
+
+        @lru_cache(maxsize=None)
+        def dfs(i, j):
+            if i < 0:
+                return j + 1  # 全插入
+            if j < 0:
+                return i + 1  # 全删除
+            if word1[i] == word2[j]:
+                return dfs(i - 1, j - 1)  # 免操作
+            return 1 + min(dfs(i - 1, j - 1),   # 替换
+                           dfs(i - 1, j),       # 删除
+                           dfs(i, j - 1))       # 插入
+
+        return dfs(len(word1) - 1, len(word2) - 1)

@@ -1,0 +1,852 @@
+@@PROBLEM
+@@NO: 63
+@@ID: 35
+@@TITLE: 搜索插入位置
+@@DIFF: 简单
+@@CATEGORY: 二分查找
+@@TAGS: 数组;二分查找
+@@URL: https://leetcode.cn/problems/search-insert-position/
+@@DESC
+给定一个排序数组和一个目标值，在数组中找到目标值，并返回其索引。如果目标值不存在于数组中，返回它将会被按顺序插入的位置。
+
+请必须使用时间复杂度为 O(log n) 的算法。
+
+示例 1：
+输入：nums = [1,3,5,6], target = 5
+输出：2
+
+示例 2：
+输入：nums = [1,3,5,6], target = 2
+输出：1
+
+示例 3：
+输入：nums = [1,3,5,6], target = 7
+输出：4
+
+提示：
+1 <= nums.length <= 10^4
+nums 为无重复元素的升序排列数组
+-10^4 <= target <= 10^4
+给定一个排序数组 nums（无重复、升序）和目标值 target，若存在则返回下标，否则返回按序插入的位置。要求 O(log n)。
+示例：nums = [1,3,5,6], target = 2 → 输出 1；target = 7 → 输出 4。
+@@SOLUTION: 方法一：lower bound 左闭右开（推荐）
+@@IDEA
+lower bound 模板：左闭右开区间 [l, r)，nums[mid] < target 时 l=mid+1 否则 r=mid；结束时 l 即第一个 ≥ target 的位置 = 插入点。O(log n)。
+@@JAVA
+class Solution {
+    public int searchInsert(int[] nums, int target) {
+        int l = 0, r = nums.length; // 左闭右开
+        while (l < r) {
+            int mid = l + (r - l) / 2;
+            if (nums[mid] < target) l = mid + 1; // 目标在右半
+            else r = mid;                        // mid 可能是答案
+        }
+        return l;
+    }
+}
+@@PY
+class Solution:
+    def searchInsert(self, nums: List[int], target: int) -> int:
+        l, r = 0, len(nums)  # 左闭右开
+        while l < r:
+            mid = (l + r) // 2
+            if nums[mid] < target:
+                l = mid + 1  # 目标在右半
+            else:
+                r = mid      # mid 可能是答案
+        return l
+@@SOLUTION: 方法二：左闭右闭写法
+@@IDEA
+左闭右闭写法：[l, r] 闭区间，l=mid+1 / r=mid-1，循环条件 l<=r；结束时 l 同样是插入位置。两种区间约定的二分都要熟练。
+@@JAVA
+class Solution {
+    public int searchInsert(int[] nums, int target) {
+        int l = 0, r = nums.length - 1; // 左闭右闭
+        while (l <= r) {
+            int mid = l + (r - l) / 2;
+            if (nums[mid] < target) l = mid + 1;
+            else r = mid - 1;
+        }
+        return l; // 插入位置
+    }
+}
+@@PY
+class Solution:
+    def searchInsert(self, nums: List[int], target: int) -> int:
+        l, r = 0, len(nums) - 1  # 左闭右闭
+        while l <= r:
+            mid = (l + r) // 2
+            if nums[mid] < target:
+                l = mid + 1
+            else:
+                r = mid - 1
+        return l  # 插入位置
+@@SOLUTION: 方法三：标准二分 + 特判返回（直白版）
+@@IDEA
+标准二分 + 命中特判：先找 target 本身，命中直接返回下标；未命中时 left 就是插入点。逻辑分层更直白。
+@@JAVA
+class Solution {
+    public int searchInsert(int[] nums, int target) {
+        int l = 0, r = nums.length - 1;
+        while (l <= r) {
+            int mid = (l + r) >>> 1;
+            if (nums[mid] == target) return mid; // 命中
+            if (nums[mid] < target) l = mid + 1;
+            else r = mid - 1;
+        }
+        return l; // l 即第一个大于 target 的位置 = 插入点
+    }
+}
+@@PY
+class Solution:
+    def searchInsert(self, nums: List[int], target: int) -> int:
+        l, r = 0, len(nums) - 1
+        while l <= r:
+            mid = (l + r) // 2
+            if nums[mid] == target:  # 命中
+                return mid
+            if nums[mid] < target:
+                l = mid + 1
+            else:
+                r = mid - 1
+        return l  # 插入点
+@@PROBLEM
+@@NO: 64
+@@ID: 74
+@@TITLE: 搜索二维矩阵
+@@DIFF: 中等
+@@CATEGORY: 二分查找
+@@TAGS: 数组;二分查找;矩阵
+@@URL: https://leetcode.cn/problems/search-a-2d-matrix/
+@@DESC
+给你一个满足下述两条属性的 m x n 整数矩阵：
+每行中的整数从左到右按非严格递增顺序排列。
+每行的第一个整数大于前一行的最后一个整数。
+
+给你一个整数 target，如果 target 在矩阵中，返回 true；否则，返回 false。
+
+示例 1：
+输入：matrix = [[1,3,5,7],[10,11,16,20],[23,30,34,60]], target = 3
+输出：true
+
+示例 2：
+输入：matrix = [[1,3,5,7],[10,11,16,20],[23,30,34,60]], target = 13
+输出：false
+
+提示：
+1 <= m, n <= 100
+-10^4 <= matrix[i][j], target <= 10^4
+给你 m x n 矩阵：每行升序，且每行首元素大于上一行末元素（整体可视为一维升序）。判断 target 是否在矩阵中。
+示例：matrix = [[1,3,5,7],[10,11,16,20],[23,30,34,60]], target = 3 → true。
+@@SOLUTION: 方法一：一维展开二分（推荐）
+@@IDEA
+一维展开：m×n 矩阵整体严格递增，可视为长度 m*n 的一维数组，mid 映射为 matrix[mid/n][mid%n] 直接二分。O(log(mn))，最优雅。
+@@JAVA
+class Solution {
+    public boolean searchMatrix(int[][] matrix, int target) {
+        int m = matrix.length, n = matrix[0].length;
+        int l = 0, r = m * n - 1;
+        while (l <= r) {
+            int mid = l + (r - l) / 2;
+            int v = matrix[mid / n][mid % n]; // 一维下标映射
+            if (v == target) return true;
+            if (v < target) l = mid + 1;
+            else r = mid - 1;
+        }
+        return false;
+    }
+}
+@@PY
+class Solution:
+    def searchMatrix(self, matrix: List[List[int]], target: int) -> bool:
+        m, n = len(matrix), len(matrix[0])
+        l, r = 0, m * n - 1
+        while l <= r:
+            mid = (l + r) // 2
+            v = matrix[mid // n][mid % n]  # 一维下标映射
+            if v == target:
+                return True
+            if v < target:
+                l = mid + 1
+            else:
+                r = mid - 1
+        return False
+@@SOLUTION: 方法二：两次二分（先行后列）
+@@IDEA
+两次二分：第一次对「每行首元素」二分找到最后一个 ≤ target 的行，第二次在该行内二分。O(log m + log n)，逻辑解耦。
+@@JAVA
+class Solution {
+    public boolean searchMatrix(int[][] matrix, int target) {
+        int m = matrix.length;
+        int lo = 0, hi = m - 1, row = -1;
+        while (lo <= hi) { // 找最后一个首元素 <= target 的行
+            int mid = (lo + hi) / 2;
+            if (matrix[mid][0] <= target) { row = mid; lo = mid + 1; }
+            else hi = mid - 1;
+        }
+        if (row < 0) return false;
+        int l = 0, r = matrix[0].length - 1; // 行内二分
+        while (l <= r) {
+            int mid = (l + r) / 2;
+            if (matrix[row][mid] == target) return true;
+            if (matrix[row][mid] < target) l = mid + 1;
+            else r = mid - 1;
+        }
+        return false;
+    }
+}
+@@PY
+class Solution:
+    def searchMatrix(self, matrix: List[List[int]], target: int) -> bool:
+        import bisect
+        # 找最后一个首元素 <= target 的行
+        row = bisect.bisect_right([r[0] for r in matrix], target) - 1
+        if row < 0:
+            return False
+        i = bisect.bisect_left(matrix[row], target)  # 行内二分
+        return i < len(matrix[row]) and matrix[row][i] == target
+@@SOLUTION: 方法三：右上角阶梯排除法
+@@IDEA
+右上角阶梯排除：偏大左移排除列、偏小下移排除行。O(m+n)，虽然没用满二分性质，但它是「搜索二维矩阵 II」的通用解，一法两题。
+@@JAVA
+class Solution {
+    public boolean searchMatrix(int[][] matrix, int target) {
+        int m = matrix.length, n = matrix[0].length;
+        int i = 0, j = n - 1; // 右上角
+        while (i < m && j >= 0) {
+            int v = matrix[i][j];
+            if (v == target) return true;
+            if (v > target) j--; // 排除当前列
+            else i++;            // 排除当前行
+        }
+        return false;
+    }
+}
+@@PY
+class Solution:
+    def searchMatrix(self, matrix: List[List[int]], target: int) -> bool:
+        m, n = len(matrix), len(matrix[0])
+        i, j = 0, n - 1  # 右上角
+        while i < m and j >= 0:
+            v = matrix[i][j]
+            if v == target:
+                return True
+            if v > target:
+                j -= 1  # 排除当前列
+            else:
+                i += 1  # 排除当前行
+        return False
+@@PROBLEM
+@@NO: 65
+@@ID: 34
+@@TITLE: 在排序数组中查找元素的第一个和最后一个位置
+@@DIFF: 中等
+@@CATEGORY: 二分查找
+@@TAGS: 数组;二分查找
+@@URL: https://leetcode.cn/problems/find-first-and-last-position-of-element-in-sorted-array/
+@@DESC
+给你一个按照非递减顺序排列的整数数组 nums，和一个目标值 target。请你找出给定目标值在数组中的开始位置和结束位置。
+
+如果数组中不存在目标值 target，返回 [-1, -1]。
+
+你必须设计并实现时间复杂度为 O(log n) 的算法解决此问题。
+
+示例 1：
+输入：nums = [5,7,7,8,8,10], target = 8
+输出：[3,4]
+
+示例 2：
+输入：nums = [5,7,7,8,8,10], target = 6
+输出：[-1,-1]
+
+示例 3：
+输入：nums = [], target = 0
+输出：[-1,-1]
+
+提示：
+0 <= nums.length <= 10^5
+-10^9 <= nums[i] <= 10^9
+nums 是一个非递减数组
+-10^9 <= target <= 10^9
+给定非递减数组 nums 和 target，返回 target 出现的起始与结束下标 [first, last]；不存在返回 [-1,-1]。要求 O(log n)。
+示例：nums = [5,7,7,8,8,10], target = 8 → 输出 [3,4]。
+@@SOLUTION: 方法一：两次 lower bound（推荐）
+@@IDEA
+两次 lower bound：first = 第一个 ≥ target；last = 第一个 ≥ target+1 再减一；需要校验 first 越界与值相等。O(log n)，边界技巧必须掌握。
+@@JAVA
+class Solution {
+    public int[] searchRange(int[] nums, int target) {
+        int first = lowerBound(nums, target);
+        if (first == nums.length || nums[first] != target) {
+            return new int[]{-1, -1};
+        }
+        int last = lowerBound(nums, target + 1) - 1; // 第一个 > target 的前一位
+        return new int[]{first, last};
+    }
+    private int lowerBound(int[] nums, int target) { // 第一个 >= target
+        int l = 0, r = nums.length;
+        while (l < r) {
+            int mid = l + (r - l) / 2;
+            if (nums[mid] < target) l = mid + 1;
+            else r = mid;
+        }
+        return l;
+    }
+}
+@@PY
+class Solution:
+    def searchRange(self, nums: List[int], target: int) -> List[int]:
+        def lower_bound(t):  # 第一个 >= t
+            l, r = 0, len(nums)
+            while l < r:
+                mid = (l + r) // 2
+                if nums[mid] < t:
+                    l = mid + 1
+                else:
+                    r = mid
+            return l
+
+        first = lower_bound(target)
+        if first == len(nums) or nums[first] != target:
+            return [-1, -1]
+        last = lower_bound(target + 1) - 1  # 第一个 > target 的前一位
+        return [first, last]
+@@SOLUTION: 方法二：分别二分找最左与最右
+@@IDEA
+分别二分找最左与最右：命中 target 后不停止——找最左继续 r=mid-1、找最右继续 l=mid+1，同时记录答案。不依赖边界推导，不易错。
+@@JAVA
+class Solution {
+    public int[] searchRange(int[] nums, int target) {
+        return new int[]{findFirst(nums, target), findLast(nums, target)};
+    }
+    private int findFirst(int[] nums, int target) {
+        int l = 0, r = nums.length - 1, res = -1;
+        while (l <= r) {
+            int mid = (l + r) / 2;
+            if (nums[mid] == target) { res = mid; r = mid - 1; } // 记录并左探
+            else if (nums[mid] < target) l = mid + 1;
+            else r = mid - 1;
+        }
+        return res;
+    }
+    private int findLast(int[] nums, int target) {
+        int l = 0, r = nums.length - 1, res = -1;
+        while (l <= r) {
+            int mid = (l + r) / 2;
+            if (nums[mid] == target) { res = mid; l = mid + 1; } // 记录并右探
+            else if (nums[mid] < target) l = mid + 1;
+            else r = mid - 1;
+        }
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def searchRange(self, nums: List[int], target: int) -> List[int]:
+        def find_first():
+            l, r, res = 0, len(nums) - 1, -1
+            while l <= r:
+                mid = (l + r) // 2
+                if nums[mid] == target:
+                    res, r = mid, mid - 1  # 记录并左探
+                elif nums[mid] < target:
+                    l = mid + 1
+                else:
+                    r = mid - 1
+            return res
+
+        def find_last():
+            l, r, res = 0, len(nums) - 1, -1
+            while l <= r:
+                mid = (l + r) // 2
+                if nums[mid] == target:
+                    res, l = mid, mid + 1  # 记录并右探
+                elif nums[mid] < target:
+                    l = mid + 1
+                else:
+                    r = mid - 1
+            return res
+
+        return [find_first(), find_last()]
+@@SOLUTION: 方法三：库函数 bisect（Python） / Arrays.binarySearch 变通（Java）
+@@IDEA
+标准库版：Python bisect_left / bisect_right 直接得到边界；Java 用 Arrays.binarySearch 找到命中后线性回退到最左。O(log n)（Java 最坏 O(n) 回退，数据小时无碍）。
+@@JAVA
+class Solution {
+    public int[] searchRange(int[] nums, int target) {
+        int first = lowerBound(nums, target);
+        if (first == nums.length || nums[first] != target) {
+            return new int[]{-1, -1};
+        }
+        int last = lowerBound(nums, target + 1) - 1;
+        return new int[]{first, last};
+    }
+    // 等价于 C++ lower_bound 的标准实现
+    private int lowerBound(int[] a, int key) {
+        int idx = java.util.Arrays.binarySearch(a, key);
+        if (idx < 0) return -(idx + 1);          // 插入点 = 第一个 > key
+        while (idx > 0 && a[idx - 1] == key) idx--; // 二分结果可能不在最左，线性回退
+        return idx;
+    }
+}
+@@PY
+class Solution:
+    def searchRange(self, nums: List[int], target: int) -> List[int]:
+        import bisect
+        first = bisect.bisect_left(nums, target)   # 第一个 >= target
+        if first == len(nums) or nums[first] != target:
+            return [-1, -1]
+        last = bisect.bisect_right(nums, target) - 1  # 最后一个 target
+        return [first, last]
+@@PROBLEM
+@@NO: 66
+@@ID: 33
+@@TITLE: 搜索旋转排序数组
+@@DIFF: 中等
+@@CATEGORY: 二分查找
+@@TAGS: 数组;二分查找
+@@URL: https://leetcode.cn/problems/search-in-rotated-sorted-array/
+@@DESC
+整数数组 nums 按升序排列，数组中的值 互不相同。
+
+在传递给函数之前，nums 在预先未知的某个下标 k（0 <= k < nums.length）上进行了旋转，使数组变为 [nums[k], nums[k+1], ..., nums[n-1], nums[0], nums[1], ..., nums[k-1]]（下标 从 0 开始 计数）。例如，[0,1,2,4,5,6,7] 在下标 3 处经旋转后可能变为 [4,5,6,7,0,1,2]。
+
+给你旋转后的数组 nums 和一个整数 target，如果 nums 中存在这个目标值 target，则返回它的下标，否则返回 -1。
+
+你必须设计一个时间复杂度为 O(log n) 的算法。
+
+示例 1：
+输入：nums = [4,5,6,7,0,1,2], target = 0
+输出：4
+
+示例 2：
+输入：nums = [4,5,6,7,0,1,2], target = 3
+输出：-1
+
+示例 3：
+输入：nums = [1], target = 0
+输出：-1
+
+提示：
+1 <= nums.length <= 5000
+-10^4 <= nums[i] <= 10^4
+nums 中的每个值都 独一无二
+-10^4 <= target <= 10^4
+给定一个在未知下标处旋转过的升序数组 nums（值互不相同）和 target，返回 target 的下标，不存在返回 -1。要求 O(log n)。
+示例：nums = [4,5,6,7,0,1,2], target = 0 → 输出 4。
+@@SOLUTION: 方法一：判断有序半区收缩（推荐）
+@@IDEA
+旋转数组二分：mid 切开后必有一半有序（nums[l] <= nums[mid] 判断左半有序）；有序的一半可精确判断 target 是否在其中，从而收缩。O(log n)。
+@@JAVA
+class Solution {
+    public int search(int[] nums, int target) {
+        int l = 0, r = nums.length - 1;
+        while (l <= r) {
+            int mid = l + (r - l) / 2;
+            if (nums[mid] == target) return mid;
+            if (nums[l] <= nums[mid]) {            // 左半有序
+                if (nums[l] <= target && target < nums[mid]) r = mid - 1;
+                else l = mid + 1;
+            } else {                               // 右半有序
+                if (nums[mid] < target && target <= nums[r]) l = mid + 1;
+                else r = mid - 1;
+            }
+        }
+        return -1;
+    }
+}
+@@PY
+class Solution:
+    def search(self, nums: List[int], target: int) -> int:
+        l, r = 0, len(nums) - 1
+        while l <= r:
+            mid = (l + r) // 2
+            if nums[mid] == target:
+                return mid
+            if nums[l] <= nums[mid]:  # 左半有序
+                if nums[l] <= target < nums[mid]:
+                    r = mid - 1
+                else:
+                    l = mid + 1
+            else:                     # 右半有序
+                if nums[mid] < target <= nums[r]:
+                    l = mid + 1
+                else:
+                    r = mid - 1
+        return -1
+@@SOLUTION: 方法二：先找旋转点（最小值）再二分
+@@IDEA
+两段式：先二分找旋转点（最小值下标），再在「虚拟有序数组」上标准二分，real = (mid+pivot)%n 映射回真实下标。逻辑解耦好理解。
+@@JAVA
+class Solution {
+    public int search(int[] nums, int target) {
+        int n = nums.length;
+        // 1. 找旋转点（最小值）
+        int lo = 0, hi = n - 1;
+        while (lo < hi) {
+            int mid = (lo + hi) / 2;
+            if (nums[mid] > nums[hi]) lo = mid + 1; // 最小值在右侧
+            else hi = mid;
+        }
+        int pivot = lo;
+        // 2. 确定二分区间并标准二分（虚拟下标映射到旋转数组）
+        int l = 0, r = n - 1;
+        while (l <= r) {
+            int mid = (l + r) / 2;
+            int real = (mid + pivot) % n; // 虚拟有序下标映射
+            if (nums[real] == target) return real;
+            if (nums[real] < target) l = mid + 1;
+            else r = mid - 1;
+        }
+        return -1;
+    }
+}
+@@PY
+class Solution:
+    def search(self, nums: List[int], target: int) -> int:
+        n = len(nums)
+        # 1. 找旋转点（最小值）
+        lo, hi = 0, n - 1
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if nums[mid] > nums[hi]:
+                lo = mid + 1  # 最小值在右侧
+            else:
+                hi = mid
+        pivot = lo
+        # 2. 在虚拟有序数组上二分
+        l, r = 0, n - 1
+        while l <= r:
+            mid = (l + r) // 2
+            real = (mid + pivot) % n  # 虚拟下标映射
+            if nums[real] == target:
+                return real
+            if nums[real] < target:
+                l = mid + 1
+            else:
+                r = mid - 1
+        return -1
+@@SOLUTION: 方法三：统一式二分（与最小值比较）
+@@IDEA
+以右端为锚的统一写法：nums[mid] <= nums[r] 判断右半有序，其余对称处理。与解法一本质相同，锚点选择不同，写法更对称。
+@@JAVA
+class Solution {
+    public int search(int[] nums, int target) {
+        int l = 0, r = nums.length - 1;
+        while (l <= r) {
+            int mid = (l + r) >>> 1;
+            if (nums[mid] == target) return mid;
+            if (nums[mid] <= nums[r]) {              // 右半有序（以右端为锚）
+                if (target > nums[mid] && target <= nums[r]) l = mid + 1;
+                else r = mid - 1;
+            } else {                                  // 左半有序
+                if (target >= nums[l] && target < nums[mid]) r = mid - 1;
+                else l = mid + 1;
+            }
+        }
+        return -1;
+    }
+}
+@@PY
+class Solution:
+    def search(self, nums: List[int], target: int) -> int:
+        l, r = 0, len(nums) - 1
+        while l <= r:
+            mid = (l + r) // 2
+            if nums[mid] == target:
+                return mid
+            if nums[mid] <= nums[r]:  # 右半有序（以右端为锚）
+                if target > nums[mid] and target <= nums[r]:
+                    l = mid + 1
+                else:
+                    r = mid - 1
+            else:                     # 左半有序
+                if target >= nums[l] and target < nums[mid]:
+                    r = mid - 1
+                else:
+                    l = mid + 1
+        return -1
+@@PROBLEM
+@@NO: 67
+@@ID: 153
+@@TITLE: 寻找旋转排序数组中的最小值
+@@DIFF: 中等
+@@CATEGORY: 二分查找
+@@TAGS: 数组;二分查找
+@@URL: https://leetcode.cn/problems/find-minimum-in-rotated-sorted-array/
+@@DESC
+已知一个长度为 n 的数组，预先按照升序排列，经由 1 到 n 次 旋转 后，得到输入数组。例如，原数组 nums = [0,1,2,4,5,6,7] 在变化后可能得到：
+若旋转 4 次，则可以得到 [4,5,6,7,0,1,2]
+若旋转 7 次，则可以得到 [0,1,2,4,5,6,7]
+
+注意，数组 [a[0], a[1], a[2], ..., a[n-1]] 旋转一次 的结果为数组 [a[n-1], a[0], a[1], a[2], ..., a[n-2]]。
+
+给你一个元素值 互不相同 的数组 nums，它原来是一个升序排列的数组，并按上述情形进行了多次旋转。请你找出并返回数组中的 最小元素。
+
+你必须设计一个时间复杂度为 O(log n) 的算法。
+
+示例 1：
+输入：nums = [3,4,5,1,2]
+输出：1
+
+示例 2：
+输入：nums = [4,5,6,7,0,1,2]
+输出：0
+
+示例 3：
+输入：nums = [11,13,15,17]
+输出：11
+
+提示：
+n == nums.length
+1 <= n <= 5000
+-5000 <= nums[i] <= 5000
+nums 中的所有整数 互不相同
+nums 原来是一个升序排序的数组，并进行了 1 至 n 次旋转
+给定一个旋转过的升序数组 nums（元素互不相同），求数组中的最小值。要求 O(log n)。
+示例：nums = [3,4,5,1,2] → 输出 1。
+@@SOLUTION: 方法一：与右端比较收缩（推荐）
+@@IDEA
+与右端比较：nums[mid] > nums[r] 说明最小值在 mid 右侧（l=mid+1），否则最小值在含 mid 的左半（r=mid）。循环到 l==r。O(log n)，本题最稳写法。
+@@JAVA
+class Solution {
+    public int findMin(int[] nums) {
+        int l = 0, r = nums.length - 1;
+        while (l < r) {
+            int mid = l + (r - l) / 2;
+            if (nums[mid] > nums[r]) l = mid + 1; // 最小值在右半
+            else r = mid;                         // 最小值含 mid
+        }
+        return nums[l];
+    }
+}
+@@PY
+class Solution:
+    def findMin(self, nums: List[int]) -> int:
+        l, r = 0, len(nums) - 1
+        while l < r:
+            mid = (l + r) // 2
+            if nums[mid] > nums[r]:
+                l = mid + 1  # 最小值在右半
+            else:
+                r = mid      # 最小值含 mid
+        return nums[l]
+@@SOLUTION: 方法二：与左端比较收缩
+@@IDEA
+与左端比较：nums[mid] >= nums[l] 说明左半有序，最小值在右侧；注意只剩两个元素时 mid==l 的特例。边界比右端版多，容易出错。
+@@JAVA
+class Solution {
+    public int findMin(int[] nums) {
+        int l = 0, r = nums.length - 1;
+        while (l < r) {
+            int mid = (l + r) / 2;
+            if (nums[mid] >= nums[l]) {        // 左半有序
+                if (mid == l) return Math.min(nums[l], nums[r]); // 只剩两个
+                l = mid + 1;                    // 去右半
+            } else {
+                r = mid;                        // 最小值含 mid
+            }
+        }
+        return nums[l];
+    }
+}
+@@PY
+class Solution:
+    def findMin(self, nums: List[int]) -> int:
+        l, r = 0, len(nums) - 1
+        while l < r:
+            mid = (l + r) // 2
+            if nums[mid] >= nums[l]:  # 左半有序
+                if mid == l:          # 只剩两个
+                    return min(nums[l], nums[r])
+                l = mid + 1           # 去右半
+            else:
+                r = mid               # 最小值含 mid
+        return nums[l]
+@@SOLUTION: 方法三：找旋转点（pivot）后取值
+@@IDEA
+找转折点：若数组未旋转（首 ≤ 尾）直接返回首元素；否则二分找第一个比 nums[0] 小的元素，它就是最小值。O(log n)。
+@@JAVA
+class Solution {
+    public int findMin(int[] nums) {
+        int n = nums.length;
+        if (nums[0] <= nums[n - 1]) return nums[0]; // 未旋转
+        int l = 1, r = n - 1, pivot = -1;
+        while (l <= r) { // 找第一个比 nums[0] 小的元素
+            int mid = (l + r) / 2;
+            if (nums[mid] < nums[0]) { pivot = mid; r = mid - 1; }
+            else l = mid + 1;
+        }
+        return nums[pivot];
+    }
+}
+@@PY
+class Solution:
+    def findMin(self, nums: List[int]) -> int:
+        n = len(nums)
+        if nums[0] <= nums[n - 1]:  # 未旋转
+            return nums[0]
+        l, r, pivot = 1, n - 1, -1
+        while l <= r:  # 找第一个比 nums[0] 小的元素
+            mid = (l + r) // 2
+            if nums[mid] < nums[0]:
+                pivot, r = mid, mid - 1
+            else:
+                l = mid + 1
+        return nums[pivot]
+@@PROBLEM
+@@NO: 68
+@@ID: 4
+@@TITLE: 寻找两个正序数组的中位数
+@@DIFF: 困难
+@@CATEGORY: 二分查找
+@@TAGS: 数组;二分查找;分治
+@@URL: https://leetcode.cn/problems/median-of-two-sorted-arrays/
+@@DESC
+给定两个大小分别为 m 和 n 的正序（从小到大）数组 nums1 和 nums2。请你找出并返回这两个正序数组的 中位数。
+
+算法的时间复杂度应该为 O(log(m+n))。
+
+示例 1：
+输入：nums1 = [1,3], nums2 = [2]
+输出：2.00000
+解释：合并数组 = [1,2,3]，中位数 2。
+
+示例 2：
+输入：nums1 = [1,2], nums2 = [3,4]
+输出：2.50000
+解释：合并数组 = [1,2,3,4]，中位数 (2 + 3) / 2 = 2.5。
+
+提示：
+0 <= m, n <= 1000
+1 <= m + n <= 2000
+-10^6 <= nums1[i], nums2[i] <= 10^6
+
+进阶：你能设计一个时间复杂度为 O(log(m+n)) 的算法解决此问题吗？
+给定两个升序数组 nums1、nums2（大小 m、n），请返回两者合并后的中位数。要求时间复杂度 O(log(m+n))。
+示例：nums1 = [1,3], nums2 = [2] → 输出 2.0；[1,2],[3,4] → 输出 2.5。
+@@SOLUTION: 方法一：二分分割线（推荐，严格 O(log min(m,n))）
+@@IDEA
+二分分割线：在较短数组上二分左半取 i 个，较长数组取 half-i 个；合法条件 aL≤bR 且 bL≤aR。奇数取左半最大，偶数取左右均值；边界用 ±∞。O(log min(m,n))。
+@@JAVA
+class Solution {
+    public double findMedianSortedArrays(int[] a, int[] b) {
+        if (a.length > b.length) { // 保证 a 较短
+            int[] t = a; a = b; b = t;
+        }
+        int m = a.length, n = b.length;
+        int lo = 0, hi = m, half = (m + n + 1) / 2; // 左半元素总数
+        while (lo <= hi) {
+            int i = (lo + hi) / 2; // a 左半取 i 个
+            int j = half - i;      // b 左半取 j 个
+            int aL = (i == 0) ? Integer.MIN_VALUE : a[i - 1];
+            int aR = (i == m) ? Integer.MAX_VALUE : a[i];
+            int bL = (j == 0) ? Integer.MIN_VALUE : b[j - 1];
+            int bR = (j == n) ? Integer.MAX_VALUE : b[j];
+            if (aL <= bR && bL <= aR) { // 合法分割
+                if (((m + n) & 1) == 1) return Math.max(aL, bL);
+                return (Math.max(aL, bL) + Math.min(aR, bR)) / 2.0;
+            } else if (aL > bR) hi = i - 1; // a 取多了
+            else lo = i + 1;                // a 取少了
+        }
+        return 0.0;
+    }
+}
+@@PY
+class Solution:
+    def findMedianSortedArrays(self, a: List[int], b: List[int]) -> float:
+        if len(a) > len(b):  # 保证 a 较短
+            a, b = b, a
+        m, n = len(a), len(b)
+        lo, hi = 0, m
+        half = (m + n + 1) // 2  # 左半元素总数
+        while lo <= hi:
+            i = (lo + hi) // 2  # a 左半取 i 个
+            j = half - i        # b 左半取 j 个
+            aL = float('-inf') if i == 0 else a[i - 1]
+            aR = float('inf') if i == m else a[i]
+            bL = float('-inf') if j == 0 else b[j - 1]
+            bR = float('inf') if j == n else b[j]
+            if aL <= bR and bL <= aR:  # 合法分割
+                if (m + n) % 2 == 1:
+                    return float(max(aL, bL))
+                return (max(aL, bL) + min(aR, bR)) / 2
+            elif aL > bR:
+                hi = i - 1  # a 取多了
+            else:
+                lo = i + 1  # a 取少了
+@@SOLUTION: 方法二：找第 k 小递归法
+@@IDEA
+找第 k 小递归：比较两数组各自第 ⌊k/2⌋ 个元素，较小者连同其前侧 ⌊k/2⌋ 个元素不可能包含第 k 小，整体排除后 k 减半。O(log(m+n))。
+@@JAVA
+class Solution {
+    public double findMedianSortedArrays(int[] a, int[] b) {
+        int m = a.length, n = b.length, total = m + n;
+        if (total % 2 == 1) {
+            return kth(a, 0, b, 0, total / 2 + 1); // 第 (total+1)/2 小
+        }
+        // 偶数取中间两数均值
+        return (kth(a, 0, b, 0, total / 2) + kth(a, 0, b, 0, total / 2 + 1)) / 2.0;
+    }
+    private int kth(int[] a, int i, int[] b, int j, int k) {
+        if (i >= a.length) return b[j + k - 1];  // a 空
+        if (j >= b.length) return a[i + k - 1];  // b 空
+        if (k == 1) return Math.min(a[i], b[j]);
+        int pa = Math.min(i + k / 2, a.length) - 1; // a 试探位置
+        int pb = Math.min(j + k / 2, b.length) - 1; // b 试探位置
+        if (a[pa] <= b[pb]) return kth(a, pa + 1, b, j, k - (pa - i + 1)); // 淘汰 a 前段
+        return kth(a, i, b, pb + 1, k - (pb - j + 1));                     // 淘汰 b 前段
+    }
+}
+@@PY
+class Solution:
+    def findMedianSortedArrays(self, a: List[int], b: List[int]) -> int:
+        m, n, total = len(a), len(b), len(a) + len(b)
+
+        def kth(i, j, k):
+            if i >= m:
+                return b[j + k - 1]  # a 空
+            if j >= n:
+                return a[i + k - 1]  # b 空
+            if k == 1:
+                return min(a[i], b[j])
+            pa = min(i + k // 2, m) - 1  # a 试探位置
+            pb = min(j + k // 2, n) - 1  # b 试探位置
+            if a[pa] <= b[pb]:
+                return kth(pa + 1, j, k - (pa - i + 1))  # 淘汰 a 前段
+            return kth(i, pb + 1, k - (pb - j + 1))      # 淘汰 b 前段
+
+        if total % 2 == 1:
+            return kth(0, 0, total // 2 + 1)
+        return (kth(0, 0, total // 2) + kth(0, 0, total // 2 + 1)) / 2
+@@SOLUTION: 方法三：归并计数法（O(m+n)，作对照）
+@@IDEA
+归并计数对照：双指针归并到第 total/2（及 +1）位即停，不真正合并数组。O(m+n)，简单可靠但不符合题目 O(log) 要求，用作对照与兜底。
+@@JAVA
+class Solution {
+    public double findMedianSortedArrays(int[] a, int[] b) {
+        int m = a.length, n = b.length, total = m + n;
+        int i = 0, j = 0, prev = 0, cur = 0;
+        for (int step = 0; step <= total / 2; step++) {
+            prev = cur;
+            if (i < m && (j >= n || a[i] <= b[j])) cur = a[i++]; // 取较小者
+            else cur = b[j++];
+        }
+        if (total % 2 == 1) return cur;              // 奇数取中间
+        return (prev + cur) / 2.0;                    // 偶数取均值
+    }
+}
+@@PY
+class Solution:
+    def findMedianSortedArrays(self, a: List[int], b: List[int]) -> float:
+        m, n, total = len(a), len(b), m + n
+        i = j = prev = cur = 0
+        for _ in range(total // 2 + 1):
+            prev = cur
+            if i < m and (j >= n or a[i] <= b[j]):
+                cur = a[i]  # 取较小者
+                i += 1
+            else:
+                cur = b[j]
+                j += 1
+        return float(cur) if total % 2 == 1 else (prev + cur) / 2  # 奇/偶

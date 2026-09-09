@@ -1,0 +1,547 @@
+@@PROBLEM
+@@NO: 18
+@@ID: 73
+@@TITLE: 矩阵置零
+@@DIFF: 中等
+@@CATEGORY: 矩阵
+@@TAGS: 数组;哈希表;矩阵
+@@URL: https://leetcode.cn/problems/set-matrix-zeroes/
+@@DESC
+给定一个 m x n 的矩阵，如果一个元素为 0，则将其所在行和列的所有元素都设为 0。请使用原地算法。
+
+示例 1：
+输入：matrix = [[1,1,1],[1,0,1],[1,1,1]]
+输出：[[1,0,1],[0,0,0],[1,0,1]]
+
+示例 2：
+输入：matrix = [[0,1,2,0],[3,4,5,2],[1,3,1,5]]
+输出：[[0,0,0,0],[0,4,5,0],[1,3,1,5]]
+
+提示：
+m == matrix.length, n == matrix[0].length
+1 <= m, n <= 200
+-2^31 <= matrix[i][j] <= 2^31 - 1
+
+进阶：一个直观的解决方案是使用 O(mn) 的额外空间，但这并不是一个好的解决方案。一个简单的改进方案是使用 O(m + n) 的额外空间，但这仍然不是最好的解决方案。你能想出一个仅使用常量空间的解决方案吗？
+给定一个 m x n 矩阵，如果一个元素为 0，则将其所在行和列的所有元素都设为 0。请使用原地算法，空间复杂度尽量低。
+示例：matrix = [[1,1,1],[1,0,1],[1,1,1]] → 输出 [[1,0,1],[0,0,0],[1,0,1]]。
+@@SOLUTION: 方法一：首行首列作标记（O(1) 空间，推荐）
+@@IDEA
+O(1) 空间标准解：用第一行和第一列本身作标记数组。注意先单独记录首行首列自身是否含 0，最后再处理它们，避免标记被提前覆盖。O(mn) 时间。
+@@JAVA
+class Solution {
+    public void setZeroes(int[][] matrix) {
+        int m = matrix.length, n = matrix[0].length;
+        boolean row0 = false, col0 = false;
+        for (int j = 0; j < n; j++) if (matrix[0][j] == 0) row0 = true;
+        for (int i = 0; i < m; i++) if (matrix[i][0] == 0) col0 = true;
+        for (int i = 1; i < m; i++) {
+            for (int j = 1; j < n; j++) {
+                if (matrix[i][j] == 0) { // 标记到首行首列
+                    matrix[i][0] = 0;
+                    matrix[0][j] = 0;
+                }
+            }
+        }
+        for (int i = 1; i < m; i++) {
+            for (int j = 1; j < n; j++) {
+                if (matrix[i][0] == 0 || matrix[0][j] == 0) matrix[i][j] = 0;
+            }
+        }
+        if (row0) for (int j = 0; j < n; j++) matrix[0][j] = 0;
+        if (col0) for (int i = 0; i < m; i++) matrix[i][0] = 0;
+    }
+}
+@@PY
+class Solution:
+    def setZeroes(self, matrix: List[List[int]]) -> None:
+        m, n = len(matrix), len(matrix[0])
+        row0 = any(matrix[0][j] == 0 for j in range(n))
+        col0 = any(matrix[i][0] == 0 for i in range(m))
+        for i in range(1, m):
+            for j in range(1, n):
+                if matrix[i][j] == 0:  # 标记到首行首列
+                    matrix[i][0] = 0
+                    matrix[0][j] = 0
+        for i in range(1, m):
+            for j in range(1, n):
+                if matrix[i][0] == 0 or matrix[0][j] == 0:
+                    matrix[i][j] = 0
+        if row0:
+            for j in range(n):
+                matrix[0][j] = 0
+        if col0:
+            for i in range(m):
+                matrix[i][0] = 0
+@@SOLUTION: 方法二：行/列集合标记
+@@IDEA
+用两个集合分别收集含 0 的行号和列号，再统一置零。O(mn) 时间、O(m+n) 空间，实现最简单，面试可作为第一版答案。
+@@JAVA
+class Solution {
+    public void setZeroes(int[][] matrix) {
+        Set<Integer> rows = new HashSet<>(), cols = new HashSet<>();
+        int m = matrix.length, n = matrix[0].length;
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (matrix[i][j] == 0) {
+                    rows.add(i); // 记录含 0 的行列
+                    cols.add(j);
+                }
+            }
+        }
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (rows.contains(i) || cols.contains(j)) {
+                    matrix[i][j] = 0;
+                }
+            }
+        }
+    }
+}
+@@PY
+class Solution:
+    def setZeroes(self, matrix: List[List[int]]) -> None:
+        m, n = len(matrix), len(matrix[0])
+        rows = {i for i in range(m) if 0 in matrix[i]}     # 含 0 的行
+        cols = {j for j in range(n)
+                if any(matrix[i][j] == 0 for i in range(m))}  # 含 0 的列
+        for i in range(m):
+            for j in range(n):
+                if i in rows or j in cols:
+                    matrix[i][j] = 0
+@@SOLUTION: 方法三：单标记变量 + 首列复用
+@@IDEA
+另一版本的原地解：只用一个变量记录首列是否置零，首行仍作列标记；从最后一行往前处理，避免首行标记被提前消费。O(mn)/O(1)。
+@@JAVA
+class Solution {
+    public void setZeroes(int[][] matrix) {
+        int m = matrix.length, n = matrix[0].length;
+        boolean col0 = false;
+        for (int i = 0; i < m; i++) {
+            if (matrix[i][0] == 0) col0 = true;
+            for (int j = 1; j < n; j++) {
+                if (matrix[i][j] == 0) { // 首行作列标记
+                    matrix[i][0] = 0;
+                    matrix[0][j] = 0;
+                }
+            }
+        }
+        for (int i = m - 1; i >= 0; i--) { // 倒序防止首行标记提前被用
+            for (int j = n - 1; j >= 1; j--) {
+                if (matrix[i][0] == 0 || matrix[0][j] == 0) matrix[i][j] = 0;
+            }
+            if (col0) matrix[i][0] = 0;    // 最后处理首列
+        }
+    }
+}
+@@PY
+class Solution:
+    def setZeroes(self, matrix: List[List[int]]) -> None:
+        m, n = len(matrix), len(matrix[0])
+        col0 = any(matrix[i][0] == 0 for i in range(m))
+        for i in range(m):
+            for j in range(1, n):
+                if matrix[i][j] == 0:  # 首行作列标记
+                    matrix[i][0] = 0
+                    matrix[0][j] = 0
+        for i in range(m - 1, -1, -1):  # 倒序防止首行标记提前被用
+            for j in range(n - 1, 0, -1):
+                if matrix[i][0] == 0 or matrix[0][j] == 0:
+                    matrix[i][j] = 0
+            if col0:          # 最后处理首列
+                matrix[i][0] = 0
+@@PROBLEM
+@@NO: 19
+@@ID: 54
+@@TITLE: 螺旋矩阵
+@@DIFF: 中等
+@@CATEGORY: 矩阵
+@@TAGS: 数组;矩阵;模拟
+@@URL: https://leetcode.cn/problems/spiral-matrix/
+@@DESC
+给你一个 m 行 n 列的矩阵 matrix，请按照 顺时针螺旋顺序，返回矩阵中的所有元素。
+
+示例 1：
+输入：matrix = [[1,2,3],[4,5,6],[7,8,9]]
+输出：[1,2,3,6,9,8,7,4,5]
+
+示例 2：
+输入：matrix = [[1,2,3,4],[5,6,7,8],[9,10,11,12]]
+输出：[1,2,3,4,8,12,11,10,9,5,6,7]
+
+提示：
+m == matrix.length, n == matrix[i].length
+1 <= m, n <= 10
+-100 <= matrix[i][j] <= 100
+给你一个 m x n 矩阵 matrix，请按顺时针螺旋顺序返回矩阵中的所有元素。
+示例：matrix = [[1,2,3],[4,5,6],[7,8,9]] → 输出 [1,2,3,6,9,8,7,4,5]。
+@@SOLUTION: 方法一：四边界逐圈收缩（推荐）
+@@IDEA
+维护 top/bottom/left/right 四个边界，按「右→下→左→上」走一圈收缩一次；每走完一条边立即检查边界是否交叉，防止剩单行/单列时重复输出。O(mn)。
+@@JAVA
+class Solution {
+    public List<Integer> spiralOrder(int[][] matrix) {
+        List<Integer> res = new ArrayList<>();
+        int top = 0, bottom = matrix.length - 1;
+        int left = 0, right = matrix[0].length - 1;
+        while (top <= bottom && left <= right) {
+            for (int j = left; j <= right; j++) res.add(matrix[top][j]);
+            top++;
+            for (int i = top; i <= bottom; i++) res.add(matrix[i][right]);
+            right--;
+            if (top <= bottom) { // 剩单行时避免重复
+                for (int j = right; j >= left; j--) res.add(matrix[bottom][j]);
+                bottom--;
+            }
+            if (left <= right) { // 剩单列时避免重复
+                for (int i = bottom; i >= top; i--) res.add(matrix[i][left]);
+                left++;
+            }
+        }
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def spiralOrder(self, matrix: List[List[int]]) -> List[int]:
+        res = []
+        top, bottom = 0, len(matrix) - 1
+        left, right = 0, len(matrix[0]) - 1
+        while top <= bottom and left <= right:
+            for j in range(left, right + 1):   # 向右
+                res.append(matrix[top][j])
+            top += 1
+            for i in range(top, bottom + 1):   # 向下
+                res.append(matrix[i][right])
+            right -= 1
+            if top <= bottom:                   # 向左（剩单行防重复）
+                for j in range(right, left - 1, -1):
+                    res.append(matrix[bottom][j])
+                bottom -= 1
+            if left <= right:                   # 向上（剩单列防重复）
+                for i in range(bottom, top - 1, -1):
+                    res.append(matrix[i][left])
+                left += 1
+        return res
+@@SOLUTION: 方法二：方向模拟 + 访问标记
+@@IDEA
+方向向量模拟：按右下左上顺序走，越界或踩到已访问格子就顺时针转向；用 visited 矩阵防回头。O(mn) 时间与空间，逻辑机械不易错。
+@@JAVA
+class Solution {
+    public List<Integer> spiralOrder(int[][] matrix) {
+        int m = matrix.length, n = matrix[0].length;
+        boolean[][] visited = new boolean[m][n];
+        int[][] dirs = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}}; // 右下左上
+        List<Integer> res = new ArrayList<>();
+        int i = 0, j = 0, d = 0;
+        for (int step = 0; step < m * n; step++) {
+            res.add(matrix[i][j]);
+            visited[i][j] = true;
+            int ni = i + dirs[d][0], nj = j + dirs[d][1];
+            if (ni < 0 || ni >= m || nj < 0 || nj >= n || visited[ni][nj]) {
+                d = (d + 1) % 4;           // 顺时针转向
+                ni = i + dirs[d][0];
+                nj = j + dirs[d][1];
+            }
+            i = ni; j = nj;
+        }
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def spiralOrder(self, matrix: List[List[int]]) -> List[int]:
+        m, n = len(matrix), len(matrix[0])
+        visited = [[False] * n for _ in range(m)]
+        dirs = ((0, 1), (1, 0), (0, -1), (-1, 0))  # 右下左上
+        res = []
+        i = j = d = 0
+        for _ in range(m * n):
+            res.append(matrix[i][j])
+            visited[i][j] = True
+            ni, nj = i + dirs[d][0], j + dirs[d][1]
+            if not (0 <= ni < m and 0 <= nj < n) or visited[ni][nj]:
+                d = (d + 1) % 4      # 顺时针转向
+                ni, nj = i + dirs[d][0], j + dirs[d][1]
+            i, j = ni, nj
+        return res
+@@SOLUTION: 方法三：递归剥环（Python 另附 zip 极简版）
+@@IDEA
+递归剥环：每层取顶行、右列、底行反向、左列反向，再对内圈子矩阵递归。Python 有极简写法：剥离首行后把剩余矩阵逆时针旋转 90°（zip）重复即可。
+@@JAVA
+class Solution {
+    public List<Integer> spiralOrder(int[][] matrix) {
+        List<Integer> res = new ArrayList<>();
+        peel(matrix, 0, matrix.length - 1, 0, matrix[0].length - 1, res);
+        return res;
+    }
+    // 剥一层环，再对内圈递归
+    private void peel(int[][] m, int rLo, int rHi, int cLo, int cHi, List<Integer> res) {
+        if (rLo > rHi || cLo > cHi) return;
+        for (int j = cLo; j <= cHi; j++) res.add(m[rLo][j]);   // 顶行
+        for (int i = rLo + 1; i <= rHi; i++) res.add(m[i][cHi]); // 右列
+        if (rLo < rHi) {
+            for (int j = cHi - 1; j >= cLo; j--) res.add(m[rHi][j]); // 底行反向
+        }
+        if (cLo < cHi) {
+            for (int i = rHi - 1; i > rLo; i--) res.add(m[i][cLo]); // 左列反向
+        }
+        peel(m, rLo + 1, rHi - 1, cLo + 1, cHi - 1, res);      // 内圈递归
+    }
+}
+@@PY
+class Solution:
+    def spiralOrder(self, matrix: List[List[int]]) -> List[int]:
+        res = []
+        while matrix:
+            res += matrix[0]              # 剥离首行
+            matrix = list(zip(*matrix[1:]))[::-1]  # 剩余逆时针旋转 90°
+        return res
+@@PROBLEM
+@@NO: 20
+@@ID: 48
+@@TITLE: 旋转图像
+@@DIFF: 中等
+@@CATEGORY: 矩阵
+@@TAGS: 数组;数学;矩阵
+@@URL: https://leetcode.cn/problems/rotate-image/
+@@DESC
+编写一个高效的算法来搜索 m x n 矩阵 matrix 中的一个目标值 target。该矩阵具有以下特性：
+
+每行的元素从左到右升序排列。
+每列的元素从上到下升序排列。
+
+示例 1：
+输入：matrix = [[1,4,7,11,15],[2,5,8,12,19],[3,6,9,16,22],[10,13,14,17,24],[18,21,23,26,30]], target = 5
+输出：true
+
+示例 2：
+输入：matrix = [[1,4,7,11,15],[2,5,8,12,19],[3,6,9,16,22],[10,13,14,17,24],[18,21,23,26,30]], target = 20
+输出：false
+
+提示：
+m == matrix.length, n == matrix[i].length
+1 <= n, m <= 300
+-10^9 <= matrix[i][j] <= 10^9
+每行的所有元素从左到右升序排列
+每列的所有元素从上到下升序排列
+-10^9 <= target <= 10^9
+给定 n x n 二维矩阵表示图像，将图像顺时针旋转 90 度。要求必须在原地旋转（O(1) 额外空间）。
+示例：[[1,2,3],[4,5,6],[7,8,9]] → [[7,4,1],[8,5,2],[9,6,3]]。
+@@SOLUTION: 方法一：转置 + 行翻转（推荐）
+@@IDEA
+顺时针旋转 90° = 先沿主对角线转置，再把每行左右翻转。两步都是原地操作，分开记忆不易错。O(n²)/O(1)。
+@@JAVA
+class Solution {
+    public void rotate(int[][] matrix) {
+        int n = matrix.length;
+        for (int i = 0; i < n; i++) {        // 转置
+            for (int j = i + 1; j < n; j++) {
+                int t = matrix[i][j]; matrix[i][j] = matrix[j][i]; matrix[j][i] = t;
+            }
+        }
+        for (int[] row : matrix) {           // 每行翻转
+            for (int l = 0, r = n - 1; l < r; l++, r--) {
+                int t = row[l]; row[l] = row[r]; row[r] = t;
+            }
+        }
+    }
+}
+@@PY
+class Solution:
+    def rotate(self, matrix: List[List[int]]) -> None:
+        n = len(matrix)
+        for i in range(n):            # 转置
+            for j in range(i + 1, n):
+                matrix[i][j], matrix[j][i] = matrix[j][i], matrix[i][j]
+        for row in matrix:            # 每行翻转
+            row.reverse()
+@@SOLUTION: 方法二：四点循环换位
+@@IDEA
+按圈处理：对每圈的每个位置做 (i,j)→(j,n-1-i) 的四点轮换，用一个临时变量一次完成。只遍历左上四分之一，理解坐标映射是关键。O(n²)/O(1)。
+@@JAVA
+class Solution {
+    public void rotate(int[][] matrix) {
+        int n = matrix.length;
+        for (int i = 0; i < n / 2; i++) {          // 圈层
+            for (int j = i; j < n - 1 - i; j++) {
+                int t = matrix[i][j];               // 四点轮换
+                matrix[i][j] = matrix[n - 1 - j][i];
+                matrix[n - 1 - j][i] = matrix[n - 1 - i][n - 1 - j];
+                matrix[n - 1 - i][n - 1 - j] = matrix[j][n - 1 - i];
+                matrix[j][n - 1 - i] = t;
+            }
+        }
+    }
+}
+@@PY
+class Solution:
+    def rotate(self, matrix: List[List[int]]) -> None:
+        n = len(matrix)
+        for i in range(n // 2):        # 圈层
+            for j in range(i, n - 1 - i):
+                t = matrix[i][j]       # 四点轮换
+                matrix[i][j] = matrix[n - 1 - j][i]
+                matrix[n - 1 - j][i] = matrix[n - 1 - i][n - 1 - j]
+                matrix[n - 1 - i][n - 1 - j] = matrix[j][n - 1 - i]
+                matrix[j][n - 1 - i] = t
+@@SOLUTION: 方法三：副对角线翻转 + 上下翻转
+@@IDEA
+另一种分解：先沿副对角线翻转，再上下翻转，同样得到顺时针 90°。与解法一对偶，说明旋转可以拆成两次简单翻转，验证角度变换的灵活性。O(n²)/O(1)。
+@@JAVA
+class Solution {
+    public void rotate(int[][] matrix) {
+        int n = matrix.length;
+        // 副对角线翻转：swap(matrix[i][j], matrix[n-1-j][n-1-i])
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n - 1 - i; j++) {
+                int t = matrix[i][j];
+                matrix[i][j] = matrix[n - 1 - j][n - 1 - i];
+                matrix[n - 1 - j][n - 1 - i] = t;
+            }
+        }
+        for (int i = 0; i < n / 2; i++) { // 上下翻转
+            for (int j = 0; j < n; j++) {
+                int t = matrix[i][j];
+                matrix[i][j] = matrix[n - 1 - i][j];
+                matrix[n - 1 - i][j] = t;
+            }
+        }
+    }
+}
+@@PY
+class Solution:
+    def rotate(self, matrix: List[List[int]]) -> None:
+        n = len(matrix)
+        for i in range(n):      # 副对角线翻转
+            for j in range(n - 1 - i):
+                matrix[i][j], matrix[n - 1 - j][n - 1 - i] = \
+                    matrix[n - 1 - j][n - 1 - i], matrix[i][j]
+        for i in range(n // 2):  # 上下翻转
+            matrix[i], matrix[n - 1 - i] = matrix[n - 1 - i], matrix[i]
+@@PROBLEM
+@@NO: 21
+@@ID: 240
+@@TITLE: 搜索二维矩阵 II
+@@DIFF: 中等
+@@CATEGORY: 矩阵
+@@TAGS: 数组;二分查找;分治;矩阵
+@@URL: https://leetcode.cn/problems/search-a-2d-matrix-ii/
+@@DESC
+给定一个 n x n 的二进制矩阵 grid，返回其中岛屿的数量。
+
+岛屿总是被水包围，并且每座岛屿只能由水平方向和/或竖直方向上相邻的陆地连接形成。
+
+此外，你可以假设该网格的四条边均被水包围。
+
+示例 1：
+输入：grid = [["1","1","1","1","0"],["1","1","0","1","0"],["1","1","0","0","0"],["0","0","0","0","0"]]
+输出：1
+
+示例 2：
+输入：grid = [["1","1","0","0","0"],["1","1","0","0","0"],["0","0","1","0","0"],["0","0","0","1","1"]]
+输出：3
+
+提示：
+m == grid.length, n == grid[i].length
+1 <= m, n <= 300
+grid[i][j] 的值为 '0' 或 '1'
+给定 m x n 矩阵，每行从左到右升序、每列从上到下升序，判断目标值 target 是否在矩阵中。
+示例：matrix = [[1,4,7],[2,5,8],[3,6,9]], target = 5 → 输出 true。
+@@SOLUTION: 方法一：右上角阶梯查找（推荐）
+@@IDEA
+从右上角出发的阶梯查找：当前值偏大说明该列都太大，左移一列；偏小说明该行都太小，下移一行。每步排除一行或一列。O(m+n)，本题最优思路。
+@@JAVA
+class Solution {
+    public boolean searchMatrix(int[][] matrix, int target) {
+        int m = matrix.length, n = matrix[0].length;
+        int i = 0, j = n - 1;   // 从右上角出发
+        while (i < m && j >= 0) {
+            int v = matrix[i][j];
+            if (v == target) return true;
+            if (v > target) j--; // 偏大 → 左移
+            else i++;            // 偏小 → 下移
+        }
+        return false;
+    }
+}
+@@PY
+class Solution:
+    def searchMatrix(self, matrix: List[List[int]], target: int) -> bool:
+        m, n = len(matrix), len(matrix[0])
+        i, j = 0, n - 1  # 从右上角出发
+        while i < m and j >= 0:
+            v = matrix[i][j]
+            if v == target:
+                return True
+            if v > target:
+                j -= 1  # 偏大 → 左移
+            else:
+                i += 1  # 偏小 → 下移
+        return False
+@@SOLUTION: 方法二：逐行二分
+@@IDEA
+对每一行做二分查找，命中即返回；若行首已大于 target 可提前结束（后面的行更大）。O(m log n)，行数少列数多时表现好。
+@@JAVA
+class Solution {
+    public boolean searchMatrix(int[][] matrix, int target) {
+        for (int[] row : matrix) {
+            if (row[0] > target) break;   // 后面行更大，提前结束
+            int lo = 0, hi = row.length - 1;
+            while (lo <= hi) {            // 行内二分
+                int mid = (lo + hi) >>> 1;
+                if (row[mid] == target) return true;
+                if (row[mid] < target) lo = mid + 1;
+                else hi = mid - 1;
+            }
+        }
+        return false;
+    }
+}
+@@PY
+class Solution:
+    def searchMatrix(self, matrix: List[List[int]], target: int) -> bool:
+        for row in matrix:
+            if row[0] > target:   # 后面行更大，提前结束
+                break
+            lo, hi = 0, len(row) - 1
+            while lo <= hi:       # 行内二分
+                mid = (lo + hi) // 2
+                if row[mid] == target:
+                    return True
+                if row[mid] < target:
+                    lo = mid + 1
+                else:
+                    hi = mid - 1
+        return False
+@@SOLUTION: 方法三：Z 形查找（左下角出发）
+@@IDEA
+与解法一对称：从左下角出发，偏大上移、偏小右移。同阶梯排除法，O(m+n)，展示矩阵搜索「选好起点」的重要性。
+@@JAVA
+class Solution {
+    public boolean searchMatrix(int[][] matrix, int target) {
+        int m = matrix.length, n = matrix[0].length;
+        int i = m - 1, j = 0;   // 从左下角出发
+        while (i >= 0 && j < n) {
+            int v = matrix[i][j];
+            if (v == target) return true;
+            if (v > target) i--; // 偏大 → 上移
+            else j++;            // 偏小 → 右移
+        }
+        return false;
+    }
+}
+@@PY
+class Solution:
+    def searchMatrix(self, matrix: List[List[int]], target: int) -> bool:
+        m, n = len(matrix), len(matrix[0])
+        i, j = m - 1, 0  # 从左下角出发
+        while i >= 0 and j < n:
+            v = matrix[i][j]
+            if v == target:
+                return True
+            if v > target:
+                i -= 1  # 偏大 → 上移
+            else:
+                j += 1  # 偏小 → 右移
+        return False

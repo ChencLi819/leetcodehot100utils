@@ -1,0 +1,385 @@
+@@PROBLEM
+@@NO: 1
+@@ID: 1
+@@TITLE: 两数之和
+@@DIFF: 简单
+@@CATEGORY: 哈希
+@@TAGS: 数组;哈希表
+@@URL: https://leetcode.cn/problems/two-sum/
+@@DESC
+给定一个整数数组 nums 和一个整数目标值 target，请你在该数组中找出和为目标值 target 的那两个整数，并返回它们的数组下标。
+
+你可以假设每种输入只会对应一个答案，并且你不能使用两次同样的元素。
+
+你可以按任意顺序返回答案。
+
+示例 1：
+输入：nums = [2,7,11,15], target = 9
+输出：[0,1]
+解释：nums[0] + nums[1] == 9，返回 [0, 1]。
+
+示例 2：
+输入：nums = [3,2,4], target = 6
+输出：[1,2]
+
+示例 3：
+输入：nums = [3,3], target = 6
+输出：[0,1]
+
+提示：
+2 <= nums.length <= 10^4
+-10^9 <= nums[i] <= 10^9
+-10^9 <= target <= 10^9
+只会存在一个有效答案。
+
+进阶：你可以想出一个时间复杂度小于 O(n^2) 的算法吗？
+给定一个整数数组 nums 和一个整数目标值 target，请在该数组中找出和为目标值 target 的那两个整数，并返回它们的数组下标。
+每种输入只会对应一个答案，不能重复使用同一个元素，可按任意顺序返回答案。
+示例：nums = [2,7,11,15], target = 9 → 输出 [0,1]（2 + 7 = 9）。
+@@SOLUTION: 方法一：哈希表（推荐）
+@@IDEA
+一次遍历，用哈希表把「见过的值 → 下标」存起来；走到每个数先查 target-当前值 是否在表里，在就直接返回两个下标。关键点是先查后存，避免同一元素被用两次。时间 O(n)，空间 O(n)。
+@@JAVA
+class Solution {
+    public int[] twoSum(int[] nums, int target) {
+        Map<Integer, Integer> seen = new HashMap<>(); // 值 -> 下标
+        for (int i = 0; i < nums.length; i++) {
+            int need = target - nums[i];
+            if (seen.containsKey(need)) {
+                return new int[]{seen.get(need), i};
+            }
+            seen.put(nums[i], i); // 先查后存，避免用到自身
+        }
+        return new int[0];
+    }
+}
+@@PY
+class Solution:
+    def twoSum(self, nums: List[int], target: int) -> List[int]:
+        seen = {}  # 值 -> 下标
+        for i, x in enumerate(nums):
+            if target - x in seen:      # 先查后存，避免用到自身
+                return [seen[target - x], i]
+            seen[x] = i
+        return []
+@@SOLUTION: 方法二：暴力枚举
+@@IDEA
+最直接的思路：双重循环枚举所有下标对 (i, j)，j 从 i+1 开始保证不重复、不重用元素，命中 target 立即返回。数据量大时会超时，仅用于对照验证。时间 O(n²)，空间 O(1)。
+@@JAVA
+class Solution {
+    public int[] twoSum(int[] nums, int target) {
+        int n = nums.length;
+        for (int i = 0; i < n; i++) {
+            for (int j = i + 1; j < n; j++) { // 枚举 i 之后的所有配对
+                if (nums[i] + nums[j] == target) {
+                    return new int[]{i, j};
+                }
+            }
+        }
+        return new int[0];
+    }
+}
+@@PY
+class Solution:
+    def twoSum(self, nums: List[int], target: int) -> List[int]:
+        n = len(nums)
+        for i in range(n):
+            for j in range(i + 1, n):  # 枚举 i 之后的所有配对
+                if nums[i] + nums[j] == target:
+                    return [i, j]
+        return []
+@@SOLUTION: 方法三：排序 + 双指针（保留原下标）
+@@IDEA
+把「值+原下标」打包后按值排序，再用首尾双指针：和偏小左端右移、偏大右端左移。关键是排序会打乱下标，所以必须携带原始下标一起排序。时间 O(n log n)，空间 O(n)。
+@@JAVA
+class Solution {
+    public int[] twoSum(int[] nums, int target) {
+        int n = nums.length;
+        int[][] pairs = new int[n][2]; // {值, 原下标}
+        for (int i = 0; i < n; i++) pairs[i] = new int[]{nums[i], i};
+        Arrays.sort(pairs, (a, b) -> a[0] - b[0]);
+        int l = 0, r = n - 1;
+        while (l < r) {
+            int sum = pairs[l][0] + pairs[r][0];
+            if (sum == target) return new int[]{pairs[l][1], pairs[r][1]};
+            if (sum < target) l++; // 和太小，左端右移
+            else r--;              // 和太大，右端左移
+        }
+        return new int[0];
+    }
+}
+@@PY
+class Solution:
+    def twoSum(self, nums: List[int], target: int) -> List[int]:
+        pairs = sorted([(x, i) for i, x in enumerate(nums)])  # {值, 原下标}
+        l, r = 0, len(nums) - 1
+        while l < r:
+            s = pairs[l][0] + pairs[r][0]
+            if s == target:
+                return [pairs[l][1], pairs[r][1]]
+            if s < target:  # 和太小，左端右移
+                l += 1
+            else:           # 和太大，右端左移
+                r -= 1
+        return []
+@@PROBLEM
+@@NO: 2
+@@ID: 49
+@@TITLE: 字母异位词分组
+@@DIFF: 中等
+@@CATEGORY: 哈希
+@@TAGS: 数组;哈希表;字符串;排序
+@@URL: https://leetcode.cn/problems/group-anagrams/
+@@DESC
+给你一个字符串数组，请你将字母异位词组合在一起。字母异位词是由重新排列源单词的所有字母得到的一个新单词（所有原始字母仅使用一次）。
+
+示例 1：
+输入：strs = ["eat", "tea", "tan", "ate", "nat", "bat"]
+输出：[["bat"],["nat","tan"],["ate","eat","tea"]]
+解释：注意输出中的顺序并不重要。
+（实际输出：[["bat"],["nat","tan"],["ate","eat","tea"]]）
+
+示例 2：
+输入：strs = [""]
+输出：[[""]]
+
+示例 3：
+输入：strs = ["a"]
+输出：[["a"]]
+
+提示：
+1 <= strs.length <= 10^4
+0 <= strs[i].length <= 100
+strs[i] 仅包含小写字母
+给你一个字符串数组，请你将字母异位词组合在一起。字母异位词是由重新排列源单词的所有字母得到的新单词（如 ate/eat/tea）。
+返回结果可以按任意顺序给出。
+示例：输入 ["eat","tea","tan","ate","nat","bat"] → 输出 [["eat","tea","ate"],["tan","nat"],["bat"]]。
+@@SOLUTION: 方法一：排序作键（推荐）
+@@IDEA
+互为异位词的字符串排序后结果完全相同，把它作为哈希表的键分组即可。关键点是 computeIfAbsent 一行完成「建组+入组」。时间 O(n·k log k)，k 为单词长度。
+@@JAVA
+class Solution {
+    public List<List<String>> groupAnagrams(String[] strs) {
+        Map<String, List<String>> groups = new HashMap<>();
+        for (String s : strs) {
+            char[] cs = s.toCharArray();
+            Arrays.sort(cs);
+            String key = new String(cs); // 排序后相同即互为异位词
+            groups.computeIfAbsent(key, k -> new ArrayList<>()).add(s);
+        }
+        return new ArrayList<>(groups.values());
+    }
+}
+@@PY
+class Solution:
+    def groupAnagrams(self, strs: List[str]) -> List[List[str]]:
+        groups = defaultdict(list)
+        for s in strs:
+            key = ''.join(sorted(s))  # 排序后相同即互为异位词
+            groups[key].append(s)
+        return list(groups.values())
+@@SOLUTION: 方法二：字母计数作键
+@@IDEA
+不排序，改用 26 个字母的计数数组拼成签名字符串作键，单词处理降为 O(k)。Python 直接用 tuple(cnt) 当键更简洁；关键点是签名必须能区分不同计数。时间 O(n·k)。
+@@JAVA
+class Solution {
+    public List<List<String>> groupAnagrams(String[] strs) {
+        Map<String, List<String>> groups = new HashMap<>();
+        for (String s : strs) {
+            int[] cnt = new int[26];
+            for (char c : s.toCharArray()) cnt[c - 'a']++;
+            // 计数数组拼成签名字符串
+            StringBuilder key = new StringBuilder();
+            for (int v : cnt) key.append(v).append('#');
+            groups.computeIfAbsent(key.toString(), k -> new ArrayList<>()).add(s);
+        }
+        return new ArrayList<>(groups.values());
+    }
+}
+@@PY
+class Solution:
+    def groupAnagrams(self, strs: List[str]) -> List[List[str]]:
+        groups = defaultdict(list)
+        for s in strs:
+            cnt = [0] * 26
+            for c in s:
+                cnt[ord(c) - ord('a')] += 1
+            key = tuple(cnt)  # 计数元组可直接作键
+            groups[key].append(s)
+        return list(groups.values())
+@@SOLUTION: 方法三：整体排序 + 相邻归组
+@@IDEA
+换个视角：把每个词转成规范形后对「下标数组」整体排序，规范形相同的词必然相邻，再线性扫描切组。理解「排序使等价元素相邻」这一通用技巧是重点。时间 O(n·k log k)。
+@@JAVA
+class Solution {
+    public List<List<String>> groupAnagrams(String[] strs) {
+        int n = strs.length;
+        String[] norm = new String[n];
+        Integer[] idx = new Integer[n];
+        for (int i = 0; i < n; i++) {
+            char[] cs = strs[i].toCharArray();
+            Arrays.sort(cs);
+            norm[i] = new String(cs);
+            idx[i] = i;
+        }
+        Arrays.sort(idx, (a, b) -> norm[a].compareTo(norm[b])); // 异位词相邻
+        List<List<String>> res = new ArrayList<>();
+        List<String> cur = null;
+        String prev = "";
+        for (int i : idx) {
+            if (cur == null || !norm[i].equals(prev)) {
+                cur = new ArrayList<>();
+                res.add(cur);
+            }
+            cur.add(strs[i]);
+            prev = norm[i];
+        }
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def groupAnagrams(self, strs: List[str]) -> List[List[str]]:
+        order = sorted(range(len(strs)),
+                       key=lambda i: ''.join(sorted(strs[i])))  # 异位词相邻
+        res = []
+        cur, prev = None, None
+        for i in order:
+            norm = ''.join(sorted(strs[i]))
+            if cur is None or norm != prev:
+                cur = []
+                res.append(cur)
+            cur.append(strs[i])
+            prev = norm
+        return res
+@@PROBLEM
+@@NO: 3
+@@ID: 128
+@@TITLE: 最长连续序列
+@@DIFF: 中等
+@@CATEGORY: 哈希
+@@TAGS: 数组;哈希表;并查集
+@@URL: https://leetcode.cn/problems/longest-consecutive-sequence/
+@@DESC
+给定一个未排序的整数数组 nums，找出数字连续的最长序列（不要求序列元素在原数组中连续）的长度。
+
+请你设计并实现时间复杂度为 O(n) 的算法解决此问题。
+
+示例 1：
+输入：nums = [100,4,200,1,3,2]
+输出：4
+解释：最长数字连续序列是 [1, 2, 3, 4]。它的长度为 4。
+
+示例 2：
+输入：nums = [0,3,7,2,5,8,4,6,0,1]
+输出：9
+
+提示：
+0 <= nums.length <= 10^5
+-10^9 <= nums[i] <= 10^9
+给定一个未排序的整数数组 nums，找出数字连续的最长序列（不要求原数组中相邻）的长度。
+要求时间复杂度 O(n)。
+示例：nums = [100,4,200,1,3,2] → 输出 4（最长连续序列 1,2,3,4）。
+@@SOLUTION: 方法一：HashSet 找序列起点（推荐，满足 O(n)）
+@@IDEA
+把所有数放进 HashSet；只有当 x-1 不存在时 x 才可能是某段连续序列的起点，从起点向后数到断为止。关键点是「只从起点数」，保证每个数最多被访问两次，达到 O(n)。
+@@JAVA
+class Solution {
+    public int longestConsecutive(int[] nums) {
+        Set<Integer> set = new HashSet<>();
+        for (int x : nums) set.add(x);
+        int best = 0;
+        for (int x : set) {
+            if (set.contains(x - 1)) continue; // x 不是起点，跳过
+            int len = 1;
+            while (set.contains(x + len)) len++; // 从起点向后数
+            best = Math.max(best, len);
+        }
+        return best;
+    }
+}
+@@PY
+class Solution:
+    def longestConsecutive(self, nums: List[int]) -> int:
+        s = set(nums)
+        best = 0
+        for x in s:
+            if x - 1 in s:    # x 不是起点，跳过
+                continue
+            length = 1
+            while x + length in s:
+                length += 1
+            best = max(best, length)
+        return best
+@@SOLUTION: 方法二：排序 + 线性扫描
+@@IDEA
+排序后一次线性扫描：相邻差 1 就延伸当前长度，相等就跳过重复，否则重新起段。思路最简单，但排序带来 O(n log n)，不满足题目的 O(n) 进阶要求。
+@@JAVA
+class Solution {
+    public int longestConsecutive(int[] nums) {
+        if (nums.length == 0) return 0;
+        Arrays.sort(nums);
+        int best = 1, len = 1;
+        for (int i = 1; i < nums.length; i++) {
+            if (nums[i] == nums[i - 1]) continue;     // 去重
+            if (nums[i] == nums[i - 1] + 1) len++;    // 连续延伸
+            else len = 1;                             // 断开重来
+            best = Math.max(best, len);
+        }
+        return best;
+    }
+}
+@@PY
+class Solution:
+    def longestConsecutive(self, nums: List[int]) -> int:
+        if not nums:
+            return 0
+        nums = sorted(set(nums))
+        best = length = 1
+        for i in range(1, len(nums)):
+            if nums[i] == nums[i - 1] + 1:  # 连续延伸
+                length += 1
+            else:                            # 断开重来
+                length = 1
+            best = max(best, length)
+        return best
+@@SOLUTION: 方法三：HashSet 双向扩展
+@@IDEA
+对每个 x 从两侧同时扩展：只要 x-1 或 x+1 还在集合里就吃掉并继续延伸，扩展过的数立即删除保证不重复处理。关键点是「边扩展边删」，整体仍是 O(n)。
+@@JAVA
+class Solution {
+    public int longestConsecutive(int[] nums) {
+        Set<Integer> set = new HashSet<>();
+        for (int x : nums) set.add(x);
+        int best = 0;
+        for (int x : nums) {
+            if (!set.contains(x)) continue; // 已被吃掉
+            set.remove(x);
+            int len = 1;
+            for (int y = x - 1; set.remove(y); y--) len++;  // 向左吃
+            for (int y = x + 1; set.remove(y); y++) len++;  // 向右吃
+            best = Math.max(best, len);
+        }
+        return best;
+    }
+}
+@@PY
+class Solution:
+    def longestConsecutive(self, nums: List[int]) -> int:
+        s = set(nums)
+        best = 0
+        for x in nums:
+            if x not in s:      # 已被吃掉
+                continue
+            s.discard(x)
+            length = 1
+            y = x - 1
+            while s.discard(y): # 向左吃
+                y -= 1
+            length += x - 1 - y
+            y = x + 1
+            while s.discard(y): # 向右吃
+                y += 1
+            length += y - x - 1
+            best = max(best, length)
+        return best

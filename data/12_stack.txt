@@ -1,0 +1,756 @@
+@@PROBLEM
+@@NO: 69
+@@ID: 20
+@@TITLE: 有效的括号
+@@DIFF: 简单
+@@CATEGORY: 栈
+@@TAGS: 栈;字符串
+@@URL: https://leetcode.cn/problems/valid-parentheses/
+@@DESC
+给定一个只包括 '('，')'，'{'，'}'，'['，']' 的字符串 s，判断字符串是否有效。
+
+有效字符串需满足：
+左括号必须用相同类型的右括号闭合。
+左括号必须以正确的顺序闭合。
+每个右括号都有一个对应的相同类型的左括号。
+
+示例 1：
+输入：s = "()"
+输出：true
+
+示例 2：
+输入：s = "()[]{}"
+输出：true
+
+示例 3：
+输入：s = "(]"
+输出：false
+
+示例 4：
+输入：s = "([])"
+输出：true
+
+提示：
+1 <= s.length <= 10^4
+s 仅由括号 '()[]{}' 组成
+给定一个只含 '()[]{}' 的字符串 s，判断字符串是否有效（括号必须以正确顺序闭合、类型匹配）。
+示例：s = "()[]{}" → true；s = "(]" → false；s = "([)]" → false。
+@@SOLUTION: 方法一：栈 + 期待字符映射（推荐）
+@@IDEA
+栈标准解：左括号压入其「期待的右括号」，右括号与栈顶比对；不匹配或栈空即无效，结束要求栈空。压期待字符比对更简洁。O(n)/O(n)。
+@@JAVA
+class Solution {
+    public boolean isValid(String s) {
+        Deque<Character> stack = new ArrayDeque<>();
+        for (char c : s.toCharArray()) {
+            switch (c) {
+                case '(': stack.push(')'); break; // 压入期待字符
+                case '[': stack.push(']'); break;
+                case '{': stack.push('}'); break;
+                default:
+                    if (stack.isEmpty() || stack.pop() != c) return false;
+            }
+        }
+        return stack.isEmpty();
+    }
+}
+@@PY
+class Solution:
+    def isValid(self, s: str) -> bool:
+        pairs = {')': '(', ']': '[', '}': '{'}
+        stack = []
+        for c in s:
+            if c in '([{':
+                stack.append(c)
+            else:
+                if not stack or stack.pop() != pairs[c]:
+                    return False
+        return not stack
+@@SOLUTION: 方法二：重复替换成对括号（消消乐）
+@@IDEA
+消消乐：反复把 ()、[]、{} 替换为空串直到无法替换，串变空即有效。O(n²)，Python 一行循环，趣味写法。
+@@JAVA
+class Solution {
+    public boolean isValid(String s) {
+        int prevLen;
+        do {
+            prevLen = s.length();
+            s = s.replace("()", "").replace("[]", "").replace("{}", ""); // 消除成对
+        } while (s.length() != prevLen);
+        return s.isEmpty();
+    }
+}
+@@PY
+class Solution:
+    def isValid(self, s: str) -> bool:
+        prev = None
+        while prev != s:  # 反复消除成对括号
+            prev = s
+            s = s.replace('()', '').replace('[]', '').replace('{}', '')
+        return not s
+@@SOLUTION: 方法三：计数器（仅限单一括号类型的推广说明 + 三计数版）
+@@IDEA
+计数 + 顺序：为每类括号维护深度计数，同时用栈记录开括号出现顺序，闭括号必须与最近开括号匹配。说明「纯计数无法处理交错嵌套」。
+@@JAVA
+class Solution {
+    public boolean isValid(String s) {
+        int round = 0, square = 0, curly = 0;
+        Deque<Character> order = new ArrayDeque<>(); // 开括号顺序
+        for (char c : s.toCharArray()) {
+            switch (c) {
+                case '(': round++; order.push('('); break;
+                case '[': square++; order.push('['); break;
+                case '{': curly++; order.push('{'); break;
+                case ')':
+                    if (round-- <= 0 || order.pop() != '(') return false;
+                    break;
+                case ']':
+                    if (square-- <= 0 || order.pop() != '[') return false;
+                    break;
+                case '}':
+                    if (curly-- <= 0 || order.pop() != '{') return false;
+                    break;
+            }
+        }
+        return round == 0 && square == 0 && curly == 0;
+    }
+}
+@@PY
+class Solution:
+    def isValid(self, s: str) -> bool:
+        depth = {'(': 0, '[': 0, '{': 0}
+        order = []  # 开括号顺序
+        match = {')': '(', ']': '[', '}': '{'}
+        for c in s:
+            if c in depth:
+                depth[c] += 1
+                order.append(c)
+            else:
+                need = match[c]
+                if depth[need] <= 0 or order.pop() != need:
+                    return False
+                depth[need] -= 1
+        return all(v == 0 for v in depth.values())
+@@PROBLEM
+@@NO: 70
+@@ID: 155
+@@TITLE: 最小栈
+@@DIFF: 中等
+@@CATEGORY: 栈
+@@TAGS: 栈;设计
+@@URL: https://leetcode.cn/problems/min-stack/
+@@DESC
+设计一个支持 push、pop、top 操作，并能在常数时间内检索到最小元素的栈。
+
+实现 MinStack 类：
+MinStack() 初始化堆栈对象。
+void push(int val) 将元素val推入堆栈。
+void pop() 删除堆栈顶部的元素。
+int top() 获取堆栈顶部的元素。
+int getMin() 获取堆栈中的最小元素。
+
+示例 1：
+输入操作序列 ["MinStack","push","push","push","getMin","pop","top","getMin"]，参数 [[],[-2],[0],[-3],[],[],[],[]]
+输出：[null,null,null,null,-3,null,0,-2]
+解释：
+MinStack minStack = new MinStack();
+minStack.push(-2); minStack.push(0); minStack.push(-3);
+minStack.getMin();   // 返回 -3
+minStack.pop();
+minStack.top();      // 返回 0
+minStack.getMin();   // 返回 -2
+
+提示：
+-2^31 <= val <= 2^31 - 1
+pop、top 和 getMin 操作总是在 非空栈 上调用
+push、pop、top 和 getMin 最多被调用 3 * 10^4 次
+设计支持 push、pop、top 并能在 O(1) 内检索最小元素的 MinStack。
+示例：push(-2)→push(0)→push(-3)→getMin() 得 -3 → pop → top 得 0 → getMin() 得 -2。
+@@SOLUTION: 方法一：辅助栈同步维护（推荐）
+@@IDEA
+辅助栈同步：主栈正常出入，辅助栈在 push 时压入「当前最小值」（min(值, 栈顶)），pop 同步弹出；getMin 即辅助栈顶。O(1)/O(n)。
+@@JAVA
+class MinStack {
+    private final Deque<Integer> stack = new ArrayDeque<>();
+    private final Deque<Integer> minStack = new ArrayDeque<>(); // 栈顶=当前最小
+
+    public MinStack() {
+        minStack.push(Integer.MAX_VALUE);
+    }
+    public void push(int val) {
+        stack.push(val);
+        minStack.push(Math.min(val, minStack.peek()));
+    }
+    public void pop() {
+        stack.pop();
+        minStack.pop();
+    }
+    public int top() {
+        return stack.peek();
+    }
+    public int getMin() {
+        return minStack.peek();
+    }
+}
+@@PY
+class MinStack:
+    def __init__(self):
+        self.stack = []
+        self.min_stack = [float('inf')]  # 栈顶=当前最小
+
+    def push(self, val: int) -> None:
+        self.stack.append(val)
+        self.min_stack.append(min(val, self.min_stack[-1]))
+
+    def pop(self) -> None:
+        self.stack.pop()
+        self.min_stack.pop()
+
+    def top(self) -> int:
+        return self.stack[-1]
+
+    def getMin(self) -> int:
+        return self.min_stack[-1]
+@@SOLUTION: 方法二：差值栈（省空间）
+@@IDEA
+差值栈：栈存 val-min 的差值；差 ≥0 非新最小（恢复 = min+diff），差 <0 说明产生新最小（恢复旧 min = min-diff）。省一半以上内存。
+@@JAVA
+class MinStack {
+    private final Deque<Long> diffStack = new ArrayDeque<>(); // val - min
+    private long min = 0;
+
+    public void push(int val) {
+        if (diffStack.isEmpty()) {
+            min = val;
+            diffStack.push(0L); // 第一个元素差值为 0
+        } else {
+            diffStack.push((long) val - min);
+            if (val < min) min = val; // 更新最小
+        }
+    }
+    public void pop() {
+        long diff = diffStack.pop();
+        if (diff < 0) min -= diff; // 弹出的是最小值，恢复旧 min
+    }
+    public int top() {
+        long diff = diffStack.peek();
+        return (int) (diff >= 0 ? min + diff : min); // 负差说明 top 即 min
+    }
+    public int getMin() {
+        return (int) min;
+    }
+}
+@@PY
+class MinStack:
+    def __init__(self):
+        self.diff = []  # val - min 差值栈
+        self.min = 0
+
+    def push(self, val: int) -> None:
+        if not self.diff:
+            self.min = val
+            self.diff.append(0)  # 第一个元素差值为 0
+        else:
+            self.diff.append(val - self.min)
+            if val < self.min:
+                self.min = val  # 更新最小
+
+    def pop(self) -> None:
+        d = self.diff.pop()
+        if d < 0:
+            self.min -= d  # 弹出的是最小值，恢复旧 min
+
+    def top(self) -> int:
+        d = self.diff[-1]
+        return int(self.min + d if d >= 0 else self.min)  # 负差说明 top 即 min
+
+    def getMin(self) -> int:
+        return int(self.min)
+@@SOLUTION: 方法三：单栈存 (值, 当时最小) 对
+@@IDEA
+成对存储：栈元素为 (val, 入栈时刻最小值) 二元组，getMin 直接取栈顶第二项。O(1)/O(n)，写法直观无推导。
+@@JAVA
+class MinStack {
+    private final Deque<int[]> stack = new ArrayDeque<>(); // {val, minAtPush}
+
+    public void push(int val) {
+        if (stack.isEmpty()) {
+            stack.push(new int[]{val, val});
+        } else {
+            int curMin = stack.peek()[1];
+            stack.push(new int[]{val, Math.min(val, curMin)});
+        }
+    }
+    public void pop() {
+        stack.pop();
+    }
+    public int top() {
+        return stack.peek()[0];
+    }
+    public int getMin() {
+        return stack.peek()[1];
+    }
+}
+@@PY
+class MinStack:
+    def __init__(self):
+        self.stack = []  # (val, 入栈时最小)
+
+    def push(self, val: int) -> None:
+        if not self.stack:
+            self.stack.append((val, val))
+        else:
+            self.stack.append((val, min(val, self.stack[-1][1])))
+
+    def pop(self) -> None:
+        self.stack.pop()
+
+    def top(self) -> int:
+        return self.stack[-1][0]
+
+    def getMin(self) -> int:
+        return self.stack[-1][1]
+@@PROBLEM
+@@NO: 71
+@@ID: 394
+@@TITLE: 字符串解码
+@@DIFF: 中等
+@@CATEGORY: 栈
+@@TAGS: 栈;递归;字符串
+@@URL: https://leetcode.cn/problems/decode-string/
+@@DESC
+给你一个字符串 s，请你根据下面的规则解码它：
+
+数字后跟一个方括号，表示方括号内的字符串重复该数字次。例如，3[a] 解码为 aaa。
+你可以按原样输出字符串，例如 2[abc] 解码为 abcabc。
+
+示例 1：
+输入：s = "3[a]2[bc]"
+输出："aaabcbc"
+
+示例 2：
+输入：s = "3[a2[c]]"
+输出："accaccacc"
+
+示例 3：
+输入：s = "2[abc]3[cd]ef"
+输出："abcabccdcdcdef"
+
+提示：
+1 <= s.length <= 30
+s 由小写英文字母、数字和方括号 '[]' 组成
+s 保证是一个 有效 的输入
+s 中所有整数的取值范围为 [1, 300]
+给定经过编码的字符串，编码规则为 k[encoded_string]，表示方括号内的字符串重复 k 次。k 保证为正整数，输入总是合法。
+示例：s = "3[a2[c]]" → 输出 "accaccacc"；s = "2[abc]3[cd]ef" → 输出 "abcabccdcdcdef"。
+@@SOLUTION: 方法一：双栈迭代（推荐）
+@@IDEA
+双栈迭代：数字栈存重复次数、字符串栈存进入括号前的现场；遇 '[' 保存现场清空当前串，遇 ']' 弹出次数把当前串重复拼回前文。注意多位数解析。
+@@JAVA
+class Solution {
+    public String decodeString(String s) {
+        Deque<Integer> numStack = new ArrayDeque<>();
+        Deque<StringBuilder> strStack = new ArrayDeque<>();
+        StringBuilder cur = new StringBuilder();
+        int num = 0;
+        for (char c : s.toCharArray()) {
+            if (Character.isDigit(c)) {
+                num = num * 10 + (c - '0'); // 可能多位数
+            } else if (c == '[') {          // 保存现场
+                numStack.push(num); num = 0;
+                strStack.push(cur); cur = new StringBuilder();
+            } else if (c == ']') {          // 展开一层
+                int repeat = numStack.pop();
+                StringBuilder prev = strStack.pop();
+                String piece = cur.toString();
+                for (int i = 1; i < repeat; i++) prev.append(piece);
+                cur = prev;
+            } else {
+                cur.append(c);
+            }
+        }
+        return cur.toString();
+    }
+}
+@@PY
+class Solution:
+    def decodeString(self, s: str) -> str:
+        num_stack, str_stack = [], []
+        cur, num = [], 0
+        for c in s:
+            if c.isdigit():
+                num = num * 10 + int(c)  # 可能多位数
+            elif c == '[':               # 保存现场
+                num_stack.append(num)
+                str_stack.append(cur)
+                num, cur = 0, []
+            elif c == ']':               # 展开一层
+                repeat = num_stack.pop()
+                prev = str_stack.pop()
+                prev = prev + cur * repeat
+                cur = prev
+            else:
+                cur.append(c)
+        return ''.join(cur)
+@@SOLUTION: 方法二：递归下降解析
+@@IDEA
+递归下降：把 k[...] 看作文法，全局下标解析——数字后必是 '['，递归解析到匹配 ']' 返回内层串展开；字母直接拼接。O(n·展开量)。
+@@JAVA
+class Solution {
+    private int i = 0; // 全局下标
+
+    public String decodeString(String s) {
+        StringBuilder res = new StringBuilder();
+        while (i < s.length() && s.charAt(i) != ']') {
+            char c = s.charAt(i);
+            if (Character.isDigit(c)) {
+                int num = 0;
+                while (Character.isDigit(s.charAt(i))) {
+                    num = num * 10 + (s.charAt(i++) - '0'); // 解析数字
+                }
+                i++; // 跳过 '['
+                String inner = decodeString(s); // 递归解析括号内
+                i++; // 跳过 ']'
+                for (int k = 0; k < num; k++) res.append(inner);
+            } else {
+                res.append(c); // 普通字母
+                i++;
+            }
+        }
+        return res.toString();
+    }
+}
+@@PY
+class Solution:
+    def decodeString(self, s: str) -> str:
+        self.i = 0  # 全局下标
+
+        def parse() -> str:
+            res = []
+            while self.i < len(s) and s[self.i] != ']':
+                c = s[self.i]
+                if c.isdigit():
+                    num = 0
+                    while s[self.i].isdigit():  # 解析数字
+                        num = num * 10 + int(s[self.i])
+                        self.i += 1
+                    self.i += 1  # 跳过 '['
+                    inner = parse()  # 递归解析括号内
+                    self.i += 1  # 跳过 ']'
+                    res.append(inner * num)
+                else:
+                    res.append(c)  # 普通字母
+                    self.i += 1
+            return ''.join(res)
+
+        return parse()
+@@SOLUTION: 方法三：单栈配对展开（存字符串，遇 ] 拼接）
+@@IDEA
+单栈配对：栈混合存字符串片段与次数，遇 ']' 连续弹出直到 '['，取出次数展开后压回；最后倒序拼接。另一种栈组织方式，对照理解。
+@@JAVA
+class Solution {
+    public String decodeString(String s) {
+        Deque<Object> stack = new ArrayDeque<>(); // 混合存 String 与 Integer
+        StringBuilder numBuf = new StringBuilder();
+        for (char c : s.toCharArray()) {
+            if (Character.isDigit(c)) {
+                numBuf.append(c);
+            } else if (c == '[') {
+                stack.push(Integer.parseInt(numBuf.toString())); // 次数入栈
+                numBuf.setLength(0);
+                stack.push("["); // 层标记
+            } else if (c == ']') {
+                StringBuilder piece = new StringBuilder();
+                while (!"[".equals(stack.peek())) { // 收集本层片段
+                    piece.insert(0, (String) stack.pop());
+                }
+                stack.pop(); // 弹掉 "["
+                int repeat = (Integer) stack.pop();
+                String expanded = piece.toString().repeat(repeat);
+                stack.push(expanded); // 展开结果压回
+            } else {
+                stack.push(String.valueOf(c));
+            }
+        }
+        StringBuilder res = new StringBuilder();
+        while (!stack.isEmpty()) res.insert(0, stack.pop()); // 倒序拼接
+        return res.toString();
+    }
+}
+@@PY
+class Solution:
+    def decodeString(self, s: str) -> str:
+        stack = []  # 混合存字符串与数字
+        num = ""
+        for c in s:
+            if c.isdigit():
+                num += c
+            elif c == '[':
+                stack.append(int(num))  # 次数入栈
+                stack.append('[')       # 层标记
+                num = ""
+            elif c == ']':
+                piece = []
+                while stack[-1] != '[':  # 收集本层片段
+                    piece.append(stack.pop())
+                stack.pop()              # 弹掉 "["
+                repeat = stack.pop()
+                stack.append(''.join(reversed(piece)) * repeat)  # 展开压回
+            else:
+                stack.append(c)
+        return ''.join(reversed([str(x) for x in stack[::-1]]))
+@@PROBLEM
+@@NO: 72
+@@ID: 739
+@@TITLE: 每日温度
+@@DIFF: 中等
+@@CATEGORY: 栈
+@@TAGS: 栈;数组;单调栈
+@@URL: https://leetcode.cn/problems/daily-temperatures/
+@@DESC
+请根据每日 气温 列表 temperatures，重新生成一个列表 answer，其中 answer[i] 是指对于第 i 天，下一个更高温度出现在几天后。如果气温在这之后都不会升高，请在该位置用 0 来代替。
+
+示例 1：
+输入：temperatures = [73,74,75,71,69,72,76,73]
+输出：[1,1,4,2,1,1,0,0]
+
+示例 2：
+输入：temperatures = [30,40,50,60]
+输出：[1,1,1,0]
+
+示例 3：
+输入：temperatures = [30,60,90]
+输出：[1,1,1]
+
+提示：
+1 <= temperatures.length <= 10^5
+30 <= temperatures[i] <= 100
+给定每日温度数组 temperatures，返回数组 answer，其中 answer[i] 表示等待多少天才会有更高的温度；之后都不会升高则为 0。
+示例：temperatures = [73,74,75,71,69,72,76,73] → 输出 [1,1,4,2,1,1,0,0]。
+@@SOLUTION: 方法一：单调递减栈（推荐）
+@@IDEA
+单调栈标准解：栈存「还没等到升温」的下标，栈内温度递减；新温度更高时逐个弹出结算 answer[j] = i-j。每个元素进出各一次，O(n)。
+@@JAVA
+class Solution {
+    public int[] dailyTemperatures(int[] temperatures) {
+        int n = temperatures.length;
+        int[] answer = new int[n];
+        Deque<Integer> stack = new ArrayDeque<>(); // 下标，温度递减
+        for (int i = 0; i < n; i++) {
+            while (!stack.isEmpty() && temperatures[i] > temperatures[stack.peek()]) {
+                int j = stack.pop();
+                answer[j] = i - j; // 等待天数
+            }
+            stack.push(i);
+        }
+        return answer;
+    }
+}
+@@PY
+class Solution:
+    def dailyTemperatures(self, temperatures: List[int]) -> List[int]:
+        n = len(temperatures)
+        answer = [0] * n
+        stack = []  # 下标，温度递减
+        for i, t in enumerate(temperatures):
+            while stack and t > temperatures[stack[-1]]:
+                j = stack.pop()
+                answer[j] = i - j  # 等待天数
+            stack.append(i)
+        return answer
+@@SOLUTION: 方法二：从右往左跳跃（利用已算答案）
+@@IDEA
+倒序跳跃：从右往左，对 i 先看 i+1，若不比它热就沿 answer[j] 跳到下一个更热处继续比较；answer[j]==0 说明右侧全不热。O(n) 均摊 / O(1) 额外空间。
+@@JAVA
+class Solution {
+    public int[] dailyTemperatures(int[] t) {
+        int n = t.length;
+        int[] answer = new int[n];
+        for (int i = n - 2; i >= 0; i--) {
+            int j = i + 1;
+            while (j < n && t[j] <= t[i]) {
+                if (answer[j] == 0) { j = n; break; } // 后面不会再热
+                j += answer[j]; // 跳到下一个更热处
+            }
+            if (j < n) answer[i] = j - i;
+        }
+        return answer;
+    }
+}
+@@PY
+class Solution:
+    def dailyTemperatures(self, t: List[int]) -> List[int]:
+        n = len(t)
+        answer = [0] * n
+        for i in range(n - 2, -1, -1):
+            j = i + 1
+            while j < n and t[j] <= t[i]:
+                if answer[j] == 0:  # 后面不会再热
+                    j = n
+                    break
+                j += answer[j]  # 跳到下一个更热处
+            if j < n:
+                answer[i] = j - i
+        return answer
+@@SOLUTION: 方法三：暴力线性查找（对照）
+@@IDEA
+暴力对照：每个位置向右线性扫描找第一个更热天。O(n²)，小数据可用，帮助理解题意。
+@@JAVA
+class Solution {
+    public int[] dailyTemperatures(int[] t) {
+        int n = t.length;
+        int[] answer = new int[n];
+        for (int i = 0; i < n; i++) {
+            int j = i + 1;
+            while (j < n && t[j] <= t[i]) j++; // 线性向后找
+            if (j < n) answer[i] = j - i;
+        }
+        return answer;
+    }
+}
+@@PY
+class Solution:
+    def dailyTemperatures(self, t: List[int]) -> List[int]:
+        n = len(t)
+        answer = [0] * n
+        for i in range(n):
+            j = i + 1
+            while j < n and t[j] <= t[i]:  # 线性向后找
+                j += 1
+            if j < n:
+                answer[i] = j - i
+        return answer
+@@PROBLEM
+@@NO: 73
+@@ID: 84
+@@TITLE: 柱状图中最大的矩形
+@@DIFF: 困难
+@@CATEGORY: 栈
+@@TAGS: 栈;数组;单调栈
+@@URL: https://leetcode.cn/problems/largest-rectangle-in-histogram/
+@@DESC
+给定 n 个非负整数，用来表示柱状图中各个柱子的高度。每个柱子彼此相邻，且宽度为 1。
+
+求在该柱状图中，能够勾勒出来的矩形的最大面积。
+
+示例 1：
+输入：heights = [2,1,5,6,2,3]
+输出：10
+解释：最大的矩形为图中红色区域，该矩形的面积为 10。
+
+示例 2：
+输入：heights = [2,4]
+输出：4
+
+提示：
+1 <= heights.length <= 10^5
+0 <= heights[i] <= 10^4
+给定 n 个非负整数表示柱状图中各柱宽度为 1 的高度，求能在柱状图中勾勒出的矩形最大面积。
+示例：heights = [2,1,5,6,2,3] → 输出 10（取 5 和 6 两根柱，高 5 宽 2）。
+@@SOLUTION: 方法一：单调递增栈 + 哨兵（推荐）
+@@IDEA
+单调递增栈 + 哨兵：栈存下标高度递增；遇到更矮柱弹出栈顶，以弹出柱为高的矩形宽 = i - 新栈顶 - 1；末尾补高度 0 统一结算。O(n)。
+@@JAVA
+class Solution {
+    public int largestRectangleArea(int[] heights) {
+        int n = heights.length, area = 0;
+        Deque<Integer> stack = new ArrayDeque<>(); // 下标，高度递增
+        for (int i = 0; i <= n; i++) {
+            int h = (i == n) ? 0 : heights[i]; // 哨兵
+            while (!stack.isEmpty() && heights[stack.peek()] >= h) {
+                int top = stack.pop();         // 以 heights[top] 为高
+                int left = stack.isEmpty() ? -1 : stack.peek();
+                area = Math.max(area, heights[top] * (i - left - 1));
+            }
+            stack.push(i);
+        }
+        return area;
+    }
+}
+@@PY
+class Solution:
+    def largestRectangleArea(self, heights: List[int]) -> int:
+        n, area = len(heights), 0
+        stack = []  # 下标，高度递增
+        for i in range(n + 1):
+            h = 0 if i == n else heights[i]  # 哨兵
+            while stack and heights[stack[-1]] >= h:
+                top = stack.pop()            # 以 heights[top] 为高
+                left = stack[-1] if stack else -1
+                area = max(area, heights[top] * (i - left - 1))
+            stack.append(i)
+        return area
+@@SOLUTION: 方法二：左右边界数组（两次单调扫描）
+@@IDEA
+左右边界数组：对每根柱分别求「左侧第一个更矮」与「右侧第一个更矮」位置，面积 = h[i] × (right-left-1)。两次单调扫描，O(n)/O(n)，最好调试。
+@@JAVA
+class Solution {
+    public int largestRectangleArea(int[] heights) {
+        int n = heights.length;
+        int[] left = new int[n], right = new int[n];
+        Deque<Integer> stack = new ArrayDeque<>();
+        for (int i = 0; i < n; i++) { // 左侧第一个更矮
+            while (!stack.isEmpty() && heights[stack.peek()] >= heights[i]) stack.pop();
+            left[i] = stack.isEmpty() ? -1 : stack.peek();
+            stack.push(i);
+        }
+        stack.clear();
+        for (int i = n - 1; i >= 0; i--) { // 右侧第一个更矮
+            while (!stack.isEmpty() && heights[stack.peek()] >= heights[i]) stack.pop();
+            right[i] = stack.isEmpty() ? n : stack.peek();
+            stack.push(i);
+        }
+        int area = 0;
+        for (int i = 0; i < n; i++) {
+            area = Math.max(area, heights[i] * (right[i] - left[i] - 1));
+        }
+        return area;
+    }
+}
+@@PY
+class Solution:
+    def largestRectangleArea(self, heights: List[int]) -> int:
+        n = len(heights)
+        left, right = [0] * n, [0] * n
+        stack = []
+        for i in range(n):    # 左侧第一个更矮
+            while stack and heights[stack[-1]] >= heights[i]:
+                stack.pop()
+            left[i] = stack[-1] if stack else -1
+            stack.append(i)
+        stack = []
+        for i in range(n - 1, -1, -1):  # 右侧第一个更矮
+            while stack and heights[stack[-1]] >= heights[i]:
+                stack.pop()
+            right[i] = stack[-1] if stack else n
+            stack.append(i)
+        return max(heights[i] * (right[i] - left[i] - 1) for i in range(n))
+@@SOLUTION: 方法三：分治（最矮柱分割）
+@@IDEA
+分治：区间最大矩形 = max(最矮柱×区间宽, 左半递归, 右半递归)；朴素找最矮 O(n²)，配线段树查区间最小可到 O(n log n)。帮助理解问题结构。
+@@JAVA
+class Solution {
+    public int largestRectangleArea(int[] heights) {
+        return divide(heights, 0, heights.length - 1);
+    }
+    private int divide(int[] h, int lo, int hi) {
+        if (lo > hi) return 0;
+        int minIdx = lo;
+        for (int i = lo; i <= hi; i++) {       // 找最矮柱（朴素扫描）
+            if (h[i] < h[minIdx]) minIdx = i;
+        }
+        int area = h[minIdx] * (hi - lo + 1);  // 横跨全区间的矩形
+        return Math.max(area,
+                Math.max(divide(h, lo, minIdx - 1), divide(h, minIdx + 1, hi)));
+    }
+}
+@@PY
+class Solution:
+    def largestRectangleArea(self, heights: List[int]) -> int:
+        def divide(lo, hi):
+            if lo > hi:
+                return 0
+            min_idx = min(range(lo, hi + 1), key=lambda i: heights[i])  # 最矮柱
+            area = heights[min_idx] * (hi - lo + 1)  # 横跨全区间的矩形
+            return max(area, divide(lo, min_idx - 1), divide(min_idx + 1, hi))
+        return divide(0, len(heights) - 1)

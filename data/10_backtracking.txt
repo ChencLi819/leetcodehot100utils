@@ -1,0 +1,1333 @@
+@@PROBLEM
+@@NO: 55
+@@ID: 46
+@@TITLE: 全排列
+@@DIFF: 中等
+@@CATEGORY: 回溯
+@@TAGS: 数组;回溯
+@@URL: https://leetcode.cn/problems/permutations/
+@@DESC
+给定一个不含重复数字的数组 nums，返回其所可能的所有全排列。你可以按任意顺序返回答案。
+
+示例 1：
+输入：nums = [1,2,3]
+输出：[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]
+
+示例 2：
+输入：nums = [0,1]
+输出：[[0,1],[1,0]]
+
+示例 3：
+输入：nums = [1]
+输出：[[1]]
+
+提示：
+1 <= nums.length <= 6
+-10 <= nums[i] <= 10
+nums 中的所有整数 互不相同
+给定一个不含重复数字的整数数组 nums，返回其所有可能的全排列（可按任意顺序）。
+示例：nums = [1,2,3] → 输出 [[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]。
+@@SOLUTION: 方法一：回溯 + used 数组（推荐）
+@@IDEA
+回溯 + used 数组：每层从 0 开始挑一个未用过的数放入路径，递归后撤销（弹出+复位）；路径满 n 时收集快照。O(n·n!)。
+@@JAVA
+class Solution {
+    public List<List<Integer>> permute(int[] nums) {
+        List<List<Integer>> res = new ArrayList<>();
+        backtrack(nums, new boolean[nums.length], new ArrayDeque<>(), res);
+        return res;
+    }
+    private void backtrack(int[] nums, boolean[] used, Deque<Integer> path,
+                           List<List<Integer>> res) {
+        if (path.size() == nums.length) {
+            res.add(new ArrayList<>(path)); // 固定快照
+            return;
+        }
+        for (int i = 0; i < nums.length; i++) {
+            if (used[i]) continue;
+            used[i] = true;
+            path.addLast(nums[i]);  // 做选择
+            backtrack(nums, used, path, res);
+            path.removeLast();      // 撤销选择
+            used[i] = false;
+        }
+    }
+}
+@@PY
+class Solution:
+    def permute(self, nums: List[int]) -> List[List[int]]:
+        res = []
+
+        def backtrack(path, used):
+            if len(path) == len(nums):
+                res.append(path[:])  # 固定快照
+                return
+            for i, x in enumerate(nums):
+                if used[i]:
+                    continue
+                used[i] = True
+                path.append(x)    # 做选择
+                backtrack(path, used)
+                path.pop()        # 撤销选择
+                used[i] = False
+
+        backtrack([], [False] * len(nums))
+        return res
+@@SOLUTION: 方法二：交换法（原地回溯）
+@@IDEA
+交换法：对位置 pos，依次把每个候选元素换到 pos，递归 pos+1，再换回撤销；无需 used 数组、原地完成。O(n·n!)。
+@@JAVA
+class Solution {
+    public List<List<Integer>> permute(int[] nums) {
+        List<List<Integer>> res = new ArrayList<>();
+        backtrack(nums, 0, res);
+        return res;
+    }
+    private void backtrack(int[] nums, int pos, List<List<Integer>> res) {
+        if (pos == nums.length) {
+            List<Integer> one = new ArrayList<>();
+            for (int x : nums) one.add(x);
+            res.add(one);
+            return;
+        }
+        for (int i = pos; i < nums.length; i++) {
+            swap(nums, pos, i);     // 候选换到 pos
+            backtrack(nums, pos + 1, res);
+            swap(nums, pos, i);     // 换回撤销
+        }
+    }
+    private void swap(int[] a, int i, int j) {
+        int t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+}
+@@PY
+class Solution:
+    def permute(self, nums: List[int]) -> List[List[int]]:
+        res = []
+
+        def backtrack(pos):
+            if pos == len(nums):
+                res.append(nums[:])
+                return
+            for i in range(pos, len(nums)):
+                nums[pos], nums[i] = nums[i], nums[pos]  # 候选换到 pos
+                backtrack(pos + 1)
+                nums[pos], nums[i] = nums[i], nums[pos]  # 换回撤销
+
+        backtrack(0)
+        return res
+@@SOLUTION: 方法三：插入法（迭代构造）
+@@IDEA
+插入法（迭代）：n-1 个数的每个排列，把新数字插入到它 n 个可能空位，得到 n 个数的全部排列。O(n·n!)，无递归。
+@@JAVA
+class Solution {
+    public List<List<Integer>> permute(int[] nums) {
+        List<List<Integer>> res = new ArrayList<>();
+        res.add(new ArrayList<>()); // 空排列
+        for (int x : nums) {
+            List<List<Integer>> next = new ArrayList<>();
+            for (List<Integer> p : res) {
+                for (int i = 0; i <= p.size(); i++) { // 插入到每个空位
+                    List<Integer> one = new ArrayList<>(p);
+                    one.add(i, x);
+                    next.add(one);
+                }
+            }
+            res = next;
+        }
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def permute(self, nums: List[int]) -> List[List[int]]:
+        res = [[]]  # 空排列
+        for x in nums:
+            nxt = []
+            for p in res:
+                for i in range(len(p) + 1):  # 插入到每个空位
+                    nxt.append(p[:i] + [x] + p[i:])
+            res = nxt
+        return res
+@@PROBLEM
+@@NO: 56
+@@ID: 78
+@@TITLE: 子集
+@@DIFF: 中等
+@@CATEGORY: 回溯
+@@TAGS: 位运算;数组;回溯
+@@URL: https://leetcode.cn/problems/subsets/
+@@DESC
+给你一个整数数组 nums，数组中的元素 互不相同。返回该数组所有可能的子集（幂集）。
+
+解集 不能 包含重复的子集。你可以按任意顺序返回解集。
+
+示例 1：
+输入：nums = [1,2,3]
+输出：[[],[1],[2],[1,2],[3],[1,3],[2,3],[1,2,3]]
+
+示例 2：
+输入：nums = [0]
+输出：[[],[0]]
+
+提示：
+1 <= nums.length <= 10
+-10 <= nums[i] <= 10
+nums 中的所有元素 互不相同
+给定一个不含重复元素的整数数组 nums，返回该数组所有可能的子集（幂集），解集不能重复。
+示例：nums = [1,2,3] → 输出 [[],[1],[2],[1,2],[3],[1,3],[2,3],[1,2,3]]。
+@@SOLUTION: 方法一：回溯 + start 索引（推荐）
+@@IDEA
+回溯 + start 索引：每个路径本身就是子集直接收集；下一层只能选索引更大的元素，天然去重。O(n·2^n)。
+@@JAVA
+class Solution {
+    public List<List<Integer>> subsets(int[] nums) {
+        List<List<Integer>> res = new ArrayList<>();
+        backtrack(nums, 0, new ArrayDeque<>(), res);
+        return res;
+    }
+    private void backtrack(int[] nums, int start, Deque<Integer> path,
+                           List<List<Integer>> res) {
+        res.add(new ArrayList<>(path)); // 每个路径都是一个子集
+        for (int i = start; i < nums.length; i++) {
+            path.addLast(nums[i]);  // 做选择
+            backtrack(nums, i + 1, path, res);
+            path.removeLast();      // 撤销选择
+        }
+    }
+}
+@@PY
+class Solution:
+    def subsets(self, nums: List[int]) -> List[List[int]]:
+        res = []
+
+        def backtrack(start, path):
+            res.append(path[:])   # 每个路径都是一个子集
+            for i in range(start, len(nums)):
+                path.append(nums[i])  # 做选择
+                backtrack(i + 1, path)
+                path.pop()            # 撤销选择
+
+        backtrack(0, [])
+        return res
+@@SOLUTION: 方法二：二进制枚举
+@@IDEA
+二进制枚举：n 个元素选/不选对应 n 位掩码，枚举 0..2^n-1，按位展开成子集。O(n·2^n)，天然无重复。
+@@JAVA
+class Solution {
+    public List<List<Integer>> subsets(int[] nums) {
+        int n = nums.length;
+        List<List<Integer>> res = new ArrayList<>();
+        for (int mask = 0; mask < (1 << n); mask++) { // 枚举所有掩码
+            List<Integer> subset = new ArrayList<>();
+            for (int i = 0; i < n; i++) {
+                if ((mask & (1 << i)) != 0) subset.add(nums[i]); // 第 i 位选
+            }
+            res.add(subset);
+        }
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def subsets(self, nums: List[int]) -> List[List[int]]:
+        n = len(nums)
+        res = []
+        for mask in range(1 << n):     # 枚举所有掩码
+            subset = [nums[i] for i in range(n) if mask >> i & 1]  # 第 i 位选
+            res.append(subset)
+        return res
+@@SOLUTION: 方法三：逐元素增量扩展
+@@IDEA
+增量构造：从空集开始，每来一个元素，把它加到当前所有已有子集的副本里生成一批新子集。O(n·2^n)，迭代无回溯，Python 一行列表推导。
+@@JAVA
+class Solution {
+    public List<List<Integer>> subsets(int[] nums) {
+        List<List<Integer>> res = new ArrayList<>();
+        res.add(new ArrayList<>()); // 空集
+        for (int x : nums) {
+            int size = res.size();
+            for (int i = 0; i < size; i++) {
+                List<Integer> one = new ArrayList<>(res.get(i));
+                one.add(x);       // 已有子集 + 新元素 = 新子集
+                res.add(one);
+            }
+        }
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def subsets(self, nums: List[int]) -> List[List[int]]:
+        res = [[]]  # 空集
+        for x in nums:
+            res += [subset + [x] for subset in res]  # 已有子集 + 新元素
+        return res
+@@PROBLEM
+@@NO: 57
+@@ID: 17
+@@TITLE: 电话号码的字母组合
+@@DIFF: 中等
+@@CATEGORY: 回溯
+@@TAGS: 哈希表;字符串;回溯
+@@URL: https://leetcode.cn/problems/letter-combinations-of-a-phone-number/
+@@DESC
+给定一个仅包含数字 2-9 的字符串，返回所有它能表示的字母组合。答案可以按任意顺序返回。
+
+给出数字到字母的映射如下（与电话按键相同）。注意 1 不对应任何字母。
+
+示例 1：
+输入：digits = "23"
+输出：["ad","ae","af","bd","be","bf","cd","ce","cf"]
+
+示例 2：
+输入：digits = ""
+输出：[]
+
+示例 3：
+输入：digits = "2"
+输出：["a","b","c"]
+
+提示：
+0 <= digits.length <= 4
+digits[i] 是范围 ['2', '9'] 的一个数字
+给定仅含 2-9 的数字字符串，返回其能表示的九宫格键盘字母组合（2=abc, 3=def, …, 9=wxyz）。
+示例：digits = "23" → 输出 ["ad","ae","af","bd","be","bf","cd","ce","cf"]；空串返回空列表。
+@@SOLUTION: 方法一：回溯（推荐）
+@@IDEA
+回溯：每位数字从映射表中选一个字母拼进路径，处理完所有位收集组合；空串要特判返回空列表。O(4^n·n)。
+@@JAVA
+class Solution {
+    private static final String[] MAP = {
+        "", "", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"
+    };
+
+    public List<String> letterCombinations(String digits) {
+        List<String> res = new ArrayList<>();
+        if (digits.isEmpty()) return res;
+        backtrack(digits, 0, new StringBuilder(), res);
+        return res;
+    }
+    private void backtrack(String digits, int pos, StringBuilder path, List<String> res) {
+        if (pos == digits.length()) {
+            res.add(path.toString());
+            return;
+        }
+        for (char c : MAP[digits.charAt(pos) - '0'].toCharArray()) {
+            path.append(c);                        // 做选择
+            backtrack(digits, pos + 1, path, res);
+            path.deleteCharAt(path.length() - 1);  // 撤销选择
+        }
+    }
+}
+@@PY
+class Solution:
+    def letterCombinations(self, digits: str) -> List[str]:
+        if not digits:
+            return []
+        MAP = {
+            '2': 'abc', '3': 'def', '4': 'ghi', '5': 'jkl',
+            '6': 'mno', '7': 'pqrs', '8': 'tuv', '9': 'wxyz'
+        }
+        res = []
+
+        def backtrack(pos, path):
+            if pos == len(digits):
+                res.append(''.join(path))
+                return
+            for c in MAP[digits[pos]]:
+                path.append(c)    # 做选择
+                backtrack(pos + 1, path)
+                path.pop()        # 撤销选择
+
+        backtrack(0, [])
+        return res
+@@SOLUTION: 方法二：队列逐位扩展（BFS 思路）
+@@IDEA
+队列逐位扩展（BFS 思路）：从空串开始，每处理一位数字，把队列中已有组合分别接上该位的每个字母。O(4^n·n)，迭代无递归。
+@@JAVA
+class Solution {
+    public List<String> letterCombinations(String digits) {
+        if (digits.isEmpty()) return new ArrayList<>();
+        String[] map = {"", "", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"};
+        Deque<String> queue = new ArrayDeque<>();
+        queue.offer("");
+        for (char d : digits.toCharArray()) {
+            int size = queue.size();
+            for (int i = 0; i < size; i++) {
+                String base = queue.poll();
+                for (char c : map[d - '0'].toCharArray()) {
+                    queue.offer(base + c); // 扩展一位
+                }
+            }
+        }
+        return new ArrayList<>(queue);
+    }
+}
+@@PY
+class Solution:
+    def letterCombinations(self, digits: str) -> List[str]:
+        if not digits:
+            return []
+        map_ = ["", "", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"]
+        queue = [""]
+        for d in digits:
+            nxt = []
+            for base in queue:               # 逐位扩展
+                for c in map_[int(d)]:
+                    nxt.append(base + c)
+            queue = nxt
+        return queue
+@@SOLUTION: 方法三：笛卡尔积（itertools / 多循环归并）
+@@IDEA
+笛卡尔积：每位数字的字母列表做笛卡尔积直接得到全部组合。Python 用 itertools.product 一行；Java 手写逐位归并。O(4^n·n)。
+@@JAVA
+class Solution {
+    public List<String> letterCombinations(String digits) {
+        if (digits.isEmpty()) return new ArrayList<>();
+        String[] map = {"", "", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"};
+        List<String> res = new ArrayList<>();
+        res.add("");
+        for (char d : digits.toCharArray()) {
+            List<String> next = new ArrayList<>();
+            for (String base : res) {
+                for (char c : map[d - '0'].toCharArray()) {
+                    next.add(base + c); // 笛卡尔积扩展
+                }
+            }
+            res = next;
+        }
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def letterCombinations(self, digits: str) -> List[str]:
+        if not digits:
+            return []
+        MAP = {
+            '2': 'abc', '3': 'def', '4': 'ghi', '5': 'jkl',
+            '6': 'mno', '7': 'pqrs', '8': 'tuv', '9': 'wxyz'
+        }
+        # 笛卡尔积
+        return [''.join(combo) for combo in itertools.product(*(MAP[d] for d in digits))]
+@@PROBLEM
+@@NO: 58
+@@ID: 39
+@@TITLE: 组合总和
+@@DIFF: 中等
+@@CATEGORY: 回溯
+@@TAGS: 数组;回溯
+@@URL: https://leetcode.cn/problems/combination-sum/
+@@DESC
+给你一个 无重复元素 的整数数组 candidates 和一个目标整数 target，找出 candidates 中可以使数字和为目标数 target 的所有不同组合，并以列表形式返回。你可以按任意顺序返回这些组合。
+
+candidates 中的 同一个 数字可以 无限制重复被选取。如果至少一个数字的被选数量不同，则两种组合是不同的。
+
+对于给定的输入，保证和为 target 的不同组合数少于 150 个。
+
+示例 1：
+输入：candidates = [2,3,6,7], target = 7
+输出：[[2,2,3],[7]]
+
+示例 2：
+输入：candidates = [2,3,5], target = 8
+输出：[[2,2,2,2],[2,3,3],[3,5]]
+
+示例 3：
+输入：candidates = [2], target = 1
+输出：[]
+
+提示：
+1 <= candidates.length <= 30
+2 <= candidates[i] <= 40
+candidates 的所有元素 互不相同
+1 <= target <= 40
+给定无重复的正整数数组 candidates 和目标 target，找出所有使数字和为 target 的组合。candidates 中的数可重复选取，数组无重复元素。
+示例：candidates = [2,3,6,7], target = 7 → 输出 [[2,2,3],[7]]。
+@@SOLUTION: 方法一：排序 + 回溯（start 可复用，推荐）
+@@IDEA
+排序后回溯：start 索引控制「可重复选当前数但不回头」，remain==0 收集，cand[i]>remain 剪枝（已排序可直接 break）。指数级时间。
+@@JAVA
+class Solution {
+    public List<List<Integer>> combinationSum(int[] candidates, int target) {
+        Arrays.sort(candidates);
+        List<List<Integer>> res = new ArrayList<>();
+        backtrack(candidates, target, 0, new ArrayDeque<>(), res);
+        return res;
+    }
+    private void backtrack(int[] cand, int remain, int start, Deque<Integer> path,
+                           List<List<Integer>> res) {
+        if (remain == 0) {
+            res.add(new ArrayList<>(path));
+            return;
+        }
+        for (int i = start; i < cand.length; i++) {
+            if (cand[i] > remain) break; // 剪枝（已排序）
+            path.addLast(cand[i]);
+            backtrack(cand, remain - cand[i], i, path, res); // i 不 +1：可复用
+            path.removeLast();
+        }
+    }
+}
+@@PY
+class Solution:
+    def combinationSum(self, candidates: List[int], target: int) -> List[List[int]]:
+        candidates.sort()
+        res = []
+
+        def backtrack(start, remain, path):
+            if remain == 0:
+                res.append(path[:])
+                return
+            for i in range(start, len(candidates)):
+                if candidates[i] > remain:
+                    break  # 剪枝（已排序）
+                path.append(candidates[i])
+                backtrack(i, remain - candidates[i], path)  # i 不 +1：可复用
+                path.pop()
+
+        backtrack(0, target, [])
+        return res
+@@SOLUTION: 方法二：完全背包式 DFS（选/不选）
+@@IDEA
+选/不选 DFS：对每个候选数做「选（下一层仍可再选它）」与「跳过」两种决策，不排序不剪枝。结构清晰，帮助理解搜索树形态。
+@@JAVA
+class Solution {
+    public List<List<Integer>> combinationSum(int[] candidates, int target) {
+        List<List<Integer>> res = new ArrayList<>();
+        dfs(candidates, 0, target, new ArrayDeque<>(), res);
+        return res;
+    }
+    private void dfs(int[] cand, int i, int remain, Deque<Integer> path,
+                     List<List<Integer>> res) {
+        if (remain == 0) {
+            res.add(new ArrayList<>(path));
+            return;
+        }
+        if (i >= cand.length || remain < 0) return;
+        path.addLast(cand[i]);                       // 选
+        dfs(cand, i, remain - cand[i], path, res);   // 可继续选
+        path.removeLast();                           // 不选
+        dfs(cand, i + 1, remain, path, res);
+    }
+}
+@@PY
+class Solution:
+    def combinationSum(self, candidates: List[int], target: int) -> List[List[int]]:
+        res = []
+
+        def dfs(i, remain, path):
+            if remain == 0:
+                res.append(path[:])
+                return
+            if i >= len(candidates) or remain < 0:
+                return
+            path.append(candidates[i])
+            dfs(i, remain - candidates[i], path)  # 选（可继续选）
+            path.pop()
+            dfs(i + 1, remain, path)              # 不选
+
+        dfs(0, target, [])
+        return res
+@@SOLUTION: 方法三：动态规划构造方案（DP 求组合 + 回溯还原）
+@@IDEA
+记忆化搜索：dfs(i, remain) 缓存「用 candidates[i..] 凑出 remain 的全部组合」，避免重复子问题重复展开。最坏仍指数，但去重后更快。
+@@JAVA
+class Solution {
+    private final Map<String, List<List<Integer>>> memo = new HashMap<>();
+
+    public List<List<Integer>> combinationSum(int[] candidates, int target) {
+        return dfs(candidates, 0, target);
+    }
+    // 记忆化：返回用 cand[i..] 凑出 remain 的所有组合
+    private List<List<Integer>> dfs(int[] cand, int i, int remain) {
+        if (remain == 0) {
+            List<List<Integer>> base = new ArrayList<>();
+            base.add(new ArrayList<>()); // 空组合
+            return base;
+        }
+        if (i >= cand.length || remain < 0) return new ArrayList<>();
+        String key = i + "," + remain;
+        if (memo.containsKey(key)) return memo.get(key);
+        List<List<Integer>> res = new ArrayList<>();
+        // 选 cand[i]（可重复）
+        for (List<Integer> sub : dfs(cand, i, remain - cand[i])) {
+            List<Integer> one = new ArrayList<>();
+            one.add(cand[i]);
+            one.addAll(sub);
+            res.add(one);
+        }
+        // 跳过 cand[i]
+        res.addAll(dfs(cand, i + 1, remain));
+        memo.put(key, res);
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def combinationSum(self, candidates: List[int], target: int) -> List[List[int]]:
+        from functools import lru_cache
+
+        @lru_cache(maxsize=None)
+        def dfs(i, remain):
+            """返回用 candidates[i..] 凑出 remain 的所有组合（元组套元组）"""
+            if remain == 0:
+                return ((),)
+            if i >= len(candidates) or remain < 0:
+                return ()
+            res = []
+            # 选 candidates[i]（可重复）
+            for sub in dfs(i, remain - candidates[i]):
+                res.append((candidates[i],) + sub)
+            # 跳过 candidates[i]
+            res.extend(dfs(i + 1, remain))
+            return tuple(res)
+
+        return [list(t) for t in dfs(0, target)]
+@@PROBLEM
+@@NO: 59
+@@ID: 22
+@@TITLE: 括号生成
+@@DIFF: 中等
+@@CATEGORY: 回溯
+@@TAGS: 字符串;动态规划;回溯
+@@URL: https://leetcode.cn/problems/generate-parentheses/
+@@DESC
+数字 n 代表生成括号的对数，请你设计一个函数，用于能够生成所有可能的并且 有效的 括号组合。
+
+示例 1：
+输入：n = 3
+输出：["((()))","(()())","(())()","()(())","()()()"]
+
+示例 2：
+输入：n = 1
+输出：["()"]
+
+提示：
+1 <= n <= 8
+给定 n 对括号，生成所有可能的且有效的括号组合。
+示例：n = 3 → 输出 ["((()))","(()())","(())()","()(())","()()()"]。
+@@SOLUTION: 方法一：回溯（open/close 计数，推荐）
+@@IDEA
+回溯计数：open<n 可加左括号，close<open 可加右括号，长度达 2n 收集。两个约束天然保证合法性，不需要事后校验。O(4^n/√n)（卡特兰数）。
+@@JAVA
+class Solution {
+    public List<String> generateParenthesis(int n) {
+        List<String> res = new ArrayList<>();
+        backtrack(n, 0, 0, new StringBuilder(), res);
+        return res;
+    }
+    private void backtrack(int n, int open, int close, StringBuilder path,
+                           List<String> res) {
+        if (path.length() == 2 * n) {
+            res.add(path.toString());
+            return;
+        }
+        if (open < n) {         // 还能放左括号
+            path.append('(');
+            backtrack(n, open + 1, close, path, res);
+            path.deleteCharAt(path.length() - 1);
+        }
+        if (close < open) {     // 右括号不能超过左括号
+            path.append(')');
+            backtrack(n, open, close + 1, path, res);
+            path.deleteCharAt(path.length() - 1);
+        }
+    }
+}
+@@PY
+class Solution:
+    def generateParenthesis(self, n: int) -> List[str]:
+        res = []
+
+        def backtrack(path, open_cnt, close_cnt):
+            if len(path) == 2 * n:
+                res.append(''.join(path))
+                return
+            if open_cnt < n:          # 还能放左括号
+                path.append('(')
+                backtrack(path, open_cnt + 1, close_cnt)
+                path.pop()
+            if close_cnt < open_cnt:  # 右括号不能超过左括号
+                path.append(')')
+                backtrack(path, open_cnt, close_cnt + 1)
+                path.pop()
+
+        backtrack([], 0, 0)
+        return res
+@@SOLUTION: 方法二：递归分解（暴力拼接 + 校验）
+@@IDEA
+递归分解：枚举第一对括号内放 i 对、外放 n-1-i 对，答案 = '(' + f(i) + ')' + f(n-1-i) 的笛卡尔拼接，直接对应卡特兰数递推式。记忆化避免重复。
+@@JAVA
+class Solution {
+    public List<String> generateParenthesis(int n) {
+        List<List<String>> memo = new ArrayList<>();
+        memo.add(new ArrayList<>(List.of(""))); // f(0)
+        for (int k = 1; k <= n; k++) {
+            List<String> cur = new ArrayList<>();
+            for (int i = 0; i < k; i++) {
+                for (String inner : memo.get(i)) {
+                    for (String tail : memo.get(k - 1 - i)) {
+                        cur.add("(" + inner + ")" + tail); // 分解拼接
+                    }
+                }
+            }
+            memo.add(cur);
+        }
+        return memo.get(n);
+    }
+}
+@@PY
+class Solution:
+    def generateParenthesis(self, n: int) -> List[str]:
+        from functools import lru_cache
+
+        @lru_cache(maxsize=None)
+        def gen(k) -> tuple:
+            if k == 0:
+                return ("",)
+            res = []
+            for i in range(k):  # 内 i 对，外 k-1-i 对
+                for inner in gen(i):
+                    for tail in gen(k - 1 - i):
+                        res.append(f"({inner}){tail}")  # 分解拼接
+            return tuple(res)
+
+        return list(gen(n))
+@@SOLUTION: 方法三：暴力生成全排列 + 栈校验
+@@IDEA
+暴力对照：生成所有 2n 长度的括号序列（限左右数量），用栈/计数校验有效性后去重收集。效率极低，仅用于理解「合法序列」的定义。
+@@JAVA
+class Solution {
+    public List<String> generateParenthesis(int n) {
+        Set<String> res = new HashSet<>();
+        permute(new char[2 * n], 0, n, n, res);
+        return new ArrayList<>(res);
+    }
+    private void permute(char[] cs, int pos, int open, int close, Set<String> res) {
+        if (pos == cs.length) {
+            if (valid(cs)) res.add(new String(cs)); // 校验有效性
+            return;
+        }
+        if (open > 0) { cs[pos] = '('; permute(cs, pos + 1, open - 1, close, res); }
+        if (close > 0) { cs[pos] = ')'; permute(cs, pos + 1, open, close - 1, res); }
+    }
+    private boolean valid(char[] cs) {
+        int bal = 0;
+        for (char c : cs) {
+            bal += (c == '(') ? 1 : -1;
+            if (bal < 0) return false; // 前缀不能为负
+        }
+        return bal == 0;
+    }
+}
+@@PY
+class Solution:
+    def generateParenthesis(self, n: int) -> List[str]:
+        res = set()
+
+        def permute(path, open_cnt, close_cnt):
+            if len(path) == 2 * n:
+                if valid(path):    # 校验有效性
+                    res.add(''.join(path))
+                return
+            if open_cnt > 0:
+                permute(path + '(', open_cnt - 1, close_cnt)
+            if close_cnt > 0:
+                permute(path + ')', open_cnt, close_cnt - 1)
+
+        def valid(s):
+            bal = 0
+            for c in s:
+                bal += 1 if c == '(' else -1
+                if bal < 0:   # 前缀不能为负
+                    return False
+            return bal == 0
+
+        permute('', n, n)
+        return list(res)
+@@PROBLEM
+@@NO: 60
+@@ID: 79
+@@TITLE: 单词搜索
+@@DIFF: 中等
+@@CATEGORY: 回溯
+@@TAGS: 数组;字符串;回溯;矩阵
+@@URL: https://leetcode.cn/problems/word-search/
+@@DESC
+给定一个 m x n 二维字符网格 board 和一个字符串单词 word。如果 word 存在于网格中，返回 true；否则，返回 false。
+
+单词必须按照字母顺序，通过相邻的单元格内的字母构成，其中「相邻」单元格是那些水平相邻或垂直相邻的单元格。同一个单元格内的字母不允许被重复使用。
+
+示例 1：
+输入：board = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], word = "ABCCED"
+输出：true
+
+示例 2：
+输入：board = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], word = "SEE"
+输出：true
+
+示例 3：
+输入：board = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], word = "ABCB"
+输出：false
+
+提示：
+m == board.length, n = board[i].length
+1 <= m, n <= 6
+1 <= word.length <= 15
+board 和 word 仅由大小写英文字母组成
+给定 m x n 字符网格 board 和单词 word，判断 word 是否存在于网格中（路径只能水平/垂直相邻，同一格子不能重复使用）。
+示例：board = [["ABCE"],["SFCS"],["ADEE"]], word = "ABCCED" → true。
+@@SOLUTION: 方法一：DFS 原地标记（推荐）
+@@IDEA
+DFS + 原地标记：从每个匹配首字母的格子出发 DFS；进入格子改为 '#' 防止回头，返回前恢复字符（回溯）。O(mn·3^L)。
+@@JAVA
+class Solution {
+    public boolean exist(char[][] board, String word) {
+        int m = board.length, n = board[0].length;
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (dfs(board, word, i, j, 0)) return true;
+            }
+        }
+        return false;
+    }
+    private boolean dfs(char[][] board, String word, int i, int j, int k) {
+        if (i < 0 || i >= board.length || j < 0 || j >= board[0].length
+                || board[i][j] != word.charAt(k)) return false;
+        if (k == word.length() - 1) return true; // 全部匹配
+        board[i][j] = '#'; // 原地标记
+        boolean found = dfs(board, word, i + 1, j, k + 1)
+                || dfs(board, word, i - 1, j, k + 1)
+                || dfs(board, word, i, j + 1, k + 1)
+                || dfs(board, word, i, j - 1, k + 1);
+        board[i][j] = word.charAt(k); // 回溯恢复
+        return found;
+    }
+}
+@@PY
+class Solution:
+    def exist(self, board: List[List[str]], word: str) -> bool:
+        m, n = len(board), len(board[0])
+
+        def dfs(i, j, k):
+            if not (0 <= i < m and 0 <= j < n) or board[i][j] != word[k]:
+                return False
+            if k == len(word) - 1:  # 全部匹配
+                return True
+            board[i][j] = '#'       # 原地标记
+            found = (dfs(i + 1, j, k + 1) or dfs(i - 1, j, k + 1)
+                     or dfs(i, j + 1, k + 1) or dfs(i, j - 1, k + 1))
+            board[i][j] = word[k]   # 回溯恢复
+            return found
+
+        return any(dfs(i, j, 0) for i in range(m) for j in range(n))
+@@SOLUTION: 方法二：DFS + visited 矩阵
+@@IDEA
+DFS + visited 矩阵：用独立布尔矩阵标记已访问格子，不修改原网格；适合「调用方不允许改输入」的场景。O(mn·3^L)/O(mn)。
+@@JAVA
+class Solution {
+    private boolean[][] visited;
+
+    public boolean exist(char[][] board, String word) {
+        int m = board.length, n = board[0].length;
+        visited = new boolean[m][n];
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (dfs(board, word, i, j, 0)) return true;
+            }
+        }
+        return false;
+    }
+    private boolean dfs(char[][] board, String word, int i, int j, int k) {
+        if (i < 0 || i >= board.length || j < 0 || j >= board[0].length
+                || visited[i][j] || board[i][j] != word.charAt(k)) return false;
+        if (k == word.length() - 1) return true;
+        visited[i][j] = true; // 标记
+        boolean found = dfs(board, word, i + 1, j, k + 1)
+                || dfs(board, word, i - 1, j, k + 1)
+                || dfs(board, word, i, j + 1, k + 1)
+                || dfs(board, word, i, j - 1, k + 1);
+        visited[i][j] = false; // 撤销
+        return found;
+    }
+}
+@@PY
+class Solution:
+    def exist(self, board: List[List[str]], word: str) -> bool:
+        m, n = len(board), len(board[0])
+        visited = [[False] * n for _ in range(m)]
+
+        def dfs(i, j, k):
+            if not (0 <= i < m and 0 <= j < n) or visited[i][j] \
+                    or board[i][j] != word[k]:
+                return False
+            if k == len(word) - 1:
+                return True
+            visited[i][j] = True  # 标记
+            found = (dfs(i + 1, j, k + 1) or dfs(i - 1, j, k + 1)
+                     or dfs(i, j + 1, k + 1) or dfs(i, j - 1, k + 1))
+            visited[i][j] = False  # 撤销
+            return found
+
+        return any(dfs(i, j, 0) for i in range(m) for j in range(n))
+@@SOLUTION: 方法三：优化版 DFS（字符统计剪枝 + 首尾选择）
+@@IDEA
+剪枝优化：先统计词中每个字母在网格的出现次数，不足直接 false；首字母出现次数多于尾字母时反转单词搜索（起点更少）。均摊大幅加速。
+@@JAVA
+class Solution {
+    public boolean exist(char[][] board, String word) {
+        int m = board.length, n = board[0].length;
+        int[] cnt = new int[128];
+        for (char[] row : board) {
+            for (char c : row) cnt[c]++;      // 网格字符计数
+        }
+        int[] need = new int[128];
+        for (char c : word.toCharArray()) need[c]++;
+        for (int c = 0; c < 128; c++) {
+            if (need[c] > cnt[c]) return false; // 字母不够，剪枝
+        }
+        // 首字母比尾字母出现得多 → 反转词搜索（起点更少）
+        if (cnt[word.charAt(0)] > cnt[word.charAt(word.length() - 1)]) {
+            word = new StringBuilder(word).reverse().toString();
+        }
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (dfs(board, word, i, j, 0)) return true;
+            }
+        }
+        return false;
+    }
+    private boolean dfs(char[][] board, String word, int i, int j, int k) {
+        if (board[i][j] != word.charAt(k)) return false;
+        if (k == word.length() - 1) return true;
+        board[i][j] = '#';
+        boolean found = (i + 1 < board.length && dfs(board, word, i + 1, j, k + 1))
+                || (i > 0 && dfs(board, word, i - 1, j, k + 1))
+                || (j + 1 < board[0].length && dfs(board, word, i, j + 1, k + 1))
+                || (j > 0 && dfs(board, word, i, j - 1, k + 1));
+        board[i][j] = word.charAt(k);
+        return found;
+    }
+}
+@@PY
+class Solution:
+    def exist(self, board: List[List[str]], word: str) -> bool:
+        from collections import Counter
+        cnt = Counter(c for row in board for c in row)   # 网格字符计数
+        need = Counter(word)
+        if any(need[c] > cnt[c] for c in need):
+            return False  # 字母不够，剪枝
+        # 首字母比尾字母出现得多 → 反转词搜索
+        if cnt[word[0]] > cnt[word[-1]]:
+            word = word[::-1]
+        m, n = len(board), len(board[0])
+
+        def dfs(i, j, k):
+            if board[i][j] != word[k]:
+                return False
+            if k == len(word) - 1:
+                return True
+            board[i][j] = '#'
+            found = any(dfs(x, y, k + 1)
+                        for x, y in ((i + 1, j), (i - 1, j), (i, j + 1), (i, j - 1))
+                        if 0 <= x < m and 0 <= y < n)
+            board[i][j] = word[k]
+            return found
+
+        return any(dfs(i, j, 0) for i in range(m) for j in range(n))
+@@PROBLEM
+@@NO: 61
+@@ID: 131
+@@TITLE: 分割回文串
+@@DIFF: 中等
+@@CATEGORY: 回溯
+@@TAGS: 字符串;动态规划;回溯
+@@URL: https://leetcode.cn/problems/palindrome-partitioning/
+@@DESC
+给你一个字符串 s，请你将 s 分割成一些子串，使每个子串都是回文串。返回 s 所有可能的分割方案。
+
+示例 1：
+输入：s = "aab"
+输出：[["a","a","b"],["aa","b"]]
+
+示例 2：
+输入：s = "a"
+输出：[["a"]]
+
+提示：
+1 <= s.length <= 16
+s 仅由小写英文字母组成
+给定字符串 s，请将 s 分割成若干子串，使每个子串都是回文串，返回 s 所有可能的分割方案。
+示例：s = "aab" → 输出 [["a","a","b"],["aa","b"]]。
+@@SOLUTION: 方法一：DP 预处理回文 + 回溯（推荐）
+@@IDEA
+DP 预处理 + 回溯：先用区间 DP 求出 pal[i][j]（s[i..j] 是否回文，判断 O(1)），回溯枚举切分点只切回文段。O(n·2^n)。
+@@JAVA
+class Solution {
+    public List<List<String>> partition(String s) {
+        int n = s.length();
+        boolean[][] pal = new boolean[n][n]; // pal[i][j]: s[i..j] 回文?
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i <= j; i++) {
+                if (s.charAt(i) == s.charAt(j) && (j - i < 2 || pal[i + 1][j - 1])) {
+                    pal[i][j] = true; // 区间 DP
+                }
+            }
+        }
+        List<List<String>> res = new ArrayList<>();
+        backtrack(s, 0, pal, new ArrayDeque<>(), res);
+        return res;
+    }
+    private void backtrack(String s, int start, boolean[][] pal, Deque<String> path,
+                           List<List<String>> res) {
+        if (start == s.length()) {
+            res.add(new ArrayList<>(path));
+            return;
+        }
+        for (int end = start; end < s.length(); end++) {
+            if (!pal[start][end]) continue; // 只切回文段
+            path.addLast(s.substring(start, end + 1));
+            backtrack(s, end + 1, pal, path, res);
+            path.removeLast();
+        }
+    }
+}
+@@PY
+class Solution:
+    def partition(self, s: str) -> List[List[str]]:
+        n = len(s)
+        pal = [[False] * n for _ in range(n)]
+        for j in range(n):
+            for i in range(j + 1):
+                if s[i] == s[j] and (j - i < 2 or pal[i + 1][j - 1]):
+                    pal[i][j] = True  # 区间 DP
+        res = []
+
+        def backtrack(start, path):
+            if start == n:
+                res.append(path[:])
+                return
+            for end in range(start, n):
+                if not pal[start][end]:
+                    continue  # 只切回文段
+                path.append(s[start:end + 1])
+                backtrack(end + 1, path)
+                path.pop()
+
+        backtrack(0, [])
+        return res
+@@SOLUTION: 方法二：回溯 + 即时双指针判回文
+@@IDEA
+回溯 + 即时判断：不预处理，枚举切分点时用双指针（Python 直接 s == s[::-1]）现判断是否回文。O(n·2^n)，代码最短。
+@@JAVA
+class Solution {
+    public List<List<String>> partition(String s) {
+        List<List<String>> res = new ArrayList<>();
+        backtrack(s, 0, new ArrayDeque<>(), res);
+        return res;
+    }
+    private void backtrack(String s, int start, Deque<String> path, List<List<String>> res) {
+        if (start == s.length()) {
+            res.add(new ArrayList<>(path));
+            return;
+        }
+        for (int end = start; end < s.length(); end++) {
+            if (!isPal(s, start, end)) continue; // 即时判断
+            path.addLast(s.substring(start, end + 1));
+            backtrack(s, end + 1, path, res);
+            path.removeLast();
+        }
+    }
+    private boolean isPal(String s, int l, int r) { // 双指针
+        while (l < r) {
+            if (s.charAt(l++) != s.charAt(r--)) return false;
+        }
+        return true;
+    }
+}
+@@PY
+class Solution:
+    def partition(self, s: str) -> List[List[str]]:
+        res = []
+
+        def is_pal(sub):  # 双指针
+            return sub == sub[::-1]
+
+        def backtrack(start, path):
+            if start == len(s):
+                res.append(path[:])
+                return
+            for end in range(start, len(s)):
+                seg = s[start:end + 1]
+                if not is_pal(seg):
+                    continue  # 即时判断
+                path.append(seg)
+                backtrack(end + 1, path)
+                path.pop()
+
+        backtrack(0, [])
+        return res
+@@SOLUTION: 方法三：记忆化搜索（返回后缀的全部分割方案）
+@@IDEA
+记忆化搜索：dfs(i) 返回 s[i..] 的所有回文分割方案并缓存；枚举回文前缀 s[i..j] 与 dfs(j+1) 组合。自顶向下的方案 DP。
+@@JAVA
+class Solution {
+    private String s;
+    private final List<List<List<String>>> memo = new ArrayList<>();
+
+    public List<List<String>> partition(String s) {
+        this.s = s;
+        for (int i = 0; i <= s.length(); i++) memo.add(null);
+        return dfs(0);
+    }
+    private List<List<String>> dfs(int i) { // s[i..] 的全部分割
+        if (i == s.length()) {
+            List<List<String>> base = new ArrayList<>();
+            base.add(new ArrayList<>());
+            return base;
+        }
+        if (memo.get(i) != null) return memo.get(i);
+        List<List<String>> res = new ArrayList<>();
+        for (int j = i; j < s.length(); j++) {
+            if (!isPal(i, j)) continue;
+            for (List<String> tail : dfs(j + 1)) { // 拼接后缀方案
+                List<String> one = new ArrayList<>();
+                one.add(s.substring(i, j + 1));
+                one.addAll(tail);
+                res.add(one);
+            }
+        }
+        memo.set(i, res);
+        return res;
+    }
+    private boolean isPal(int l, int r) {
+        while (l < r) {
+            if (s.charAt(l++) != s.charAt(r--)) return false;
+        }
+        return true;
+    }
+}
+@@PY
+class Solution:
+    def partition(self, s: str) -> List[List[str]]:
+        from functools import lru_cache
+
+        @lru_cache(maxsize=None)
+        def dfs(i):
+            """s[i..] 的全部回文分割（元组套元组）"""
+            if i == len(s):
+                return ((),)
+            res = []
+            for j in range(i, len(s)):
+                seg = s[i:j + 1]
+                if seg == seg[::-1]:  # 回文段
+                    for tail in dfs(j + 1):  # 拼接后缀方案
+                        res.append((seg,) + tail)
+            return tuple(res)
+
+        return [list(t) for t in dfs(0)]
+@@PROBLEM
+@@NO: 62
+@@ID: 51
+@@TITLE: N 皇后
+@@DIFF: 困难
+@@CATEGORY: 回溯
+@@TAGS: 数组;回溯
+@@URL: https://leetcode.cn/problems/n-queens/
+@@DESC
+按照国际象棋的规则，皇后可以攻击与之处在同一行或同一列或同一斜线上的棋子。
+
+n 皇后问题 研究的是如何将 n 个皇后放置在 n×n 的棋盘上，并且使皇后彼此之间不能相互攻击。
+
+给你一个整数 n，返回所有不同的 n 皇后问题的解决方案。每一个解包含一个不同的 n 皇后问题的棋子放置方案，该方案中 'Q' 和 '.' 分别代表了皇后和空位。
+
+示例 1：
+输入：n = 4
+输出：[[".Q..","...Q","Q...","..Q."],["..Q.","Q...","...Q",".Q.."]]
+解释：如上图所示，4 皇后问题存在两个不同的解法。
+
+示例 2：
+输入：n = 1
+输出：[["Q"]]
+
+提示：
+1 <= n <= 9
+在 n x n 棋盘上放置 n 个皇后使其互不攻击（不同行、不同列、不同对角线），返回所有解法（每个解为一组棋盘字符串）。
+示例：n = 4 → 输出 [".Q..","...Q","Q...","..Q."] 与 ["..Q.","Q...","...Q",".Q.."]。
+@@SOLUTION: 方法一：逐行回溯 + 布尔标记（推荐）
+@@IDEA
+逐行回溯 + 三组布尔标记：逐行放置天然不同行；col[c]、主对角线 row+c、副对角线 row-c+n 三组标记防冲突，回溯尝试每列。O(n!) 量级。
+@@JAVA
+class Solution {
+    public List<List<String>> solveNQueens(int n) {
+        List<List<String>> res = new ArrayList<>();
+        char[][] board = new char[n][n];
+        for (char[] row : board) java.util.Arrays.fill(row, '.');
+        backtrack(board, 0, new boolean[n], new boolean[2 * n], new boolean[2 * n], res);
+        return res;
+    }
+    private void backtrack(char[][] board, int row, boolean[] col,
+                           boolean[] diag1, boolean[] diag2, List<List<String>> res) {
+        int n = board.length;
+        if (row == n) {
+            List<String> solution = new ArrayList<>();
+            for (char[] r : board) solution.add(new String(r));
+            res.add(solution);
+            return;
+        }
+        for (int c = 0; c < n; c++) {
+            if (col[c] || diag1[row + c] || diag2[row - c + n]) continue; // 冲突
+            board[row][c] = 'Q';
+            col[c] = diag1[row + c] = diag2[row - c + n] = true;
+            backtrack(board, row + 1, col, diag1, diag2, res);
+            board[row][c] = '.';
+            col[c] = diag1[row + c] = diag2[row - c + n] = false;
+        }
+    }
+}
+@@PY
+class Solution:
+    def solveNQueens(self, n: int) -> List[List[str]]:
+        res = []
+        board = [['.'] * n for _ in range(n)]
+        cols = [False] * n
+        diag1 = [False] * (2 * n)  # row + c
+        diag2 = [False] * (2 * n)  # row - c + n
+
+        def backtrack(row):
+            if row == n:
+                res.append([''.join(r) for r in board])
+                return
+            for c in range(n):
+                if cols[c] or diag1[row + c] or diag2[row - c + n]:
+                    continue  # 冲突
+                board[row][c] = 'Q'
+                cols[c] = diag1[row + c] = diag2[row - c + n] = True
+                backtrack(row + 1)
+                board[row][c] = '.'
+                cols[c] = diag1[row + c] = diag2[row - c + n] = False
+
+        backtrack(0)
+        return res
+@@SOLUTION: 方法二：集合位运算标记
+@@IDEA
+位运算版：用三个整数按位表示列/对角线占用，冲突检查与撤销都是位运算（cols>>c & 1 等），常数效率最高；传值天然完成撤销。
+@@JAVA
+class Solution {
+    public List<List<String>> solveNQueens(int n) {
+        List<List<String>> res = new ArrayList<>();
+        int[] queens = new int[n]; // queens[row] = col
+        backtrack(res, queens, 0, 0, 0, 0, n);
+        return res;
+    }
+    private void backtrack(List<List<String>> res, int[] queens, int row,
+                           int cols, int d1, int d2, int n) {
+        if (row == n) {
+            List<String> solution = new ArrayList<>();
+            for (int r = 0; r < n; r++) {
+                StringBuilder sb = new StringBuilder();
+                for (int c = 0; c < n; c++) sb.append(queens[r] == c ? 'Q' : '.');
+                solution.add(sb.toString());
+            }
+            res.add(solution);
+            return;
+        }
+        for (int c = 0; c < n; c++) {
+            if (((cols >> c) & 1) == 1) continue;                      // 列冲突
+            if (((d1 >> (row + c)) & 1) == 1) continue;                // 主对角线
+            if (((d2 >> (row - c + n)) & 1) == 1) continue;            // 副对角线
+            queens[row] = c; // 做选择
+            backtrack(res, queens, row + 1,
+                    cols | (1 << c), d1 | (1 << (row + c)), d2 | (1 << (row - c + n)), n);
+            // 整数传值天然完成撤销
+        }
+    }
+}
+@@PY
+class Solution:
+    def solveNQueens(self, n: int) -> List[List[str]]:
+        res = []
+
+        def backtrack(row, cols, d1, d2, queens):
+            if row == n:
+                board = []
+                for r in range(n):
+                    board.append('.' * queens[r] + 'Q' + '.' * (n - queens[r] - 1))
+                res.append(board)
+                return
+            for c in range(n):
+                if (cols >> c) & 1:              # 列冲突
+                    continue
+                if (d1 >> (row + c)) & 1:        # 主对角线
+                    continue
+                if (d2 >> (row - c + n)) & 1:    # 副对角线
+                    continue
+                backtrack(row + 1, cols | (1 << c),
+                          d1 | (1 << (row + c)), d2 | (1 << (row - c + n)),
+                          queens + [c])  # 传值天然撤销
+
+        backtrack(0, 0, 0, 0, [])
+        return res
+@@SOLUTION: 方法三：逐行回溯 + 每行线性检查（无标记数组）
+@@IDEA
+朴素对照：不维护标记数组，放置前线性扫描之前所有行的皇后位置判断同列/对角线冲突。每步 O(n)，代码最短，帮助理解冲突定义。
+@@JAVA
+class Solution {
+    public List<List<String>> solveNQueens(int n) {
+        List<List<String>> res = new ArrayList<>();
+        int[] queens = new int[n]; // queens[row] = col
+        backtrack(res, queens, 0, n);
+        return res;
+    }
+    private void backtrack(List<List<String>> res, int[] queens, int row, int n) {
+        if (row == n) {
+            List<String> solution = new ArrayList<>();
+            for (int r = 0; r < n; r++) {
+                StringBuilder sb = new StringBuilder();
+                for (int c = 0; c < n; c++) sb.append(queens[r] == c ? 'Q' : '.');
+                solution.add(sb.toString());
+            }
+            res.add(solution);
+            return;
+        }
+        for (int c = 0; c < n; c++) {
+            if (conflict(queens, row, c)) continue; // 与之前行冲突
+            queens[row] = c;
+            backtrack(res, queens, row + 1, n);
+        }
+    }
+    private boolean conflict(int[] queens, int row, int col) {
+        for (int prev = 0; prev < row; prev++) {
+            if (queens[prev] == col) return true;              // 同列
+            if (Math.abs(queens[prev] - col) == row - prev) return true; // 对角线
+        }
+        return false;
+    }
+}
+@@PY
+class Solution:
+    def solveNQueens(self, n: int) -> List[List[str]]:
+        res = []
+
+        def conflict(queens, row, col):  # 与之前行冲突
+            for prev in range(row):
+                if queens[prev] == col:                        # 同列
+                    return True
+                if abs(queens[prev] - col) == row - prev:      # 对角线
+                    return True
+            return False
+
+        def backtrack(row, queens):
+            if row == n:
+                board = ['.' * q + 'Q' + '.' * (n - q - 1) for q in queens]
+                res.append(board)
+                return
+            for c in range(n):
+                if conflict(queens, row, c):
+                    continue
+                backtrack(row + 1, queens + [c])
+
+        backtrack(0, [])
+        return res

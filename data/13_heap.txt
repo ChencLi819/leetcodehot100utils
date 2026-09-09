@@ -1,0 +1,386 @@
+@@PROBLEM
+@@NO: 74
+@@ID: 215
+@@TITLE: 数组中的第K个最大元素
+@@DIFF: 中等
+@@CATEGORY: 堆
+@@TAGS: 数组;分治;快速选择;排序;堆(优先队列)
+@@URL: https://leetcode.cn/problems/kth-largest-element-in-an-array/
+@@DESC
+给定整数数组 nums 和整数 k，请返回数组中第 k 个最大的元素。
+
+请注意，你需要找的是数组排序后的第 k 个最大的元素，而不是第 k 个不同的元素。
+
+你必须设计并实现时间复杂度为 O(n) 的算法解决此问题。
+
+示例 1：
+输入：nums = [3,2,1,5,6,4], k = 2
+输出：5
+
+示例 2：
+输入：nums = [3,2,3,1,2,4,5,5,6], k = 4
+输出：4
+
+提示：
+1 <= k <= nums.length <= 10^5
+-10^4 <= nums[i] <= 10^4
+给定整数数组 nums 和整数 k，请返回数组中第 k 个最大的元素（要求整体顺序第 k 大，而非去重后的第 k 个）。
+示例：nums = [3,2,1,5,6,4], k = 2 → 输出 5。
+@@SOLUTION: 方法一：大小为 k 的小根堆（推荐）
+@@IDEA
+容量 k 的小根堆：遍历元素入堆，超 k 弹最小；堆里始终是当前最大的 k 个，堆顶即第 k 大。O(n log k)/O(k)，适合数据流。
+@@JAVA
+class Solution {
+    public int findKthLargest(int[] nums, int k) {
+        PriorityQueue<Integer> heap = new PriorityQueue<>(); // 小根堆
+        for (int x : nums) {
+            heap.offer(x);
+            if (heap.size() > k) heap.poll(); // 弹掉目前最小的
+        }
+        return heap.peek();
+    }
+}
+@@PY
+class Solution:
+    def findKthLargest(self, nums: List[int], k: int) -> int:
+        heap = []  # 小根堆
+        for x in nums:
+            heapq.heappush(heap, x)
+            if len(heap) > k:
+                heapq.heappop(heap)  # 弹掉目前最小的
+        return heap[0]
+@@SOLUTION: 方法二：快速选择（partition，平均 O(n)）
+@@IDEA
+快速选择：随机 pivot 三路划分（< = >），目标位置落在哪段就只递归那段，像二分一样收缩。平均 O(n)，最坏 O(n²)（随机化规避）。
+@@JAVA
+class Solution {
+    private final java.util.Random rand = new java.util.Random();
+
+    public int findKthLargest(int[] nums, int k) {
+        int target = nums.length - k;      // 升序后第 target 位
+        int l = 0, r = nums.length - 1;
+        while (true) {
+            int[] bounds = partition3(nums, l, r, nums[l + rand.nextInt(r - l + 1)]);
+            int lt = bounds[0], gt = bounds[1]; // [lt, gt] 等于 pivot
+            if (target < lt) r = lt - 1;        // 只走左侧
+            else if (target > gt) l = gt + 1;   // 只走右侧
+            else return nums[target];
+        }
+    }
+    // 三路划分：返回 [小于区末, 大于区首]
+    private int[] partition3(int[] a, int l, int r, int pivot) {
+        int lt = l, i = l, gt = r;
+        while (i <= gt) {
+            if (a[i] < pivot) swap(a, lt++, i++);
+            else if (a[i] > pivot) swap(a, i, gt--);
+            else i++;
+        }
+        return new int[]{lt, gt};
+    }
+    private void swap(int[] a, int i, int j) {
+        int t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+}
+@@PY
+class Solution:
+    def findKthLargest(self, nums: List[int], k: int) -> int:
+        target = len(nums) - k  # 升序后第 target 位
+        l, r = 0, len(nums) - 1
+        while True:
+            pivot = nums[random.randint(l, r)]
+            lt, i, gt = l, l, r
+            while i <= gt:  # 三路划分
+                if nums[i] < pivot:
+                    nums[lt], nums[i] = nums[i], nums[lt]
+                    lt += 1
+                    i += 1
+                elif nums[i] > pivot:
+                    nums[i], nums[gt] = nums[gt], nums[i]
+                    gt -= 1
+                else:
+                    i += 1
+            if target < lt:   # 只走左侧
+                r = lt - 1
+            elif target > gt: # 只走右侧
+                l = gt + 1
+            else:
+                return nums[target]
+@@SOLUTION: 方法三：全部排序后取位
+@@IDEA
+排序对照：整体排序后取第 n-k 位。O(n log n)，一行解决，工程首选、面试垫底答案。
+@@JAVA
+class Solution {
+    public int findKthLargest(int[] nums, int k) {
+        Arrays.sort(nums);                       // 升序排序
+        return nums[nums.length - k];            // 倒数第 k 个
+    }
+}
+@@PY
+class Solution:
+    def findKthLargest(self, nums: List[int], k: int) -> int:
+        nums.sort()          # 升序排序
+        return nums[-k]      # 倒数第 k 个
+@@PROBLEM
+@@NO: 75
+@@ID: 347
+@@TITLE: 前 K 个高频元素
+@@DIFF: 中等
+@@CATEGORY: 堆
+@@TAGS: 数组;哈希表;分治;桶排序;计数;堆(优先队列);排序
+@@URL: https://leetcode.cn/problems/top-k-frequent-elements/
+@@DESC
+给定一个整数数组 nums 和一个整数 k，请返回其中出现频率前 k 高的元素。你可以按任意顺序返回答案。
+
+示例 1：
+输入：nums = [1,1,1,2,2,3], k = 2
+输出：[1,2]
+
+示例 2：
+输入：nums = [1], k = 1
+输出：[1]
+
+提示：
+1 <= nums.length <= 10^5
+k 的取值范围是 [1, 数组中不相同的元素的个数]
+题目数据保证答案唯一
+
+进阶：你所设计算法的时间复杂度必须优于 O(n log n)，其中 n 是数组大小。
+给定整数数组 nums 和整数 k，返回其中出现频率前 k 高的元素。要求时间复杂度优于 O(n log n)。
+示例：nums = [1,1,1,2,2,3], k = 2 → 输出 [1,2]。
+@@SOLUTION: 方法一：计数 + 小根堆（推荐）
+@@IDEA
+计数 + 小根堆：Counter 统计频次，容量 k 的堆按频次比较，超 k 弹最小频次；最终堆中即前 k 高频。O(n log k)，满足优于 O(n log n)。
+@@JAVA
+class Solution {
+    public int[] topKFrequent(int[] nums, int k) {
+        Map<Integer, Integer> freq = new HashMap<>();
+        for (int x : nums) freq.merge(x, 1, Integer::sum);
+        PriorityQueue<int[]> heap = new PriorityQueue<>((a, b) -> a[1] - b[1]); // {值,频次}
+        for (Map.Entry<Integer, Integer> e : freq.entrySet()) {
+            heap.offer(new int[]{e.getKey(), e.getValue()});
+            if (heap.size() > k) heap.poll(); // 弹出频次最小
+        }
+        int[] res = new int[k];
+        for (int i = 0; i < k; i++) res[i] = heap.poll()[0];
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def topKFrequent(self, nums: List[int], k: int) -> List[int]:
+        freq = Counter(nums)
+        heap = []  # (频次, 值) 小根堆
+        for val, cnt in freq.items():
+            heapq.heappush(heap, (cnt, val))
+            if len(heap) > k:
+                heapq.heappop(heap)  # 弹出频次最小
+        return [v for _, v in heap]
+@@SOLUTION: 方法二：桶排序（严格 O(n)）
+@@IDEA
+桶排序（严格 O(n)）：按出现次数建桶（下标=频次），从高频桶向低频收集直到凑够 k。频次上限是 n，桶数有限。
+@@JAVA
+class Solution {
+    public int[] topKFrequent(int[] nums, int k) {
+        Map<Integer, Integer> freq = new HashMap<>();
+        for (int x : nums) freq.merge(x, 1, Integer::sum);
+        List<List<Integer>> buckets = new ArrayList<>();
+        for (int i = 0; i <= nums.length; i++) buckets.add(new ArrayList<>());
+        for (Map.Entry<Integer, Integer> e : freq.entrySet()) {
+            buckets.get(e.getValue()).add(e.getKey()); // 频次作桶下标
+        }
+        int[] res = new int[k];
+        int idx = 0;
+        for (int c = nums.length; c >= 1 && idx < k; c--) { // 高频到低频
+            for (int v : buckets.get(c)) {
+                res[idx++] = v;
+                if (idx == k) break;
+            }
+        }
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def topKFrequent(self, nums: List[int], k: int) -> List[int]:
+        freq = Counter(nums)
+        buckets = [[] for _ in range(len(nums) + 1)]
+        for val, cnt in freq.items():
+            buckets[cnt].append(val)  # 频次作桶下标
+        res = []
+        for c in range(len(buckets) - 1, 0, -1):  # 高频到低频
+            for val in buckets[c]:
+                res.append(val)
+                if len(res) == k:
+                    return res
+        return res
+@@SOLUTION: 方法三：按频次全排序（O(n log n)，作对照）
+@@IDEA
+全排序对照：按频次降序排序取前 k。O(n log n)，不满足题目复杂度要求，但 Counter.most_common(k) 一行搞定，工程常用。
+@@JAVA
+class Solution {
+    public int[] topKFrequent(int[] nums, int k) {
+        Map<Integer, Integer> freq = new HashMap<>();
+        for (int x : nums) freq.merge(x, 1, Integer::sum);
+        List<Map.Entry<Integer, Integer>> entries = new ArrayList<>(freq.entrySet());
+        entries.sort((a, b) -> b.getValue() - a.getValue()); // 按频次降序
+        int[] res = new int[k];
+        for (int i = 0; i < k; i++) res[i] = entries.get(i).getKey();
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def topKFrequent(self, nums: List[int], k: int) -> List[int]:
+        freq = Counter(nums)
+        return [v for v, _ in freq.most_common(k)]  # 按频次降序取前 k
+@@PROBLEM
+@@NO: 76
+@@ID: 295
+@@TITLE: 数据流的中位数
+@@DIFF: 困难
+@@CATEGORY: 堆
+@@TAGS: 设计;双指针;数据流;排序;堆(优先队列)
+@@URL: https://leetcode.cn/problems/find-median-from-data-stream/
+@@DESC
+中位数是有序整数列表中的中间值。如果列表的长度是偶数，则中位数是两个中间值的平均值。
+
+例如 [2,3,4] 的中位数是 3；[2,3] 的中位数是 (2 + 3) / 2 = 2.5。
+
+设计一个支持以下两种操作的数据结构：
+void addNum(int num) 从数据流中添加一个整数到数据结构中。
+double findMedian() 返回目前所有元素的中位数。
+
+示例 1：
+输入：["MedianFinder","addNum","addNum","findMedian","addNum","findMedian"]
+[[],[1],[2],[],[3],[]]
+输出：[null,null,null,1.50000,null,2.00000]
+
+示例 2：
+输入：["MedianFinder","addNum","findMedian","addNum","findMedian"]
+[[],[2],[],[3],[]]
+输出：[null,null,2.00000,null,2.50000]
+
+提示：
+-10^5 <= num <= 10^5
+在调用 findMedian 之前，数据结构中至少有一个元素
+最多 5 * 10^4 次调用 addNum 和 findMedian
+
+进阶：如果数据流中 99% 的整数都在 0 到 100 范围内，你将如何优化你的算法？
+实现 MedianFinder 类：addNum(num) 向数据结构添加整数；findMedian() 返回目前所有元素的中位数（均为 O(log n)）。
+示例：addNum(1)→addNum(2)→findMedian()=1.5→addNum(3)→findMedian()=2。
+@@SOLUTION: 方法一：对顶双堆（推荐）
+@@IDEA
+对顶双堆：大根堆存较小一半（可多 1 个），小根堆存较大一半；新数先进大根堆再经小根堆「过滤」平衡。中位数由两堆顶决定。addNum O(log n)，findMedian O(1)。
+@@JAVA
+class MedianFinder {
+    private final PriorityQueue<Integer> small = // 较小一半（大根堆）
+            new PriorityQueue<>(Collections.reverseOrder());
+    private final PriorityQueue<Integer> large = new PriorityQueue<>(); // 较大一半
+
+    public void addNum(int num) {
+        small.offer(num);
+        large.offer(small.poll());      // 经另一半过滤保证有序性
+        if (large.size() > small.size()) {
+            small.offer(large.poll());  // small 允许多 1 个
+        }
+    }
+    public double findMedian() {
+        return small.size() > large.size()
+                ? small.peek()
+                : (small.peek() + large.peek()) / 2.0;
+    }
+}
+@@PY
+class MedianFinder:
+    def __init__(self):
+        self.small = []  # 较小一半（负数模拟大根堆）
+        self.large = []  # 较大一半（小根堆）
+
+    def addNum(self, num: int) -> None:
+        heapq.heappush(self.small, -num)
+        heapq.heappush(self.large, -heapq.heappop(self.small))  # 过滤
+        if len(self.large) > len(self.small):
+            heapq.heappush(self.small, -heapq.heappop(self.large))  # small 允许多 1 个
+
+    def findMedian(self) -> float:
+        if len(self.small) > len(self.large):
+            return float(-self.small[0])
+        return (-self.small[0] + self.large[0]) / 2
+@@SOLUTION: 方法二：有序数组 + 二分插入
+@@IDEA
+有序数组 + 二分插入：维护始终有序的列表，addNum 用二分找插入点（挪动 O(n)），findMedian 直接取中间。查询频繁、写入少的场景反而占优。
+@@JAVA
+class MedianFinder {
+    private final List<Integer> sorted = new ArrayList<>();
+
+    public void addNum(int num) {
+        int idx = lowerBound(num); // 二分找插入点
+        sorted.add(idx, num);
+    }
+    private int lowerBound(int target) {
+        int l = 0, r = sorted.size();
+        while (l < r) {
+            int mid = (l + r) / 2;
+            if (sorted.get(mid) < target) l = mid + 1;
+            else r = mid;
+        }
+        return l;
+    }
+    public double findMedian() {
+        int n = sorted.size();
+        return (n % 2 == 1) ? sorted.get(n / 2)
+                : (sorted.get(n / 2 - 1) + sorted.get(n / 2)) / 2.0;
+    }
+}
+@@PY
+class MedianFinder:
+    def __init__(self):
+        self.sorted_ = []  # 始终有序
+
+    def addNum(self, num: int) -> None:
+        import bisect
+        bisect.insort(self.sorted_, num)  # 二分插入
+
+    def findMedian(self) -> float:
+        n = len(self.sorted_)
+        return float(self.sorted_[n // 2]) if n % 2 == 1 \
+            else (self.sorted_[n // 2 - 1] + self.sorted_[n // 2]) / 2
+@@SOLUTION: 方法三：TreeMap / SortedList 平衡结构
+@@IDEA
+平衡有序结构：Java TreeMap 计数 / Python SortedList；插入 O(log n)，中位数借助第 k 个元素查询。展示工程化的有序容器思路。
+@@JAVA
+class MedianFinder {
+    private final java.util.TreeMap<Integer, Integer> multiset = new java.util.TreeMap<>();
+    private int size = 0;
+
+    public void addNum(int num) {
+        multiset.merge(num, 1, Integer::sum);
+        size++;
+    }
+    public double findMedian() {
+        // 找第 (size+1)/2 与 (size+2)/2 小（顺序遍历，概念演示）
+        int k1 = (size + 1) / 2, k2 = (size + 2) / 2;
+        int v1 = 0, v2 = 0, idx = 0;
+        for (Map.Entry<Integer, Integer> e : multiset.entrySet()) {
+            for (int c = 0; c < e.getValue(); c++) {
+                idx++;
+                if (idx == k1) v1 = e.getKey();
+                if (idx == k2) v2 = e.getKey();
+            }
+        }
+        return (v1 + v2) / 2.0;
+    }
+}
+@@PY
+class MedianFinder:
+    def __init__(self):
+        from sortedcontainers import SortedList
+        self.sl = SortedList()  # 有序多重集合
+
+    def addNum(self, num: int) -> None:
+        self.sl.add(num)  # O(log n)
+
+    def findMedian(self) -> float:
+        n = len(self.sl)
+        return float(self.sl[n // 2]) if n % 2 == 1 \
+            else (self.sl[n // 2 - 1] + self.sl[n // 2]) / 2  # O(1) 随机访问

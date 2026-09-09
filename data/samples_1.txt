@@ -1,0 +1,461 @@
+@@SAMPLE-JAVA: 1
+Solution s = new Solution();
+int[] nums = {2, 7, 11, 15};
+System.out.println(Arrays.toString(s.twoSum(nums, 9))); // 期望 [0, 1]
+@@SAMPLE-PY: 1
+s = Solution()
+print(s.twoSum([2, 7, 11, 15], 9))  # 期望 [0, 1]
+@@SAMPLE-JAVA: 2
+Solution s = new Solution();
+String[] strs = {"eat", "tea", "tan", "ate", "nat", "bat"};
+System.out.println(s.groupAnagrams(strs)); // 顺序不限
+@@SAMPLE-PY: 2
+print(Solution().groupAnagrams(["eat", "tea", "tan", "ate", "nat", "bat"]))  # 顺序不限
+@@SAMPLE-JAVA: 3
+Solution s = new Solution();
+int[] nums = {100, 4, 200, 1, 3, 2};
+System.out.println(s.longestConsecutive(nums)); // 期望 4
+@@SAMPLE-PY: 3
+print(Solution().longestConsecutive([100, 4, 200, 1, 3, 2]))  # 期望 4
+@@SAMPLE-JAVA: 4
+Solution s = new Solution();
+int[] nums = {0, 1, 0, 3, 12};
+s.moveZeroes(nums);
+System.out.println(Arrays.toString(nums)); // 期望 [1, 3, 12, 0, 0]
+@@SAMPLE-PY: 4
+nums = [0, 1, 0, 3, 12]
+Solution().moveZeroes(nums)
+print(nums)  # 期望 [1, 3, 12, 0, 0]
+@@SAMPLE-JAVA: 5
+Solution s = new Solution();
+int[] height = {1, 8, 6, 2, 5, 4, 8, 3, 7};
+System.out.println(s.maxArea(height)); // 期望 49
+@@SAMPLE-PY: 5
+print(Solution().maxArea([1, 8, 6, 2, 5, 4, 8, 3, 7]))  # 期望 49
+@@SAMPLE-JAVA: 6
+Solution s = new Solution();
+int[] nums = {-1, 0, 1, 2, -1, -4};
+System.out.println(s.threeSum(nums)); // 顺序不限
+@@SAMPLE-PY: 6
+print(Solution().threeSum([-1, 0, 1, 2, -1, -4]))  # 顺序不限
+@@SAMPLE-JAVA: 7
+Solution s = new Solution();
+int[] height = {0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1};
+System.out.println(s.trap(height)); // 期望 6
+@@SAMPLE-PY: 7
+print(Solution().trap([0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]))  # 期望 6
+@@SAMPLE-JAVA: 8
+Solution s = new Solution();
+System.out.println(s.lengthOfLongestSubstring("abcabcbb")); // 期望 3
+@@SAMPLE-PY: 8
+print(Solution().lengthOfLongestSubstring("abcabcbb"))  # 期望 3
+@@SAMPLE-JAVA: 9
+Solution s = new Solution();
+System.out.println(s.findAnagrams("cbaebabacd", "abc")); // 期望 [0, 6]
+@@SAMPLE-PY: 9
+print(Solution().findAnagrams("cbaebabacd", "abc"))  # 期望 [0, 6]
+@@SAMPLE-JAVA: 10
+Solution s = new Solution();
+System.out.println(s.subarraySum(new int[]{1, 1, 1}, 2)); // 期望 2
+@@SAMPLE-PY: 10
+print(Solution().subarraySum([1, 1, 1], 2))  # 期望 2
+@@SAMPLE-JAVA: 11
+Solution s = new Solution();
+System.out.println(Arrays.toString(s.maxSlidingWindow(new int[]{1, 3, -1, -3, 5, 3, 6, 7}, 3)));
+// 期望 [3, 3, 5, 5, 6, 7]
+@@SAMPLE-PY: 11
+print(Solution().maxSlidingWindow([1, 3, -1, -3, 5, 3, 6, 7], 3))  # 期望 [3, 3, 5, 5, 6, 7]
+@@SAMPLE-JAVA: 12
+Solution s = new Solution();
+System.out.println(s.minWindow("ADOBECODEBANC", "ABC")); // 期望 "BANC"
+@@SAMPLE-PY: 12
+print(Solution().minWindow("ADOBECODEBANC", "ABC"))  # 期望 BANC
+@@SAMPLE-JAVA: 13
+Solution s = new Solution();
+System.out.println(s.maxSubArray(new int[]{-2, 1, -3, 4, -1, 2, 1, -5, 4})); // 期望 6
+@@SAMPLE-PY: 13
+print(Solution().maxSubArray([-2, 1, -3, 4, -1, 2, 1, -5, 4]))  # 期望 6
+@@SAMPLE-JAVA: 14
+Solution s = new Solution();
+int[][] intervals = {{1, 3}, {2, 6}, {8, 10}, {15, 18}};
+System.out.println(Arrays.deepToString(s.merge(intervals)));
+// 期望 [[1, 6], [8, 10], [15, 18]]
+@@SAMPLE-PY: 14
+print(Solution().merge([[1, 3], [2, 6], [8, 10], [15, 18]]))
+# 期望 [[1, 6], [8, 10], [15, 18]]
+@@SAMPLE-JAVA: 15
+Solution s = new Solution();
+int[] nums = {1, 2, 3, 4, 5, 6, 7};
+s.rotate(nums, 3);
+System.out.println(Arrays.toString(nums)); // 期望 [5, 6, 7, 1, 2, 3, 4]
+@@SAMPLE-PY: 15
+nums = [1, 2, 3, 4, 5, 6, 7]
+Solution().rotate(nums, 3)
+print(nums)  # 期望 [5, 6, 7, 1, 2, 3, 4]
+@@SAMPLE-JAVA: 16
+Solution s = new Solution();
+System.out.println(Arrays.toString(s.productExceptSelf(new int[]{1, 2, 3, 4})));
+// 期望 [24, 12, 8, 6]
+@@SAMPLE-PY: 16
+print(Solution().productExceptSelf([1, 2, 3, 4]))  # 期望 [24, 12, 8, 6]
+@@SAMPLE-JAVA: 17
+Solution s = new Solution();
+System.out.println(s.firstMissingPositive(new int[]{3, 4, -1, 1})); // 期望 2
+@@SAMPLE-PY: 17
+print(Solution().firstMissingPositive([3, 4, -1, 1]))  # 期望 2
+@@SAMPLE-JAVA: 18
+Solution s = new Solution();
+int[][] m = {{1, 1, 1}, {1, 0, 1}, {1, 1, 1}};
+s.setZeroes(m);
+System.out.println(Arrays.deepToString(m)); // 期望 [[1, 0, 1], [0, 0, 0], [1, 0, 1]]
+@@SAMPLE-PY: 18
+m = [[1, 1, 1], [1, 0, 1], [1, 1, 1]]
+Solution().setZeroes(m)
+print(m)  # 期望 [[1, 0, 1], [0, 0, 0], [1, 0, 1]]
+@@SAMPLE-JAVA: 19
+Solution s = new Solution();
+int[][] m = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+System.out.println(s.spiralOrder(m)); // 期望 [1, 2, 3, 6, 9, 8, 7, 4, 5]
+@@SAMPLE-PY: 19
+print(Solution().spiralOrder([[1, 2, 3], [4, 5, 6], [7, 8, 9]]))
+# 期望 [1, 2, 3, 6, 9, 8, 7, 4, 5]
+@@SAMPLE-JAVA: 20
+Solution s = new Solution();
+int[][] m = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+s.rotate(m);
+System.out.println(Arrays.deepToString(m)); // 期望 [[7, 4, 1], [8, 5, 2], [9, 6, 3]]
+@@SAMPLE-PY: 20
+m = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+Solution().rotate(m)
+print(m)  # 期望 [[7, 4, 1], [8, 5, 2], [9, 6, 3]]
+@@SAMPLE-JAVA: 21
+Solution s = new Solution();
+int[][] m = {{1, 4, 7}, {2, 5, 8}, {3, 6, 9}};
+System.out.println(s.searchMatrix(m, 5)); // 期望 true
+@@SAMPLE-PY: 21
+print(Solution().searchMatrix([[1, 4, 7], [2, 5, 8], [3, 6, 9]], 5))  # 期望 True
+@@SAMPLE-JAVA: 22
+Solution s = new Solution();
+// 公共部分 8→4→5；A: 4→1→公共；B: 5→6→1→公共
+ListNode common = new ListNode(8, new ListNode(4, new ListNode(5)));
+ListNode a = new ListNode(4, new ListNode(1, common));
+ListNode b = new ListNode(5, new ListNode(6, new ListNode(1, common)));
+ListNode node = s.getIntersectionNode(a, b);
+System.out.println(node == null ? "null" : node.val); // 期望 8
+@@SAMPLE-PY: 22
+# 公共部分 8→4→5；A: 4→1→公共；B: 5→6→1→公共
+common = ListNode(8, ListNode(4, ListNode(5)))
+a = ListNode(4, ListNode(1, common))
+b = ListNode(5, ListNode(6, ListNode(1, common)))
+node = Solution().getIntersectionNode(a, b)
+print(node.val if node else "null")  # 期望 8
+@@SAMPLE-JAVA: 23
+Solution s = new Solution();
+ListNode head = new ListNode(1, new ListNode(2, new ListNode(3, new ListNode(4, new ListNode(5)))));
+ListNode p = s.reverseList(head);
+while (p != null) { System.out.print(p.val + " "); p = p.next; } // 期望 5 4 3 2 1
+@@SAMPLE-PY: 23
+head = ListNode(1, ListNode(2, ListNode(3, ListNode(4, ListNode(5)))))
+p = Solution().reverseList(head)
+out = []
+while p:
+    out.append(str(p.val)); p = p.next
+print(" ".join(out))  # 期望 5 4 3 2 1
+@@SAMPLE-JAVA: 24
+Solution s = new Solution();
+ListNode head = new ListNode(1, new ListNode(2, new ListNode(2, new ListNode(1))));
+System.out.println(s.isPalindrome(head)); // 期望 true
+@@SAMPLE-PY: 24
+head = ListNode(1, ListNode(2, ListNode(2, ListNode(1))))
+print(Solution().isPalindrome(head))  # 期望 True
+@@SAMPLE-JAVA: 25
+Solution s = new Solution();
+ListNode n1 = new ListNode(3); ListNode n2 = new ListNode(2);
+ListNode n3 = new ListNode(0); ListNode n4 = new ListNode(-4);
+n1.next = n2; n2.next = n3; n3.next = n4; n4.next = n2; // n4 → n2 成环
+System.out.println(s.hasCycle(n1)); // 期望 true
+@@SAMPLE-PY: 25
+n4 = ListNode(-4)
+n3 = ListNode(0, n4)
+n2 = ListNode(2, n3)
+n1 = ListNode(3, n2)
+n4.next = n2  # n4 → n2 成环
+print(Solution().hasCycle(n1))  # 期望 True
+@@SAMPLE-JAVA: 26
+Solution s = new Solution();
+ListNode n1 = new ListNode(3); ListNode n2 = new ListNode(2);
+ListNode n3 = new ListNode(0); ListNode n4 = new ListNode(-4);
+n1.next = n2; n2.next = n3; n3.next = n4; n4.next = n2; // 入环点为 n2
+ListNode node = s.detectCycle(n1);
+System.out.println(node == null ? "null" : node.val); // 期望 2
+@@SAMPLE-PY: 26
+n4 = ListNode(-4)
+n3 = ListNode(0, n4)
+n2 = ListNode(2, n3)
+n1 = ListNode(3, n2)
+n4.next = n2  # 入环点为 n2
+node = Solution().detectCycle(n1)
+print(node.val if node else "null")  # 期望 2
+@@SAMPLE-JAVA: 27
+Solution s = new Solution();
+ListNode a = new ListNode(1, new ListNode(2, new ListNode(4)));
+ListNode b = new ListNode(1, new ListNode(3, new ListNode(4)));
+ListNode p = s.mergeTwoLists(a, b);
+while (p != null) { System.out.print(p.val + " "); p = p.next; } // 期望 1 1 2 3 4 4
+@@SAMPLE-PY: 27
+a = ListNode(1, ListNode(2, ListNode(4)))
+b = ListNode(1, ListNode(3, ListNode(4)))
+p = Solution().mergeTwoLists(a, b)
+out = []
+while p:
+    out.append(str(p.val)); p = p.next
+print(" ".join(out))  # 期望 1 1 2 3 4 4
+@@SAMPLE-JAVA: 28
+Solution s = new Solution();
+ListNode a = new ListNode(2, new ListNode(4, new ListNode(3)));
+ListNode b = new ListNode(5, new ListNode(6, new ListNode(4)));
+ListNode p = s.addTwoNumbers(a, b);
+while (p != null) { System.out.print(p.val + " "); p = p.next; } // 期望 7 0 8
+@@SAMPLE-PY: 28
+a = ListNode(2, ListNode(4, ListNode(3)))
+b = ListNode(5, ListNode(6, ListNode(4)))
+p = Solution().addTwoNumbers(a, b)
+out = []
+while p:
+    out.append(str(p.val)); p = p.next
+print(" ".join(out))  # 期望 7 0 8
+@@SAMPLE-JAVA: 29
+Solution s = new Solution();
+ListNode head = new ListNode(1, new ListNode(2, new ListNode(3,
+        new ListNode(4, new ListNode(5)))));
+ListNode p = s.removeNthFromEnd(head, 2);
+while (p != null) { System.out.print(p.val + " "); p = p.next; } // 期望 1 2 3 5
+@@SAMPLE-PY: 29
+head = ListNode(1, ListNode(2, ListNode(3, ListNode(4, ListNode(5)))))
+p = Solution().removeNthFromEnd(head, 2)
+out = []
+while p:
+    out.append(str(p.val)); p = p.next
+print(" ".join(out))  # 期望 1 2 3 5
+@@SAMPLE-JAVA: 30
+Solution s = new Solution();
+ListNode head = new ListNode(1, new ListNode(2, new ListNode(3, new ListNode(4))));
+ListNode p = s.swapPairs(head);
+while (p != null) { System.out.print(p.val + " "); p = p.next; } // 期望 2 1 4 3
+@@SAMPLE-PY: 30
+head = ListNode(1, ListNode(2, ListNode(3, ListNode(4))))
+p = Solution().swapPairs(head)
+out = []
+while p:
+    out.append(str(p.val)); p = p.next
+print(" ".join(out))  # 期望 2 1 4 3
+@@SAMPLE-JAVA: 31
+Solution s = new Solution();
+ListNode head = new ListNode(1, new ListNode(2, new ListNode(3,
+        new ListNode(4, new ListNode(5)))));
+ListNode p = s.reverseKGroup(head, 3);
+while (p != null) { System.out.print(p.val + " "); p = p.next; } // 期望 3 2 1 4 5
+@@SAMPLE-PY: 31
+head = ListNode(1, ListNode(2, ListNode(3, ListNode(4, ListNode(5)))))
+p = Solution().reverseKGroup(head, 3)
+out = []
+while p:
+    out.append(str(p.val)); p = p.next
+print(" ".join(out))  # 期望 3 2 1 4 5
+@@SAMPLE-JAVA: 32
+Solution s = new Solution();
+Node n1 = new Node(7); Node n2 = new Node(13);
+n1.next = n2; n1.random = null; n2.random = n1;
+Node copy = s.copyRandomList(n1);
+System.out.println(copy.val + " " + copy.next.val + " random→" + copy.next.random.val);
+// 期望 7 13 random→7
+@@SAMPLE-PY: 32
+n2 = Node(13)
+n1 = Node(7)
+n1.next = n2; n1.random = None; n2.random = n1
+copy = Solution().copyRandomList(n1)
+print(copy.val, copy.next.val, "random→", copy.next.random.val)  # 期望 7 13 random→7
+@@SAMPLE-JAVA: 33
+Solution s = new Solution();
+ListNode head = new ListNode(4, new ListNode(2, new ListNode(1, new ListNode(3))));
+ListNode p = s.sortList(head);
+while (p != null) { System.out.print(p.val + " "); p = p.next; } // 期望 1 2 3 4
+@@SAMPLE-PY: 33
+head = ListNode(4, ListNode(2, ListNode(1, ListNode(3))))
+p = Solution().sortList(head)
+out = []
+while p:
+    out.append(str(p.val)); p = p.next
+print(" ".join(out))  # 期望 1 2 3 4
+@@SAMPLE-JAVA: 34
+Solution s = new Solution();
+ListNode a = new ListNode(1, new ListNode(4, new ListNode(5)));
+ListNode b = new ListNode(1, new ListNode(3, new ListNode(4)));
+ListNode c = new ListNode(2, new ListNode(6));
+ListNode p = s.mergeKLists(new ListNode[]{a, b, c});
+while (p != null) { System.out.print(p.val + " "); p = p.next; }
+// 期望 1 1 2 3 4 4 5 6
+@@SAMPLE-PY: 34
+a = ListNode(1, ListNode(4, ListNode(5)))
+b = ListNode(1, ListNode(3, ListNode(4)))
+c = ListNode(2, ListNode(6))
+p = Solution().mergeKLists([a, b, c])
+out = []
+while p:
+    out.append(str(p.val)); p = p.next
+print(" ".join(out))  # 期望 1 1 2 3 4 4 5 6
+@@SAMPLE-JAVA: 35
+LRUCache cache = new LRUCache(2);
+cache.put(1, 1); cache.put(2, 2);
+System.out.println(cache.get(1)); // 1
+cache.put(3, 3);                  // 淘汰 key=2
+System.out.println(cache.get(2)); // -1
+cache.put(4, 4);
+System.out.println(cache.get(1)); // -1
+System.out.println(cache.get(3)); // 3
+@@SAMPLE-PY: 35
+cache = LRUCache(2)
+cache.put(1, 1); cache.put(2, 2)
+print(cache.get(1))  # 1
+cache.put(3, 3)      # 淘汰 key=2
+print(cache.get(2))  # -1
+cache.put(4, 4)
+print(cache.get(1))  # -1
+print(cache.get(3))  # 3
+@@SAMPLE-JAVA: 36
+Solution s = new Solution();
+TreeNode root = new TreeNode(1, null, new TreeNode(2, new TreeNode(3), null));
+System.out.println(s.inorderTraversal(root)); // 期望 [1, 3, 2]
+@@SAMPLE-PY: 36
+root = TreeNode(1, None, TreeNode(2, TreeNode(3), None))
+print(Solution().inorderTraversal(root))  # 期望 [1, 3, 2]
+@@SAMPLE-JAVA: 37
+Solution s = new Solution();
+TreeNode root = new TreeNode(3, new TreeNode(9),
+        new TreeNode(20, new TreeNode(15), new TreeNode(7)));
+System.out.println(s.maxDepth(root)); // 期望 3
+@@SAMPLE-PY: 37
+root = TreeNode(3, TreeNode(9), TreeNode(20, TreeNode(15), TreeNode(7)))
+print(Solution().maxDepth(root))  # 期望 3
+@@SAMPLE-JAVA: 38
+Solution s = new Solution();
+TreeNode root = new TreeNode(4, new TreeNode(2, new TreeNode(1), new TreeNode(3)),
+        new TreeNode(7, new TreeNode(6), new TreeNode(9)));
+root = s.invertTree(root);
+System.out.println(root.left.val + " " + root.right.val); // 期望 7 2
+@@SAMPLE-PY: 38
+root = TreeNode(4, TreeNode(2, TreeNode(1), TreeNode(3)),
+                TreeNode(7, TreeNode(6), TreeNode(9)))
+root = Solution().invertTree(root)
+print(root.left.val, root.right.val)  # 期望 7 2
+@@SAMPLE-JAVA: 39
+Solution s = new Solution();
+TreeNode root = new TreeNode(1, new TreeNode(2, new TreeNode(3), new TreeNode(4)),
+        new TreeNode(2, new TreeNode(4), new TreeNode(3)));
+System.out.println(s.isSymmetric(root)); // 期望 true
+@@SAMPLE-PY: 39
+root = TreeNode(1, TreeNode(2, TreeNode(3), TreeNode(4)),
+                TreeNode(2, TreeNode(4), TreeNode(3)))
+print(Solution().isSymmetric(root))  # 期望 True
+@@SAMPLE-JAVA: 40
+Solution s = new Solution();
+TreeNode root = new TreeNode(1, new TreeNode(2, new TreeNode(4), new TreeNode(5)),
+        new TreeNode(3));
+System.out.println(s.diameterOfBinaryTree(root)); // 期望 3
+@@SAMPLE-PY: 40
+root = TreeNode(1, TreeNode(2, TreeNode(4), TreeNode(5)), TreeNode(3))
+print(Solution().diameterOfBinaryTree(root))  # 期望 3
+@@SAMPLE-JAVA: 41
+Solution s = new Solution();
+TreeNode root = new TreeNode(3, new TreeNode(9),
+        new TreeNode(20, new TreeNode(15), new TreeNode(7)));
+System.out.println(s.levelOrder(root)); // 期望 [[3], [9, 20], [15, 7]]
+@@SAMPLE-PY: 41
+root = TreeNode(3, TreeNode(9), TreeNode(20, TreeNode(15), TreeNode(7)))
+print(Solution().levelOrder(root))  # 期望 [[3], [9, 20], [15, 7]]
+@@SAMPLE-JAVA: 42
+Solution s = new Solution();
+int[] nums = {-10, -3, 0, 5, 9};
+TreeNode root = s.sortedArrayToBST(nums);
+System.out.println(root.val); // 期望 0（中点为根）
+@@SAMPLE-PY: 42
+root = Solution().sortedArrayToBST([-10, -3, 0, 5, 9])
+print(root.val)  # 期望 0（中点为根）
+@@SAMPLE-JAVA: 43
+Solution s = new Solution();
+TreeNode root = new TreeNode(2, new TreeNode(1), new TreeNode(3));
+System.out.println(s.isValidBST(root)); // 期望 true
+@@SAMPLE-PY: 43
+root = TreeNode(2, TreeNode(1), TreeNode(3))
+print(Solution().isValidBST(root))  # 期望 True
+@@SAMPLE-JAVA: 44
+Solution s = new Solution();
+TreeNode root = new TreeNode(3, new TreeNode(1, null, new TreeNode(2)), new TreeNode(4));
+System.out.println(s.kthSmallest(root, 1)); // 期望 1
+@@SAMPLE-PY: 44
+root = TreeNode(3, TreeNode(1, None, TreeNode(2)), TreeNode(4))
+print(Solution().kthSmallest(root, 1))  # 期望 1
+@@SAMPLE-JAVA: 45
+Solution s = new Solution();
+TreeNode root = new TreeNode(1, new TreeNode(2, null, new TreeNode(5)),
+        new TreeNode(3, null, new TreeNode(4)));
+System.out.println(s.rightSideView(root)); // 期望 [1, 3, 4]
+@@SAMPLE-PY: 45
+root = TreeNode(1, TreeNode(2, None, TreeNode(5)), TreeNode(3, None, TreeNode(4)))
+print(Solution().rightSideView(root))  # 期望 [1, 3, 4]
+@@SAMPLE-JAVA: 46
+Solution s = new Solution();
+TreeNode root = new TreeNode(1, new TreeNode(2, new TreeNode(3), new TreeNode(4)),
+        new TreeNode(5, null, new TreeNode(6)));
+s.flatten(root);
+TreeNode p = root;
+while (p != null) { System.out.print(p.val + " "); p = p.right; } // 期望 1 2 3 4 5 6
+@@SAMPLE-PY: 46
+root = TreeNode(1, TreeNode(2, TreeNode(3), TreeNode(4)),
+                TreeNode(5, None, TreeNode(6)))
+Solution().flatten(root)
+out = []
+while root:
+    out.append(str(root.val)); root = root.right
+print(" ".join(out))  # 期望 1 2 3 4 5 6
+@@SAMPLE-JAVA: 47
+Solution s = new Solution();
+int[] preorder = {3, 9, 20, 15, 7};
+int[] inorder = {9, 3, 15, 20, 7};
+TreeNode root = s.buildTree(preorder, inorder);
+System.out.println(root.val + " " + root.right.left.val); // 期望 3 15
+@@SAMPLE-PY: 47
+root = Solution().buildTree([3, 9, 20, 15, 7], [9, 3, 15, 20, 7])
+print(root.val, root.right.left.val)  # 期望 3 15
+@@SAMPLE-JAVA: 48
+Solution s = new Solution();
+TreeNode root = new TreeNode(10,
+        new TreeNode(5, new TreeNode(3), new TreeNode(2, null, new TreeNode(1))),
+        new TreeNode(-3, null, new TreeNode(11)));
+System.out.println(s.pathSum(root, 8)); // 期望 3
+@@SAMPLE-PY: 48
+root = TreeNode(10, TreeNode(5, TreeNode(3), TreeNode(2, None, TreeNode(1))),
+                TreeNode(-3, None, TreeNode(11)))
+print(Solution().pathSum(root, 8))  # 期望 3
+@@SAMPLE-JAVA: 49
+Solution s = new Solution();
+TreeNode root = new TreeNode(3, new TreeNode(5, new TreeNode(6),
+        new TreeNode(2, new TreeNode(7), new TreeNode(4))),
+        new TreeNode(1, new TreeNode(0), new TreeNode(8)));
+TreeNode lca = s.lowestCommonAncestor(root,
+        root.left, root.left.right.right); // 5 与 4
+System.out.println(lca.val); // 期望 5
+@@SAMPLE-PY: 49
+root = TreeNode(3, TreeNode(5, TreeNode(6),
+                TreeNode(2, TreeNode(7), TreeNode(4))),
+                TreeNode(1, TreeNode(0), TreeNode(8)))
+lca = Solution().lowestCommonAncestor(root, root.left, root.left.right.right)
+print(lca.val)  # 期望 5（5 与 4 的 LCA）
+@@SAMPLE-JAVA: 50
+Solution s = new Solution();
+TreeNode root = new TreeNode(-10, new TreeNode(9),
+        new TreeNode(20, new TreeNode(15), new TreeNode(7)));
+System.out.println(s.maxPathSum(root)); // 期望 42
+@@SAMPLE-PY: 50
+root = TreeNode(-10, TreeNode(9), TreeNode(20, TreeNode(15), TreeNode(7)))
+print(Solution().maxPathSum(root))  # 期望 42

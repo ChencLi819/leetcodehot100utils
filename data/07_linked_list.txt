@@ -1,0 +1,2042 @@
+@@PROBLEM
+@@NO: 22
+@@ID: 160
+@@TITLE: 相交链表
+@@DIFF: 简单
+@@CATEGORY: 链表
+@@TAGS: 哈希表;链表;双指针
+@@URL: https://leetcode.cn/problems/intersection-of-two-linked-lists/
+@@DESC
+在给定的 m x n 网格 grid 中，每个单元格可以有以下三个值之一：
+值 0 代表空单元格；值 1 代表新鲜橘子；值 2 代表腐烂的橘子。
+
+每分钟，腐烂的橘子 周围 4 个方向上相邻 的新鲜橘子都会腐烂。
+
+返回 直到单元格中没有新鲜橘子为止所必须经过的最小分钟数。如果不可能，返回 -1。
+
+示例 1：
+输入：grid = [[2,1,1],[1,1,0],[0,1,1]]
+输出：4
+
+示例 2：
+输入：grid = [[2,1,1],[0,1,1],[1,0,1]]
+输出：-1
+解释：左下角的橘子（第 2 行，第 0 列）永远不会腐烂，因为腐烂只会发生在 4 个正向上。
+
+示例 3：
+输入：grid = [[0,2]]
+输出：0
+解释：因为 0 分钟时已经没有新鲜橘子了，所以答案就是 0。
+
+提示：
+m == grid.length, n == grid[i].length
+1 <= m, n <= 10
+grid[i][j] 仅为 0、1 或 2
+给你两个单链表的头节点 headA 和 headB，找出并返回两链表相交的起始节点；不相交则返回 null。
+整个链式结构中不存在环，函数返回结果后链表必须保持原样。
+示例：两链表在节点 c1 相交（a 段长 5、b 段长 6）→ 返回 c1。
+@@SOLUTION: 方法一：浪漫双指针（推荐，O(1) 空间）
+@@IDEA
+浪漫双指针：a 走完 A 转 B，b 走完 B 转 A；两者总路程相同（a+c = b+c），必然同步到达交点或同时为 null。O(n+m)/O(1)，无需测长度。
+@@JAVA
+public class Solution {
+    public ListNode getIntersectionNode(ListNode headA, ListNode headB) {
+        ListNode a = headA, b = headB;
+        while (a != b) {
+            a = (a == null) ? headB : a.next; // a 走完 A 转 B
+            b = (b == null) ? headA : b.next; // b 走完 B 转 A
+        }
+        return a; // 相遇点即交点，或同时为 null
+    }
+}
+@@PY
+class Solution:
+    def getIntersectionNode(self, headA: ListNode, headB: ListNode) -> Optional[ListNode]:
+        a, b = headA, headB
+        while a is not b:
+            a = headB if a is None else a.next  # a 走完 A 转 B
+            b = headA if b is None else b.next  # b 走完 B 转 A
+        return a  # 相遇点即交点，或同时为 null
+@@SOLUTION: 方法二：哈希集合判重
+@@IDEA
+把 A 的所有节点存进 HashSet，遍历 B 时第一个已出现的节点即交点（节点相同而非值相同）。O(n+m)/O(n)，最直观。
+@@JAVA
+public class Solution {
+    public ListNode getIntersectionNode(ListNode headA, ListNode headB) {
+        Set<ListNode> seen = new HashSet<>();
+        for (ListNode p = headA; p != null; p = p.next) {
+            seen.add(p); // 记录 A 的所有节点
+        }
+        for (ListNode p = headB; p != null; p = p.next) {
+            if (seen.contains(p)) return p; // 第个公共节点
+        }
+        return null;
+    }
+}
+@@PY
+class Solution:
+    def getIntersectionNode(self, headA: ListNode, headB: ListNode) -> Optional[ListNode]:
+        seen = set()
+        p = headA
+        while p:            # 记录 A 的所有节点
+            seen.add(p)
+            p = p.next
+        p = headB
+        while p:            # 第个公共节点
+            if p in seen:
+                return p
+            p = p.next
+        return None
+@@SOLUTION: 方法三：先对齐长度再同步前进
+@@IDEA
+先分别测出两链表长度，长链先走差值步对齐，再同步前进，第一个相同节点即交点。O(n+m)/O(1)，思路朴素好讲。
+@@JAVA
+public class Solution {
+    public ListNode getIntersectionNode(ListNode headA, ListNode headB) {
+        int la = length(headA), lb = length(headB);
+        ListNode longL = la >= lb ? headA : headB;  // 长链表
+        ListNode shortL = la >= lb ? headB : headA;
+        for (int i = 0; i < Math.abs(la - lb); i++) {
+            longL = longL.next; // 长链表先走差值步
+        }
+        while (longL != shortL) { // 同步前进
+            longL = longL.next;
+            shortL = shortL.next;
+        }
+        return longL;
+    }
+    private int length(ListNode head) {
+        int n = 0;
+        for (ListNode p = head; p != null; p = p.next) n++;
+        return n;
+    }
+}
+@@PY
+class Solution:
+    def getIntersectionNode(self, headA: ListNode, headB: ListNode) -> Optional[ListNode]:
+        def length(node):
+            n = 0
+            while node:
+                n += 1
+                node = node.next
+            return n
+
+        la, lb = length(headA), length(headB)
+        long_l, short_l = (headA, headB) if la >= lb else (headB, headA)
+        for _ in range(abs(la - lb)):  # 长链表先走差值步
+            long_l = long_l.next
+        while long_l is not short_l:   # 同步前进
+            long_l = long_l.next
+            short_l = short_l.next
+        return long_l
+@@PROBLEM
+@@NO: 23
+@@ID: 206
+@@TITLE: 反转链表
+@@DIFF: 简单
+@@CATEGORY: 链表
+@@TAGS: 递归;链表
+@@URL: https://leetcode.cn/problems/reverse-linked-list/
+@@DESC
+你这个学期必须选修 numCourses 门课程，记为 0 到 numCourses - 1。
+
+在选修某些课程之前需要一些先修课程。先修课程按数组 prerequisites 给出，其中 prerequisites[i] = [a_i, b_i]，表示如果要学习课程 a_i 则必须先学习课程 b_i。
+
+例如，先修课程对 [0, 1] 表示：想要学习课程 0，你需要先完成课程 1。
+请你判断是否可能完成所有课程的学习？如果可以，返回 true；否则，返回 false。
+
+示例 1：
+输入：numCourses = 2, prerequisites = [[1,0]]
+输出：true
+解释：总共有 2 门课程。学习课程 1 之前，你需要完成课程 0。这是可能的。
+
+示例 2：
+输入：numCourses = 2, prerequisites = [[1,0],[0,1]]
+输出：false
+解释：总共有 2 门课程。学习课程 1 之前，你需要先完成课程 0；并且学习课程 0 之前，你还应先完成课程 1。这是不可能的。
+
+提示：
+1 <= numCourses <= 2000
+0 <= prerequisites.length <= 5000
+prerequisites[i].length == 2
+0 <= a_i, b_i < numCourses
+prerequisites[i] 中的所有课程对 互不相同
+给你单链表的头节点 head，请反转链表并返回反转后的链表。
+示例：输入 1→2→3→4→5 → 输出 5→4→3→2→1。
+@@SOLUTION: 方法一：迭代三指针（推荐）
+@@IDEA
+迭代三指针：每步把 cur.next 指向 prev，然后 prev、cur 整体右移；先用临时变量暂存 next 防断链。O(n)/O(1)，链表基本功。
+@@JAVA
+class Solution {
+    public ListNode reverseList(ListNode head) {
+        ListNode prev = null, cur = head;
+        while (cur != null) {
+            ListNode next = cur.next; // 暂存后继
+            cur.next = prev;          // 反转当前指针
+            prev = cur;
+            cur = next;
+        }
+        return prev;
+    }
+}
+@@PY
+class Solution:
+    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        prev, cur = None, head
+        while cur:
+            nxt = cur.next   # 暂存后继
+            cur.next = prev  # 反转当前指针
+            prev = cur
+            cur = nxt
+        return prev
+@@SOLUTION: 方法二：递归
+@@IDEA
+递归：先递归反转 head 之后的链表，再让 head.next.next = head（后继回指自己），head.next 置空。O(n)/O(n) 栈空间，理解递归「先处理后面再接线」。
+@@JAVA
+class Solution {
+    public ListNode reverseList(ListNode head) {
+        if (head == null || head.next == null) return head; // 递归出口
+        ListNode newHead = reverseList(head.next); // 反转后续
+        head.next.next = head; // 后继回指自己（自己成新尾）
+        head.next = null;      // 断开旧指向
+        return newHead;
+    }
+}
+@@PY
+class Solution:
+    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        if not head or not head.next:   # 递归出口
+            return head
+        new_head = self.reverseList(head.next)  # 反转后续
+        head.next.next = head  # 后继回指自己
+        head.next = None       # 断开旧指向
+        return new_head
+@@SOLUTION: 方法三：头插法（借助哑结点重建）
+@@IDEA
+头插法：哑结点后依次摘下原链表节点插到最前面，天然逆序。O(n)/O(1)，是「重建链表」类问题的通用套路。
+@@JAVA
+class Solution {
+    public ListNode reverseList(ListNode head) {
+        ListNode dummy = new ListNode(0);
+        ListNode cur = head;
+        while (cur != null) {
+            ListNode next = cur.next;
+            cur.next = dummy.next; // 头插
+            dummy.next = cur;
+            cur = next;
+        }
+        return dummy.next;
+    }
+}
+@@PY
+class Solution:
+    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        dummy = ListNode(0)
+        cur = head
+        while cur:
+            nxt = cur.next
+            cur.next = dummy.next  # 头插
+            dummy.next = cur
+            cur = nxt
+        return dummy.next
+@@PROBLEM
+@@NO: 24
+@@ID: 234
+@@TITLE: 回文链表
+@@DIFF: 简单
+@@CATEGORY: 链表
+@@TAGS: 栈;递归;链表;双指针
+@@URL: https://leetcode.cn/problems/palindrome-linked-list/
+@@DESC
+Trie（发音类似 "try"）或者说 前缀树 是一种树形数据结构，用于高效地存储和检索字符串数据集中的键。这一数据结构有相当多的应用情景，例如自动补全和拼写检查。
+
+请你实现 Trie 类：
+Trie() 初始化前缀树对象。
+void insert(String word) 向前缀树中插入字符串 word。
+boolean search(String word) 如果字符串 word 在前缀树中，返回 true（即在检索之前已经插入）；否则，返回 false。
+boolean startsWith(String prefix) 如果之前已经插入的字符串 word 的前缀之一为 prefix，返回 true；否则，返回 false。
+
+示例：
+输入：["Trie", "insert", "search", "search", "startsWith", "insert", "search"]
+[[], ["apple"], ["apple"], ["app"], ["app"], ["app"], ["app"]]
+输出：[null, null, true, false, true, null, true]
+解释：
+Trie trie = new Trie();
+trie.insert("apple");
+trie.search("apple");   // 返回 True
+trie.search("app");     // 返回 False
+trie.startsWith("app"); // 返回 True
+trie.insert("app");
+trie.search("app");     // 返回 True
+
+提示：
+1 <= word.length, prefix.length <= 2000
+word 和 prefix 仅由小写英文字母组成
+insert、search 和 startsWith 调用次数 总计 不超过 3 * 10^4 次
+给你单链表的头节点 head，判断该链表是否为回文链表。要求 O(n) 时间、O(1) 空间。
+示例：head = 1→2→2→1 → 输出 true。
+@@SOLUTION: 方法一：找中点 + 反转后半段（推荐，O(1) 空间）
+@@IDEA
+O(1) 空间标准解：快慢指针找中点，反转后半段，再与前半段逐节点比较。注意偶数长度时前后半差一个节点不影响判断。O(n)/O(1)。
+@@JAVA
+class Solution {
+    public boolean isPalindrome(ListNode head) {
+        ListNode slow = head, fast = head;
+        while (fast != null && fast.next != null) { // 找中点
+            slow = slow.next;
+            fast = fast.next.next;
+        }
+        ListNode p1 = head, p2 = reverse(slow); // 反转后半段
+        while (p2 != null) {                    // 逐节点比较
+            if (p1.val != p2.val) return false;
+            p1 = p1.next;
+            p2 = p2.next;
+        }
+        return true;
+    }
+    private ListNode reverse(ListNode head) {
+        ListNode prev = null, cur = head;
+        while (cur != null) {
+            ListNode next = cur.next;
+            cur.next = prev;
+            prev = cur;
+            cur = next;
+        }
+        return prev;
+    }
+}
+@@PY
+class Solution:
+    def isPalindrome(self, head: Optional[ListNode]) -> bool:
+        slow = fast = head
+        while fast and fast.next:   # 找中点
+            slow = slow.next
+            fast = fast.next.next
+        p1, p2 = head, self._reverse(slow)  # 反转后半段
+        while p2:                   # 逐节点比较
+            if p1.val != p2.val:
+                return False
+            p1, p2 = p1.next, p2.next
+        return True
+
+    def _reverse(self, head):
+        prev, cur = None, head
+        while cur:
+            cur.next, prev, cur = prev, cur, cur.next
+        return prev
+@@SOLUTION: 方法二：值复制到数组 + 双指针
+@@IDEA
+把链表的值复制到数组/列表，用首尾双指针（Python 直接比较反转列表）判断回文。O(n)/O(n)，最好写。
+@@JAVA
+class Solution {
+    public boolean isPalindrome(ListNode head) {
+        List<Integer> vals = new ArrayList<>();
+        for (ListNode p = head; p != null; p = p.next) vals.add(p.val);
+        int l = 0, r = vals.size() - 1;
+        while (l < r) { // 首尾双指针
+            if (!vals.get(l).equals(vals.get(r))) return false;
+            l++;
+            r--;
+        }
+        return true;
+    }
+}
+@@PY
+class Solution:
+    def isPalindrome(self, head: Optional[ListNode]) -> bool:
+        vals = []
+        while head:        # 值复制进数组
+            vals.append(head.val)
+            head = head.next
+        return vals == vals[::-1]  # 与反转比较
+@@SOLUTION: 方法三：递归（前序 vs 逆序指针）
+@@IDEA
+递归：先递归到链表尾部，回溯时用外部 front 指针与当前节点比较（front 正序推进）。O(n)/O(n) 栈，体现「递归天然逆序」的性质。
+@@JAVA
+class Solution {
+    private ListNode front;
+
+    public boolean isPalindrome(ListNode head) {
+        front = head;
+        return check(head);
+    }
+    private boolean check(ListNode node) {
+        if (node != null) {
+            if (!check(node.next)) return false;   // 先递归到尾
+            if (node.val != front.val) return false; // 回溯时比较
+            front = front.next;                     // 正序指针右移
+        }
+        return true;
+    }
+}
+@@PY
+class Solution:
+    def isPalindrome(self, head: Optional[ListNode]) -> bool:
+        self.front = head
+
+        def check(node) -> bool:
+            if node:
+                if not check(node.next):    # 先递归到尾
+                    return False
+                if node.val != self.front.val:  # 回溯时比较
+                    return False
+                self.front = self.front.next    # 正序指针右移
+            return True
+
+        return check(head)
+@@PROBLEM
+@@NO: 25
+@@ID: 141
+@@TITLE: 环形链表
+@@DIFF: 简单
+@@CATEGORY: 链表
+@@TAGS: 哈希表;链表;双指针
+@@URL: https://leetcode.cn/problems/linked-list-cycle/
+@@DESC
+给定一个不含重复数字的数组 nums，返回其所可能的所有全排列。你可以按任意顺序返回答案。
+
+示例 1：
+输入：nums = [1,2,3]
+输出：[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]
+
+示例 2：
+输入：nums = [0,1]
+输出：[[0,1],[1,0]]
+
+示例 3：
+输入：nums = [1]
+输出：[[1]]
+
+提示：
+1 <= nums.length <= 6
+-10 <= nums[i] <= 10
+nums 中的所有整数 互不相同
+给你一个链表的头节点 head，判断链表中是否有环。pos 表示链表尾连接到的下标（-1 表示无环），pos 不作为参数传入。
+@@SOLUTION: 方法一：Floyd 快慢指针（推荐，O(1) 空间）
+@@IDEA
+Floyd 快慢指针：慢一步快两步，有环则必在环内相遇，无环则 fast 先到 null。数学上进入环后每轮快指针追近一步，必然相遇。O(n)/O(1)。
+@@JAVA
+public class Solution {
+    public boolean hasCycle(ListNode head) {
+        ListNode slow = head, fast = head;
+        while (fast != null && fast.next != null) {
+            slow = slow.next;
+            fast = fast.next.next;
+            if (slow == fast) return true; // 相遇即有环
+        }
+        return false;
+    }
+}
+@@PY
+class Solution:
+    def hasCycle(self, head: Optional[ListNode]) -> bool:
+        slow = fast = head
+        while fast and fast.next:
+            slow = slow.next
+            fast = fast.next.next
+            if slow is fast:  # 相遇即有环
+                return True
+        return False
+@@SOLUTION: 方法二：哈希集合判重
+@@IDEA
+逐节点访问并存 HashSet，某节点第二次出现说明有环；走到 null 则无环。O(n)/O(n)，最直接的判重思路。
+@@JAVA
+public class Solution {
+    public boolean hasCycle(ListNode head) {
+        Set<ListNode> seen = new HashSet<>();
+        for (ListNode p = head; p != null; p = p.next) {
+            if (!seen.add(p)) return true; // 再次访问即有环
+        }
+        return false;
+    }
+}
+@@PY
+class Solution:
+    def hasCycle(self, head: Optional[ListNode]) -> bool:
+        seen = set()
+        p = head
+        while p:
+            if p in seen:   # 再次访问即有环
+                return True
+            seen.add(p)
+            p = p.next
+        return False
+@@SOLUTION: 方法三：计数上限遍历
+@@IDEA
+利用题目节点数上限（10^4）：最多走「上限+1」步，走完还没到 null 说明在环里打转。O(上限)/O(1)，投机但有效的范围利用技巧。
+@@JAVA
+public class Solution {
+    public boolean hasCycle(ListNode head) {
+        ListNode p = head;
+        int limit = 10000 + 1; // 题目节点数上限
+        for (int i = 0; i < limit; i++) {
+            if (p == null) return false;
+            p = p.next;
+        }
+        return true; // 超过上限仍未结束 → 有环
+    }
+}
+@@PY
+class Solution:
+    def hasCycle(self, head: Optional[ListNode]) -> bool:
+        p = head
+        for _ in range(10001):  # 题目节点数上限
+            if p is None:
+                return False
+            p = p.next
+        return True  # 超过上限仍未结束 → 有环
+@@PROBLEM
+@@NO: 26
+@@ID: 142
+@@TITLE: 环形链表 II
+@@DIFF: 中等
+@@CATEGORY: 链表
+@@TAGS: 哈希表;链表;双指针
+@@URL: https://leetcode.cn/problems/linked-list-cycle-ii/
+@@DESC
+给你一个整数数组 nums，数组中的元素 互不相同。返回该数组所有可能的子集（幂集）。
+
+解集 不能 包含重复的子集。你可以按任意顺序返回解集。
+
+示例 1：
+输入：nums = [1,2,3]
+输出：[[],[1],[2],[1,2],[3],[1,3],[2,3],[1,2,3]]
+
+示例 2：
+输入：nums = [0]
+输出：[[],[0]]
+
+提示：
+1 <= nums.length <= 10
+-10 <= nums[i] <= 10
+nums 中的所有元素 互不相同
+给定链表头节点 head，返回链表开始入环的第一个节点；无环则返回 null（pos 含义同上，不作为参数传入）。
+@@SOLUTION: 方法一：Floyd 判圈 + 数学推导（推荐）
+@@IDEA
+Floyd 判圈 + 数学：快慢相遇后，把一个指针放回 head，两指针同速前进，再次相遇处即入环点（可由 a = (n-1)·环长 + (环长-b) 推出）。O(n)/O(1)。
+@@JAVA
+public class Solution {
+    public ListNode detectCycle(ListNode head) {
+        ListNode slow = head, fast = head;
+        while (fast != null && fast.next != null) {
+            slow = slow.next;
+            fast = fast.next.next;
+            if (slow == fast) {        // 相遇
+                ListNode p = head;
+                while (p != slow) {    // 同速前进找入环点
+                    p = p.next;
+                    slow = slow.next;
+                }
+                return p;
+            }
+        }
+        return null;
+    }
+}
+@@PY
+class Solution:
+    def detectCycle(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        slow = fast = head
+        while fast and fast.next:
+            slow = slow.next
+            fast = fast.next.next
+            if slow is fast:        # 相遇
+                p = head
+                while p is not slow:  # 同速前进找入环点
+                    p = p.next
+                    slow = slow.next
+                return p
+        return None
+@@SOLUTION: 方法二：哈希集合
+@@IDEA
+HashSet 判重：第一个重复出现的节点就是入环点。O(n)/O(n)，不涉及数学推导，工程上最稳。
+@@JAVA
+public class Solution {
+    public ListNode detectCycle(ListNode head) {
+        Set<ListNode> seen = new HashSet<>();
+        for (ListNode p = head; p != null; p = p.next) {
+            if (!seen.add(p)) return p; // 首个重复节点即入环点
+        }
+        return null;
+    }
+}
+@@PY
+class Solution:
+    def detectCycle(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        seen = set()
+        p = head
+        while p:
+            if p in seen:   # 首个重复节点即入环点
+                return p
+            seen.add(p)
+            p = p.next
+        return None
+@@SOLUTION: 方法三：先测环长再对齐
+@@IDEA
+三步走：判环得到环内一点 → 走一圈测出环长 c → 一个指针从 head 先走 c 步，再与 head 同速前进，相遇即入环点。把数学关系拆成可执行步骤。
+@@JAVA
+public class Solution {
+    public ListNode detectCycle(ListNode head) {
+        // 1. 判环并得到环内一个节点
+        ListNode slow = head, fast = head, inCycle = null;
+        while (fast != null && fast.next != null) {
+            slow = slow.next;
+            fast = fast.next.next;
+            if (slow == fast) { inCycle = slow; break; }
+        }
+        if (inCycle == null) return null;
+        // 2. 测环长
+        int c = 1;
+        for (ListNode p = inCycle.next; p != inCycle; p = p.next) c++;
+        // 3. 一个指针从 head 先走 c 步，再与 head 同步——相遇即入环点
+        ListNode ahead = head;
+        while (c-- > 0) ahead = ahead.next;
+        ListNode p = head;
+        while (p != ahead) {
+            p = p.next;
+            ahead = ahead.next;
+        }
+        return p;
+    }
+}
+@@PY
+class Solution:
+    def detectCycle(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        # 1. 判环并得到环内一个节点
+        slow = fast = head
+        in_cycle = None
+        while fast and fast.next:
+            slow, fast = slow.next, fast.next.next
+            if slow is fast:
+                in_cycle = slow
+                break
+        if in_cycle is None:
+            return None
+        # 2. 测环长
+        c = 1
+        p = in_cycle.next
+        while p is not in_cycle:
+            c += 1
+            p = p.next
+        # 3. 一个指针先走 c 步再同步，相遇即入环点
+        ahead = head
+        for _ in range(c):
+            ahead = ahead.next
+        p = head
+        while p is not ahead:
+            p, ahead = p.next, ahead.next
+        return p
+@@PROBLEM
+@@NO: 27
+@@ID: 21
+@@TITLE: 合并两个有序链表
+@@DIFF: 简单
+@@CATEGORY: 链表
+@@TAGS: 递归;链表
+@@URL: https://leetcode.cn/problems/merge-two-sorted-lists/
+@@DESC
+给定一个仅包含数字 2-9 的字符串，返回所有它能表示的字母组合。答案可以按任意顺序返回。
+
+给出数字到字母的映射如下（与电话按键相同）。注意 1 不对应任何字母。
+
+示例 1：
+输入：digits = "23"
+输出：["ad","ae","af","bd","be","bf","cd","ce","cf"]
+
+示例 2：
+输入：digits = ""
+输出：[]
+
+示例 3：
+输入：digits = "2"
+输出：["a","b","c"]
+
+提示：
+0 <= digits.length <= 4
+digits[i] 是范围 ['2', '9'] 的一个数字
+将两个升序链表合并为一个新的升序链表并返回（拼接给定链表中的所有节点）。
+示例：1→2→4 与 1→3→4 → 1→1→2→3→4→4。
+@@SOLUTION: 方法一：哑结点迭代（推荐）
+@@IDEA
+哑结点 + 双指针：比较两链表当前节点，小的接到结果尾部并后移；循环结束后把非空链整体接到尾部。O(n+m)/O(1)。
+@@JAVA
+class Solution {
+    public ListNode mergeTwoLists(ListNode a, ListNode b) {
+        ListNode dummy = new ListNode(0), cur = dummy;
+        while (a != null && b != null) {
+            if (a.val <= b.val) { cur.next = a; a = a.next; }
+            else { cur.next = b; b = b.next; }
+            cur = cur.next;
+        }
+        cur.next = (a != null) ? a : b; // 拼接剩余
+        return dummy.next;
+    }
+}
+@@PY
+class Solution:
+    def mergeTwoLists(self, a: Optional[ListNode], b: Optional[ListNode]) -> Optional[ListNode]:
+        dummy = cur = ListNode(0)
+        while a and b:
+            if a.val <= b.val:
+                cur.next, a = a, a.next
+            else:
+                cur.next, b = b, b.next
+            cur = cur.next
+        cur.next = a or b  # 拼接剩余
+        return dummy.next
+@@SOLUTION: 方法二：递归
+@@IDEA
+递归：两链表中值较小的节点作新头，它的 next 指向「剩余部分的递归合并结果」。O(n+m)/O(n+m) 栈，代码极短。
+@@JAVA
+class Solution {
+    public ListNode mergeTwoLists(ListNode a, ListNode b) {
+        if (a == null) return b;
+        if (b == null) return a;
+        if (a.val <= b.val) {
+            a.next = mergeTwoLists(a.next, b); // 小者做头
+            return a;
+        } else {
+            b.next = mergeTwoLists(a, b.next);
+            return b;
+        }
+    }
+}
+@@PY
+class Solution:
+    def mergeTwoLists(self, a: Optional[ListNode], b: Optional[ListNode]) -> Optional[ListNode]:
+        if not a:
+            return b
+        if not b:
+            return a
+        if a.val <= b.val:   # 小者做头
+            a.next = self.mergeTwoLists(a.next, b)
+            return a
+        b.next = self.mergeTwoLists(a, b.next)
+        return b
+@@SOLUTION: 方法三：归并到新链（不改原链）
+@@IDEA
+为每个节点新建副本接到新链，完全不修改原链表结构；适合「不能动原数据」的场景。O(n+m)/O(n+m)。
+@@JAVA
+class Solution {
+    public ListNode mergeTwoLists(ListNode a, ListNode b) {
+        ListNode dummy = new ListNode(0), cur = dummy;
+        while (a != null || b != null) {
+            if (a != null && (b == null || a.val <= b.val)) {
+                cur.next = new ListNode(a.val); // 新建节点
+                a = a.next;
+            } else {
+                cur.next = new ListNode(b.val);
+                b = b.next;
+            }
+            cur = cur.next;
+        }
+        return dummy.next;
+    }
+}
+@@PY
+class Solution:
+    def mergeTwoLists(self, a: Optional[ListNode], b: Optional[ListNode]) -> Optional[ListNode]:
+        dummy = cur = ListNode(0)
+        while a or b:
+            if a and (not b or a.val <= b.val):
+                cur.next = ListNode(a.val)  # 新建节点
+                a = a.next
+            else:
+                cur.next = ListNode(b.val)
+                b = b.next
+            cur = cur.next
+        return dummy.next
+@@PROBLEM
+@@NO: 28
+@@ID: 2
+@@TITLE: 两数相加
+@@DIFF: 中等
+@@CATEGORY: 链表
+@@TAGS: 递归;链表;数学
+@@URL: https://leetcode.cn/problems/add-two-numbers/
+@@DESC
+给你一个 无重复元素 的整数数组 candidates 和一个目标整数 target，找出 candidates 中可以使数字和为目标数 target 的所有不同组合，并以列表形式返回。你可以按任意顺序返回这些组合。
+
+candidates 中的 同一个 数字可以 无限制重复被选取。如果至少一个数字的被选数量不同，则两种组合是不同的。
+
+对于给定的输入，保证和为 target 的不同组合数少于 150 个。
+
+示例 1：
+输入：candidates = [2,3,6,7], target = 7
+输出：[[2,2,3],[7]]
+解释：2 和 3 可以组成一组候选，2 + 2 + 3 = 7。注意 2 可以使用多次。7 也是一个候选，7 = 7。仅有这两种组合。
+
+示例 2：
+输入：candidates = [2,3,5], target = 8
+输出：[[2,2,2,2],[2,3,3],[3,5]]
+
+示例 3：
+输入：candidates = [2], target = 1
+输出：[]
+
+提示：
+1 <= candidates.length <= 30
+2 <= candidates[i] <= 40
+candidates 的所有元素 互不相同
+1 <= target <= 40
+两个非空链表表示两个非负整数（逆序存储，每个节点一位）。将两数相加并返回同样逆序的链表。
+示例：(2→4→3) + (5→6→4) 表示 342 + 465 = 807 → 输出 7→0→8。
+@@SOLUTION: 方法一：迭代模拟加法（推荐）
+@@IDEA
+逐位模拟加法：维护进位 carry，两链对应位与 carry 求和，新节点存 sum%10；循环条件包含 carry≠0，防止最后漏进位。O(max(m,n))/O(1)。
+@@JAVA
+class Solution {
+    public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
+        ListNode dummy = new ListNode(0), cur = dummy;
+        int carry = 0;
+        while (l1 != null || l2 != null || carry != 0) {
+            int sum = carry;
+            if (l1 != null) { sum += l1.val; l1 = l1.next; }
+            if (l2 != null) { sum += l2.val; l2 = l2.next; }
+            carry = sum / 10;
+            cur.next = new ListNode(sum % 10);
+            cur = cur.next;
+        }
+        return dummy.next;
+    }
+}
+@@PY
+class Solution:
+    def addTwoNumbers(self, l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:
+        dummy = cur = ListNode(0)
+        carry = 0
+        while l1 or l2 or carry:
+            total = carry
+            if l1:
+                total += l1.val
+                l1 = l1.next
+            if l2:
+                total += l2.val
+                l2 = l2.next
+            carry, digit = divmod(total, 10)
+            cur.next = ListNode(digit)
+            cur = cur.next
+        return dummy.next
+@@SOLUTION: 方法二：递归模拟
+@@IDEA
+递归版本：当前位和 = 两值 + carry，本位节点next 指向「剩余部分的递归结果」；两链空且进位 0 时终止。O(max(m,n))/递归栈。
+@@JAVA
+class Solution {
+    public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
+        return add(l1, l2, 0);
+    }
+    private ListNode add(ListNode a, ListNode b, int carry) {
+        if (a == null && b == null && carry == 0) return null; // 终止
+        int sum = carry;
+        if (a != null) { sum += a.val; a = a.next; }
+        if (b != null) { sum += b.val; b = b.next; }
+        ListNode node = new ListNode(sum % 10);
+        node.next = add(a, b, sum / 10); // 递归下一位
+        return node;
+    }
+}
+@@PY
+class Solution:
+    def addTwoNumbers(self, l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:
+        def add(a, b, carry):
+            if not a and not b and carry == 0:  # 终止
+                return None
+            total = carry
+            if a:
+                total += a.val
+                a = a.next
+            if b:
+                total += b.val
+                b = b.next
+            node = ListNode(total % 10)
+            node.next = add(a, b, total // 10)  # 递归下一位
+            return node
+        return add(l1, l2, 0)
+@@SOLUTION: 方法三：转数值相加再转链（直观但有溢出风险）
+@@IDEA
+把两条链还原成整数相加，再按位拆回链表。Java 需 BigInteger（节点可达 100 位），Python 天然大整数。O(m+n)，仅作思路拓展，面试应写模拟。
+@@JAVA
+class Solution {
+    public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
+        java.math.BigInteger x = toNumber(l1), y = toNumber(l2);
+        String s = x.add(y).toString(); // 大整数相加
+        ListNode dummy = new ListNode(0), cur = dummy;
+        for (int i = s.length() - 1; i >= 0; i--) { // 逆序建链
+            cur.next = new ListNode(s.charAt(i) - '0');
+            cur = cur.next;
+        }
+        return dummy.next;
+    }
+    private java.math.BigInteger toNumber(ListNode head) {
+        java.math.BigInteger v = java.math.BigInteger.ZERO, base = java.math.BigInteger.ONE;
+        for (ListNode p = head; p != null; p = p.next) {
+            v = v.add(base.multiply(java.math.BigInteger.valueOf(p.val)));
+            base = base.multiply(java.math.BigInteger.TEN);
+        }
+        return v;
+    }
+}
+@@PY
+class Solution:
+    def addTwoNumbers(self, l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:
+        def to_number(node):  # 大整数相加
+            v = 0
+            base = 1
+            while node:
+                v += node.val * base
+                base *= 10
+                node = node.next
+            return v
+
+        s = str(to_number(l1) + to_number(l2))
+        dummy = cur = ListNode(0)
+        for ch in reversed(s):  # 逆序建链
+            cur.next = ListNode(int(ch))
+            cur = cur.next
+        return dummy.next
+@@PROBLEM
+@@NO: 29
+@@ID: 19
+@@TITLE: 删除链表的倒数第 N 个结点
+@@DIFF: 中等
+@@CATEGORY: 链表
+@@TAGS: 链表;双指针
+@@URL: https://leetcode.cn/problems/remove-nth-node-from-end-of-list/
+@@DESC
+数字 n 代表生成括号的对数，请你设计一个函数，用于能够生成所有可能的并且 有效的 括号组合。
+
+示例 1：
+输入：n = 3
+输出：["((()))","(()())","(())()","()(())","()()()"]
+
+示例 2：
+输入：n = 1
+输出：["()"]
+
+提示：
+1 <= n <= 8
+给你一个链表的头节点 head 和整数 n，删除链表的倒数第 n 个结点并返回头节点。要求一趟扫描实现。
+示例：1→2→3→4→5, n=2 → 1→2→3→5。
+@@SOLUTION: 方法一：快慢指针 + 哑结点（推荐，一趟扫描）
+@@IDEA
+一趟扫描标准解：哑结点护住头部，fast 先走 n+1 步拉开距离，再与 slow 同步前进，fast 到 null 时 slow 恰在待删节点的前驱。O(L)/O(1)。
+@@JAVA
+class Solution {
+    public ListNode removeNthFromEnd(ListNode head, int n) {
+        ListNode dummy = new ListNode(0, head);
+        ListNode fast = dummy, slow = dummy;
+        for (int i = 0; i <= n; i++) fast = fast.next; // fast 先走 n+1 步
+        while (fast != null) {
+            fast = fast.next;
+            slow = slow.next;
+        }
+        slow.next = slow.next.next; // 删除倒数第 n 个
+        return dummy.next;
+    }
+}
+@@PY
+class Solution:
+    def removeNthFromEnd(self, head: Optional[ListNode], n: int) -> Optional[ListNode]:
+        dummy = ListNode(0, head)
+        fast = slow = dummy
+        for _ in range(n + 1):   # fast 先走 n+1 步
+            fast = fast.next
+        while fast:
+            fast = fast.next
+            slow = slow.next
+        slow.next = slow.next.next  # 删除倒数第 n 个
+        return dummy.next
+@@SOLUTION: 方法二：先测长度再删
+@@IDEA
+两遍扫描：第一遍测链表长度 L，倒数第 n 个即正数第 L-n+1 个；第二遍走到其前驱删除。O(L)/O(1)，逻辑最直白。
+@@JAVA
+class Solution {
+    public ListNode removeNthFromEnd(ListNode head, int n) {
+        int len = 0;
+        for (ListNode p = head; p != null; p = p.next) len++; // 测长度
+        ListNode dummy = new ListNode(0, head);
+        ListNode cur = dummy;
+        for (int i = 0; i < len - n; i++) cur = cur.next; // 走到前驱
+        cur.next = cur.next.next;
+        return dummy.next;
+    }
+}
+@@PY
+class Solution:
+    def removeNthFromEnd(self, head: Optional[ListNode], n: int) -> Optional[ListNode]:
+        length = 0
+        p = head
+        while p:          # 测长度
+            length += 1
+            p = p.next
+        dummy = ListNode(0, head)
+        cur = dummy
+        for _ in range(length - n):  # 走到前驱
+            cur = cur.next
+        cur.next = cur.next.next
+        return dummy.next
+@@SOLUTION: 方法三：递归回溯计数
+@@IDEA
+递归回溯计数：递归压到 null 后开始回溯计数，数到第 n+1 层正是待删节点的前驱，直接改指针删除。O(L)/O(L) 栈，体现「递归返回过程即逆序」。
+@@JAVA
+class Solution {
+    private int count = 0;
+
+    public ListNode removeNthFromEnd(ListNode head, int n) {
+        ListNode dummy = new ListNode(0, head);
+        remove(dummy, n);
+        return dummy.next;
+    }
+    private void remove(ListNode node, int n) {
+        if (node == null) return;
+        remove(node.next, n);      // 先递归到尾
+        count++;                   // 回溯计数
+        if (count == n + 1) {      // 前驱层
+            node.next = node.next.next;
+        }
+    }
+}
+@@PY
+class Solution:
+    def removeNthFromEnd(self, head: Optional[ListNode], n: int) -> Optional[ListNode]:
+        self.count = 0
+        dummy = ListNode(0, head)
+
+        def remove(node):
+            if not node:
+                return
+            remove(node.next)   # 先递归到尾
+            self.count += 1     # 回溯计数
+            if self.count == n + 1:  # 前驱层
+                node.next = node.next.next
+
+        remove(dummy)
+        return dummy.next
+@@PROBLEM
+@@NO: 30
+@@ID: 24
+@@TITLE: 两两交换链表中的节点
+@@DIFF: 中等
+@@CATEGORY: 链表
+@@TAGS: 链表;递归
+@@URL: https://leetcode.cn/problems/swap-nodes-in-pairs/
+@@DESC
+给定一个 m x n 二维字符网格 board 和一个字符串单词 word。如果 word 存在于网格中，返回 true；否则，返回 false。
+
+单词必须按照字母顺序，通过相邻的单元格内的字母构成，其中「相邻」单元格是那些水平相邻或垂直相邻的单元格。同一个单元格内的字母不允许被重复使用。
+
+示例 1：
+输入：board = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], word = "ABCCED"
+输出：true
+
+示例 2：
+输入：board = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], word = "SEE"
+输出：true
+
+示例 3：
+输入：board = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], word = "ABCB"
+输出：false
+
+提示：
+m == board.length, n = board[i].length
+1 <= m, n <= 6
+1 <= word.length <= 15
+board 和 word 仅由大小写英文字母组成
+
+进阶：你可以使用搜索剪枝的技术来优化解决方案，使其在 board 更大的情况下可以更快解决问题？
+给你一个链表，两两交换其中相邻的节点，并返回交换后的链表头节点。必须实际交换节点（不能只改值）。
+示例：1→2→3→4 → 2→1→4→3。
+@@SOLUTION: 方法一：哑结点迭代（推荐）
+@@IDEA
+哑结点迭代：cur 指向每对的前驱，三步接线 a.next=b.next、b.next=a、cur.next=b，然后 cur 前进到 a（已变成后一个）。O(n)/O(1)。
+@@JAVA
+class Solution {
+    public ListNode swapPairs(ListNode head) {
+        ListNode dummy = new ListNode(0, head);
+        ListNode cur = dummy;
+        while (cur.next != null && cur.next.next != null) {
+            ListNode a = cur.next, b = a.next;
+            a.next = b.next; // 三步接线
+            b.next = a;
+            cur.next = b;
+            cur = a;         // a 已成后一个，作新前驱
+        }
+        return dummy.next;
+    }
+}
+@@PY
+class Solution:
+    def swapPairs(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        dummy = ListNode(0, head)
+        cur = dummy
+        while cur.next and cur.next.next:
+            a, b = cur.next, cur.next.next
+            a.next = b.next  # 三步接线
+            b.next = a
+            cur.next = b
+            cur = a          # a 已成后一个，作新前驱
+        return dummy.next
+@@SOLUTION: 方法二：递归
+@@IDEA
+递归：交换前两个节点后，第一个节点的 next 接「剩余链表的递归交换结果」，返回第二个节点作为新头。O(n)/O(n) 栈。
+@@JAVA
+class Solution {
+    public ListNode swapPairs(ListNode head) {
+        if (head == null || head.next == null) return head;
+        ListNode second = head.next;
+        head.next = swapPairs(second.next); // 剩余部分递归交换
+        second.next = head;                 // 第二个指回第一个
+        return second;                      // 新头
+    }
+}
+@@PY
+class Solution:
+    def swapPairs(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        if not head or not head.next:
+            return head
+        second = head.next
+        head.next = self.swapPairs(second.next)  # 剩余部分递归交换
+        second.next = head  # 第二个指回第一个
+        return second       # 新头
+@@SOLUTION: 方法三：值交换（偷懒写法，题目不允许但作对照）
+@@IDEA
+偷懒对照：只交换相邻节点的值而不动指针结构，代码最短；不符合题目「实际交换节点」的要求，用于对照理解题意。
+@@JAVA
+class Solution {
+    public ListNode swapPairs(ListNode head) {
+        for (ListNode p = head; p != null && p.next != null; p = p.next.next) {
+            int t = p.val;      // 只交换值
+            p.val = p.next.val;
+            p.next.val = t;
+        }
+        return head;
+    }
+}
+@@PY
+class Solution:
+    def swapPairs(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        p = head
+        while p and p.next:
+            p.val, p.next.val = p.next.val, p.val  # 只交换值
+            p = p.next.next
+        return head
+@@PROBLEM
+@@NO: 31
+@@ID: 25
+@@TITLE: K 个一组翻转链表
+@@DIFF: 困难
+@@CATEGORY: 链表
+@@TAGS: 递归;链表
+@@URL: https://leetcode.cn/problems/reverse-nodes-in-k-group/
+@@DESC
+给你一个字符串 s，请你将 s 分割成一些子串，使每个子串都是回文串。返回 s 所有可能的分割方案。
+
+示例 1：
+输入：s = "aab"
+输出：[["a","a","b"],["aa","b"]]
+
+示例 2：
+输入：s = "a"
+输出：[["a"]]
+
+提示：
+1 <= s.length <= 16
+s 仅由小写英文字母组成
+给你链表的头节点 head 和整数 k，每 k 个节点一组进行翻转，不足 k 的尾部保持原样。返回修改后的链表。
+示例：1→2→3→4→5, k=2 → 2→1→4→3→5；k=3 → 3→2→1→4→5。
+@@SOLUTION: 方法一：迭代分组反转（推荐）
+@@IDEA
+迭代分组反转：每轮先探测本组第 k 个节点（不足则结束），整段反转后与前后接好，prevGroup 移到本组新尾。易错点：反转后原组头变成组尾要正确接回。O(n)/O(1)。
+@@JAVA
+class Solution {
+    public ListNode reverseKGroup(ListNode head, int k) {
+        ListNode dummy = new ListNode(0);
+        dummy.next = head;
+        ListNode prevGroup = dummy;
+        while (true) {
+            ListNode kth = prevGroup;
+            for (int i = 0; i < k && kth != null; i++) kth = kth.next;
+            if (kth == null) break;            // 不足 k 个，保持原样
+            ListNode nextGroup = kth.next;
+            ListNode cur = prevGroup.next, prev = nextGroup;
+            while (cur != nextGroup) {         // 反转本组 [cur..kth]
+                ListNode nxt = cur.next;
+                cur.next = prev;
+                prev = cur;
+                cur = nxt;
+            }
+            ListNode groupTail = prevGroup.next; // 原组头，翻转后成尾
+            prevGroup.next = kth;
+            groupTail.next = nextGroup;
+            prevGroup = groupTail;
+        }
+        return dummy.next;
+    }
+}
+@@PY
+class Solution:
+    def reverseKGroup(self, head: Optional[ListNode], k: int) -> Optional[ListNode]:
+        dummy = ListNode(0, head)
+        prev_group = dummy
+        while True:
+            kth = prev_group
+            for _ in range(k):
+                kth = kth.next
+                if kth is None:
+                    return dummy.next  # 不足 k 个，保持原样
+            next_group = kth.next
+            cur, prev = prev_group.next, next_group
+            while cur is not next_group:  # 反转本组
+                cur.next, prev, cur = prev, cur, cur.next
+            group_tail = prev_group.next  # 原组头，翻转后成尾
+            prev_group.next = kth
+            group_tail.next = next_group
+            prev_group = group_tail
+@@SOLUTION: 方法二：递归
+@@IDEA
+递归：先探测 k 个节点，不足直接返回 head；反转本组（prev 初值 = 递归处理剩余的结果），返回新头。O(n)/O(n/k) 栈。
+@@JAVA
+class Solution {
+    public ListNode reverseKGroup(ListNode head, int k) {
+        ListNode probe = head;
+        for (int i = 0; i < k; i++) {
+            if (probe == null) return head; // 不足 k 个
+            probe = probe.next;
+        }
+        // 反转 [head, probe) 区间，prev 初值 = 递归处理剩余的结果
+        ListNode prev = reverseKGroup(probe, k);
+        ListNode cur = head;
+        while (cur != probe) {
+            ListNode nxt = cur.next;
+            cur.next = prev;
+            prev = cur;
+            cur = nxt;
+        }
+        return prev; // 本组新头
+    }
+}
+@@PY
+class Solution:
+    def reverseKGroup(self, head: Optional[ListNode], k: int) -> Optional[ListNode]:
+        probe = head
+        for _ in range(k):
+            if not probe:      # 不足 k 个
+                return head
+            probe = probe.next
+        prev = self.reverseKGroup(probe, k)  # 递归处理剩余
+        cur = head
+        while cur is not probe:  # 反转本组
+            cur.next, prev, cur = prev, cur, cur.next
+        return prev  # 本组新头
+@@SOLUTION: 方法三：拆成数组重排再回接
+@@IDEA
+把所有节点指针存进数组，按组在数组里倒序重排，再统一回接 next。O(n)/O(n)，不碰指针细节，最好调试。
+@@JAVA
+class Solution {
+    public ListNode reverseKGroup(ListNode head, int k) {
+        List<ListNode> nodes = new ArrayList<>();
+        for (ListNode p = head; p != null; p = p.next) nodes.add(p);
+        int n = nodes.size();
+        for (int start = 0; start + k <= n; start += k) {
+            // 组内倒序重排
+            for (int i = start, j = start + k - 1; i < j; i++, j--) {
+                ListNode t = nodes.get(i); nodes.set(i, nodes.get(j)); nodes.set(j, t);
+            }
+        }
+        for (int i = 0; i + 1 < n; i++) nodes.get(i).next = nodes.get(i + 1);
+        if (!nodes.isEmpty()) nodes.get(n - 1).next = null;
+        return nodes.isEmpty() ? null : nodes.get(0);
+    }
+}
+@@PY
+class Solution:
+    def reverseKGroup(self, head: Optional[ListNode], k: int) -> Optional[ListNode]:
+        nodes = []
+        p = head
+        while p:      # 指针存数组
+            nodes.append(p)
+            p = p.next
+        n = len(nodes)
+        for start in range(0, n - k + 1, k):
+            nodes[start:start + k] = nodes[start:start + k][::-1]  # 组内倒序
+        for i in range(n - 1):  # 回接 next
+            nodes[i].next = nodes[i + 1]
+        if nodes:
+            nodes[-1].next = None
+            return nodes[0]
+        return None
+@@PROBLEM
+@@NO: 32
+@@ID: 138
+@@TITLE: 随机链表的复制
+@@DIFF: 中等
+@@CATEGORY: 链表
+@@TAGS: 哈希表;链表
+@@URL: https://leetcode.cn/problems/copy-list-with-random-pointer/
+@@DESC
+按照国际象棋的规则，皇后可以攻击与之处在同一行或同一列或同一斜线上的棋子。
+
+n 皇后问题 研究的是如何将 n 个皇后放置在 n×n 的棋盘上，并且使皇后彼此之间不能相互攻击。
+
+给你一个整数 n，返回所有不同的 n 皇后问题的解决方案。每一个解包含一个不同的 n 皇后问题的棋子放置方案，该方案中 'Q' 和 '.' 分别代表了皇后和空位。
+
+示例 1：
+输入：n = 4
+输出：[[".Q..","...Q","Q...","..Q."],["..Q.","Q...","...Q",".Q.."]]
+解释：如上图所示，4 皇后问题存在两个不同的解法。
+
+示例 2：
+输入：n = 1
+输出：[["Q"]]
+
+提示：
+1 <= n <= 9
+给定长度为 n 的链表，每个节点含 val、next、random（可指向任意节点或 null）。
+构造该链表的深拷贝（新节点值与 next/random 关系一一对应）。
+@@SOLUTION: 方法一：哈希表两遍遍历（推荐）
+@@IDEA
+哈希表两遍遍历：第一遍为每个旧节点建新节点并存「旧→新」映射；第二遍按映射接好 next 和 random（用 map.get 处理 null）。O(n)/O(n)。
+@@JAVA
+class Solution {
+    public Node copyRandomList(Node head) {
+        if (head == null) return null;
+        Map<Node, Node> map = new HashMap<>(); // 旧 -> 新
+        for (Node p = head; p != null; p = p.next) {
+            map.put(p, new Node(p.val));
+        }
+        for (Node p = head; p != null; p = p.next) {
+            Node copy = map.get(p);
+            copy.next = map.get(p.next);     // 接 next
+            copy.random = map.get(p.random); // 接 random
+        }
+        return map.get(head);
+    }
+}
+@@PY
+class Solution:
+    def copyRandomList(self, head: 'Optional[Node]') -> 'Optional[Node]':
+        if not head:
+            return None
+        mapping = {}  # 旧 -> 新
+        p = head
+        while p:
+            mapping[p] = Node(p.val)
+            p = p.next
+        p = head
+        while p:
+            copy = mapping[p]
+            copy.next = mapping.get(p.next)     # 接 next
+            copy.random = mapping.get(p.random) # 接 random
+            p = p.next
+        return mapping[head]
+@@SOLUTION: 方法二：原地拼接 + 拆分（O(1) 空间）
+@@IDEA
+O(1) 空间技巧：把每个新节点交错插到旧节点之后（A→A'→B→B'），新节点 random = 旧节点 random.next；最后拆成两条链并恢复原链。O(n)/O(1)。
+@@JAVA
+class Solution {
+    public Node copyRandomList(Node head) {
+        if (head == null) return null;
+        for (Node p = head; p != null; p = p.next.next) {
+            Node copy = new Node(p.val);   // 交错插入
+            copy.next = p.next;
+            p.next = copy;
+        }
+        for (Node p = head; p != null; p = p.next.next) {
+            if (p.random != null) {
+                p.next.random = p.random.next; // 新 random = 旧 random 的 next
+            }
+        }
+        Node dummy = new Node(0), cur = dummy;
+        for (Node p = head; p != null; p = p.next) {
+            cur.next = p.next;  // 拆分新链
+            cur = cur.next;
+            p.next = p.next.next; // 恢复原链
+        }
+        return dummy.next;
+    }
+}
+@@PY
+class Solution:
+    def copyRandomList(self, head: 'Optional[Node]') -> 'Optional[Node]':
+        if not head:
+            return None
+        p = head
+        while p:                    # 交错插入
+            copy = Node(p.val, p.next, None)
+            p.next = copy
+            p = copy.next
+        p = head
+        while p:
+            if p.random:
+                p.next.random = p.random.next  # 新 random = 旧 random 的 next
+            p = p.next.next
+        dummy = cur = Node(0, None, None)
+        p = head
+        while p:                    # 拆分新链
+            cur.next = p.next
+            cur = cur.next
+            p.next = p.next.next    # 恢复原链
+            p = p.next
+        return dummy.next
+@@SOLUTION: 方法三：回溯 + 缓存
+@@IDEA
+回溯 + 缓存：递归复制，next/random 指向的节点先递归创建；进入递归先把自己放进缓存再递归，天然处理 random 成环。与「克隆图」同一套路。
+@@JAVA
+class Solution {
+    private final Map<Node, Node> cache = new HashMap<>();
+
+    public Node copyRandomList(Node head) {
+        if (head == null) return null;
+        if (cache.containsKey(head)) return cache.get(head); // 已建过
+        Node copy = new Node(head.val);
+        cache.put(head, copy);        // 先放入缓存防环
+        copy.next = copyRandomList(head.next);
+        copy.random = copyRandomList(head.random);
+        return copy;
+    }
+}
+@@PY
+class Solution:
+    def copyRandomList(self, head: 'Optional[Node]') -> 'Optional[Node]':
+        cache = {}
+
+        def clone(node):
+            if not node:
+                return None
+            if node in cache:   # 已建过
+                return cache[node]
+            copy = Node(node.val)
+            cache[node] = copy  # 先放入缓存防环
+            copy.next = clone(node.next)
+            copy.random = clone(node.random)
+            return copy
+
+        return clone(head)
+@@PROBLEM
+@@NO: 33
+@@ID: 148
+@@TITLE: 排序链表
+@@DIFF: 中等
+@@CATEGORY: 链表
+@@TAGS: 链表;双指针;分治;排序;归并排序
+@@URL: https://leetcode.cn/problems/sort-list/
+@@DESC
+给定一个排序数组和一个目标值，在数组中找到目标值，并返回其索引。如果目标值不存在于数组中，返回它将会被按顺序插入的位置。
+
+请必须使用时间复杂度为 O(log n) 的算法。
+
+示例 1：
+输入：nums = [1,3,5,6], target = 5
+输出：2
+
+示例 2：
+输入：nums = [1,3,5,6], target = 2
+输出：1
+
+示例 3：
+输入：nums = [1,3,5,6], target = 7
+输出：4
+
+提示：
+1 <= nums.length <= 10^4
+nums 为 无重复元素 的升序排列数组
+-10^4 <= target <= 10^4
+给你链表的头结点 head，请将其按升序排列并返回排序后的链表。要求 O(n log n) 时间、常数级空间（递归栈除外）。
+示例：4→2→1→3 → 1→2→3→4。
+@@SOLUTION: 方法一：归并排序（递归版，推荐）
+@@IDEA
+归并排序：快慢指针找中点断开，两半递归排序，再按「合并两个有序链表」合并。注意快指针要从 head.next 起步，避免两节点死循环。O(n log n)/O(log n) 栈。
+@@JAVA
+class Solution {
+    public ListNode sortList(ListNode head) {
+        if (head == null || head.next == null) return head;
+        ListNode slow = head, fast = head.next;
+        while (fast != null && fast.next != null) { // 找中点
+            slow = slow.next;
+            fast = fast.next.next;
+        }
+        ListNode mid = slow.next;
+        slow.next = null; // 断开
+        return merge(sortList(head), sortList(mid));
+    }
+    private ListNode merge(ListNode a, ListNode b) {
+        ListNode dummy = new ListNode(0), cur = dummy;
+        while (a != null && b != null) {
+            if (a.val <= b.val) { cur.next = a; a = a.next; }
+            else { cur.next = b; b = b.next; }
+            cur = cur.next;
+        }
+        cur.next = (a != null) ? a : b;
+        return dummy.next;
+    }
+}
+@@PY
+class Solution:
+    def sortList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        if not head or not head.next:
+            return head
+        slow, fast = head, head.next
+        while fast and fast.next:  # 找中点
+            slow, fast = slow.next, fast.next.next
+        mid = slow.next
+        slow.next = None  # 断开
+        return self._merge(self.sortList(head), self.sortList(mid))
+
+    def _merge(self, a, b):
+        dummy = cur = ListNode(0)
+        while a and b:
+            if a.val <= b.val:
+                cur.next, a = a, a.next
+            else:
+                cur.next, b = b, b.next
+            cur = cur.next
+        cur.next = a or b
+        return dummy.next
+@@SOLUTION: 方法二：自底向上归并（O(1) 空间）
+@@IDEA
+自底向上归并：从步长 1 开始两两合并相邻子链，步长翻倍直到覆盖全链；无递归，满足严格 O(1) 空间。实现较繁，是本题的空间最优解。
+@@JAVA
+class Solution {
+    public ListNode sortList(ListNode head) {
+        if (head == null) return null;
+        int len = 0;
+        for (ListNode p = head; p != null; p = p.next) len++;
+        ListNode dummy = new ListNode(0, head);
+        for (int step = 1; step < len; step <<= 1) {   // 子链长度翻倍
+            ListNode prev = dummy, cur = dummy.next;
+            while (cur != null) {
+                ListNode left = cur;
+                ListNode mid = cut(left, step);        // 第一段
+                ListNode right = cut(mid, step);       // 第二段
+                prev.next = merge(left, right);        // 合并两段
+                while (prev.next != null) prev = prev.next; // 移到尾部
+                cur = right;
+            }
+        }
+        return dummy.next;
+    }
+    private ListNode cut(ListNode head, int n) { // 截断 n 个节点，返回剩余头
+        while (n > 1 && head != null) {
+            head = head.next;
+            n--;
+        }
+        if (head == null) return null;
+        ListNode next = head.next;
+        head.next = null;
+        return next;
+    }
+    private ListNode merge(ListNode a, ListNode b) {
+        ListNode dummy = new ListNode(0), cur = dummy;
+        while (a != null && b != null) {
+            if (a.val <= b.val) { cur.next = a; a = a.next; }
+            else { cur.next = b; b = b.next; }
+            cur = cur.next;
+        }
+        cur.next = (a != null) ? a : b;
+        return dummy.next;
+    }
+}
+@@PY
+class Solution:
+    def sortList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        if not head:
+            return None
+        length, p = 0, head
+        while p:          # 测长度
+            length += 1
+            p = p.next
+        dummy = ListNode(0, head)
+        step = 1
+        while step < length:      # 子链长度翻倍
+            prev, cur = dummy, dummy.next
+            while cur:
+                left = cur
+                mid = self._cut(left, step)    # 第一段
+                right = self._cut(mid, step)   # 第二段
+                prev.next = self._merge(left, right)
+                while prev.next:               # 移到尾部
+                    prev = prev.next
+                cur = right
+            step <<= 1
+        return dummy.next
+
+    def _cut(self, head, n):  # 截断 n 个节点，返回剩余头
+        while n > 1 and head:
+            head = head.next
+            n -= 1
+        if not head:
+            return None
+        nxt = head.next
+        head.next = None
+        return nxt
+
+    def _merge(self, a, b):
+        dummy = cur = ListNode(0)
+        while a and b:
+            if a.val <= b.val:
+                cur.next, a = a, a.next
+            else:
+                cur.next, b = b, b.next
+            cur = cur.next
+        cur.next = a or b
+        return dummy.next
+@@SOLUTION: 方法三：转数组排序后回写值
+@@IDEA
+务实解：把值存进数组排序后回写节点值（不动指针）。O(n log n)/O(n)，工程上最快写完，但面试要说明「未按要求操作节点」。
+@@JAVA
+class Solution {
+    public ListNode sortList(ListNode head) {
+        int[] vals = new int[length(head)];
+        int i = 0;
+        for (ListNode p = head; p != null; p = p.next) vals[i++] = p.val;
+        Arrays.sort(vals); // 排序
+        i = 0;
+        for (ListNode p = head; p != null; p = p.next) p.val = vals[i++]; // 回写
+        return head;
+    }
+    private int length(ListNode head) {
+        int n = 0;
+        for (ListNode p = head; p != null; p = p.next) n++;
+        return n;
+    }
+}
+@@PY
+class Solution:
+    def sortList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        vals = []
+        p = head
+        while p:      # 取值
+            vals.append(p.val)
+            p = p.next
+        vals.sort()   # 排序
+        p = head
+        for v in vals:  # 回写
+            p.val = v
+            p = p.next
+        return head
+@@PROBLEM
+@@NO: 34
+@@ID: 23
+@@TITLE: 合并 K 个升序链表
+@@DIFF: 困难
+@@CATEGORY: 链表
+@@TAGS: 链表;分治;堆(优先队列);归并排序
+@@URL: https://leetcode.cn/problems/merge-k-sorted-lists/
+@@DESC
+给你一个 m x n 的整数矩阵 matrix（下标从 0 开始）和一个整数 target。如果 target 在矩阵中，返回 true；否则，返回 false。
+
+该矩阵具有以下性质：每行中的整数从左到右按非严格递增顺序排列；每行第一个整数大于前一行的最后一个整数。
+
+示例 1：
+输入：matrix = [[1,3,5,7],[10,11,16,20],[23,30,34,60]], target = 3
+输出：true
+
+示例 2：
+输入：matrix = [[1,3,5,7],[10,11,16,20],[23,30,34,60]], target = 13
+输出：false
+
+提示：
+1 <= m, n <= 100
+-10^4 <= matrix[i][j], target <= 10^4
+给你一个链表数组 lists，其中每个链表都已按升序排列。请将它们合并成一个升序链表并返回。
+示例：lists = [1→4→5, 1→3→4, 2→6] → 输出 1→1→2→3→4→4→5→6。
+@@SOLUTION: 方法一：小根堆（推荐）
+@@IDEA
+小根堆：各链表头节点入堆，每次弹出最小者接到结果尾部，再把它的 next 入堆。堆中始终最多 K 个元素，O(N log K)/O(K)。
+@@JAVA
+class Solution {
+    public ListNode mergeKLists(ListNode[] lists) {
+        if (lists == null || lists.length == 0) return null;
+        PriorityQueue<ListNode> heap = new PriorityQueue<>((a, b) -> a.val - b.val);
+        for (ListNode h : lists) {
+            if (h != null) heap.offer(h);
+        }
+        ListNode dummy = new ListNode(0), cur = dummy;
+        while (!heap.isEmpty()) {
+            ListNode node = heap.poll(); // 当前最小
+            cur.next = node;
+            cur = cur.next;
+            if (node.next != null) heap.offer(node.next); // 后继入堆
+        }
+        return dummy.next;
+    }
+}
+@@PY
+class Solution:
+    def mergeKLists(self, lists: List[Optional[ListNode]]) -> Optional[ListNode]:
+        heap = []
+        for i, h in enumerate(lists):
+            if h:
+                heapq.heappush(heap, (h.val, i, h))  # i 防止比较节点
+        dummy = cur = ListNode(0)
+        while heap:
+            val, i, node = heapq.heappop(heap)  # 当前最小
+            cur.next = node
+            cur = cur.next
+            if node.next:
+                heapq.heappush(heap, (node.next.val, i, node.next))
+        return dummy.next
+@@SOLUTION: 方法二：分治两两合并
+@@IDEA
+分治：每轮把链表数组两两合并，数组长度减半，重复 log K 轮；复用「合并两个有序链表」。O(N log K)/O(1)，不依赖堆。
+@@JAVA
+class Solution {
+    public ListNode mergeKLists(ListNode[] lists) {
+        if (lists == null || lists.length == 0) return null;
+        List<ListNode> cur = new ArrayList<>(Arrays.asList(lists));
+        while (cur.size() > 1) {
+            List<ListNode> next = new ArrayList<>();
+            for (int i = 0; i < cur.size(); i += 2) {
+                ListNode a = cur.get(i);
+                ListNode b = (i + 1 < cur.size()) ? cur.get(i + 1) : null;
+                next.add(mergeTwo(a, b)); // 两两合并
+            }
+            cur = next;
+        }
+        return cur.get(0);
+    }
+    private ListNode mergeTwo(ListNode a, ListNode b) {
+        ListNode dummy = new ListNode(0), tail = dummy;
+        while (a != null && b != null) {
+            if (a.val <= b.val) { tail.next = a; a = a.next; }
+            else { tail.next = b; b = b.next; }
+            tail = tail.next;
+        }
+        tail.next = (a != null) ? a : b;
+        return dummy.next;
+    }
+}
+@@PY
+class Solution:
+    def mergeKLists(self, lists: List[Optional[ListNode]]) -> Optional[ListNode]:
+        if not lists:
+            return None
+        cur = lists
+        while len(cur) > 1:
+            nxt = []
+            for i in range(0, len(cur), 2):
+                a = cur[i]
+                b = cur[i + 1] if i + 1 < len(cur) else None
+                nxt.append(self._merge_two(a, b))  # 两两合并
+            cur = nxt
+        return cur[0]
+
+    def _merge_two(self, a, b):
+        dummy = tail = ListNode(0)
+        while a and b:
+            if a.val <= b.val:
+                tail.next, a = a, a.next
+            else:
+                tail.next, b = b, b.next
+            tail = tail.next
+        tail.next = a or b
+        return dummy.next
+@@SOLUTION: 方法三：全部节点收集后排序重建
+@@IDEA
+全部节点收集到列表按值排序后顺序回接。O(N log N)/O(N)，代码最短，数据量小的时候最省事。
+@@JAVA
+class Solution {
+    public ListNode mergeKLists(ListNode[] lists) {
+        List<ListNode> nodes = new ArrayList<>();
+        for (ListNode h : lists) {
+            for (ListNode p = h; p != null; p = p.next) nodes.add(p);
+        }
+        nodes.sort((a, b) -> a.val - b.val); // 按值排序
+        ListNode dummy = new ListNode(0), cur = dummy;
+        for (ListNode node : nodes) { // 回接
+            cur.next = node;
+            cur = cur.next;
+        }
+        cur.next = null;
+        return dummy.next;
+    }
+}
+@@PY
+class Solution:
+    def mergeKLists(self, lists: List[Optional[ListNode]]) -> Optional[ListNode]:
+        nodes = []
+        for h in lists:
+            while h:
+                nodes.append(h)  # 收集节点
+                h = h.next
+        nodes.sort(key=lambda x: x.val)  # 按值排序
+        dummy = cur = ListNode(0)
+        for node in nodes:  # 回接
+            cur.next = node
+            cur = cur.next
+        cur.next = None
+        return dummy.next
+@@PROBLEM
+@@NO: 35
+@@ID: 146
+@@TITLE: LRU 缓存
+@@DIFF: 中等
+@@CATEGORY: 链表
+@@TAGS: 设计;哈希表;链表;双向链表
+@@URL: https://leetcode.cn/problems/lru-cache/
+@@DESC
+给你一个按照非递减顺序排列的整数数组 nums，和一个目标值 target。请你找出给定目标值在数组中的开始位置和结束位置。
+
+如果数组中不存在目标值 target，返回 [-1, -1]。
+
+你必须设计并实现时间复杂度为 O(log n) 的算法解决此问题。
+
+示例 1：
+输入：nums = [5,7,7,8,8,10], target = 8
+输出：[3,4]
+
+示例 2：
+输入：nums = [5,7,7,8,8,10], target = 6
+输出：[-1,-1]
+
+示例 3：
+输入：nums = [], target = 0
+输出：[-1,-1]
+
+提示：
+0 <= nums.length <= 10^5
+-10^9 <= nums[i] <= 10^9
+nums 是一个非递减数组
+-10^9 <= target <= 10^9
+设计并实现满足 LRU（最近最少使用）约束的缓存结构：LRUCache(capacity) 初始化容量；
+get(key) 不存在返回 -1；put(key, value) 写入，超容量时淘汰最久未使用的关键字。
+get 和 put 都要 O(1)。
+@@SOLUTION: 方法一：LinkedHashMap / OrderedDict（推荐）
+@@IDEA
+LinkedHashMap(accessOrder=true) 天生按访问顺序维护；put 后超容量就删 keySet 迭代器第一个（最久未使用）。Python 用 OrderedDict 的 move_to_end + popitem。O(1) 均摊。
+@@JAVA
+class LRUCache {
+    private final int cap;
+    private final LinkedHashMap<Integer, Integer> map;
+
+    public LRUCache(int capacity) {
+        this.cap = capacity;
+        this.map = new LinkedHashMap<>(16, 0.75f, true); // 按访问顺序
+    }
+
+    public int get(int key) {
+        return map.getOrDefault(key, -1); // get 即视为访问
+    }
+
+    public void put(int key, int value) {
+        map.put(key, value);
+        if (map.size() > cap) {
+            Integer eldest = map.keySet().iterator().next(); // 最久未使用
+            map.remove(eldest);
+        }
+    }
+}
+@@PY
+class LRUCache:
+    def __init__(self, capacity: int):
+        self.cap = capacity
+        self.map = OrderedDict()  # 按访问顺序
+
+    def get(self, key: int) -> int:
+        if key not in self.map:
+            return -1
+        self.map.move_to_end(key)  # 标记为最近访问
+        return self.map[key]
+
+    def put(self, key: int, value: int) -> None:
+        if key in self.map:
+            self.map.move_to_end(key)
+        self.map[key] = value
+        if len(self.map) > self.cap:
+            self.map.popitem(last=False)  # 淘汰最久未使用
+@@SOLUTION: 方法二：手写哈希表 + 双向链表
+@@IDEA
+手写核心结构：哈希表存 key→节点，双向链表（带头尾哨兵）维护访问顺序；get/put 都把节点移到头部，超容量删尾部。面试要求手写时必须掌握，O(1) 均摊。
+@@JAVA
+class LRUCache {
+    private static class Node {
+        int key, val;
+        Node prev, next;
+        Node(int k, int v) { key = k; val = v; }
+    }
+    private final int cap;
+    private final Map<Integer, Node> map = new HashMap<>();
+    private final Node head = new Node(0, 0), tail = new Node(0, 0); // 哨兵
+
+    public LRUCache(int capacity) {
+        this.cap = capacity;
+        head.next = tail;
+        tail.prev = head;
+    }
+
+    public int get(int key) {
+        Node node = map.get(key);
+        if (node == null) return -1;
+        moveToFront(node); // 提升为最新
+        return node.val;
+    }
+
+    public void put(int key, int value) {
+        Node node = map.get(key);
+        if (node != null) {
+            node.val = value;
+            moveToFront(node);
+            return;
+        }
+        if (map.size() >= cap) {
+            Node eldest = tail.prev;  // 最久未使用
+            remove(eldest);
+            map.remove(eldest.key);
+        }
+        node = new Node(key, value);
+        map.put(key, node);
+        addToFront(node);
+    }
+
+    private void remove(Node node) {
+        node.prev.next = node.next;
+        node.next.prev = node.prev;
+    }
+    private void addToFront(Node node) {
+        node.next = head.next;
+        node.prev = head;
+        head.next.prev = node;
+        head.next = node;
+    }
+    private void moveToFront(Node node) {
+        remove(node);
+        addToFront(node);
+    }
+}
+@@PY
+class LRUCache:
+    class Node:
+        __slots__ = ("key", "val", "prev", "next")
+
+        def __init__(self, k=0, v=0):
+            self.key, self.val = k, v
+            self.prev = self.next = None
+
+    def __init__(self, capacity: int):
+        self.cap = capacity
+        self.map = {}
+        self.head = self.Node()  # 哨兵
+        self.tail = self.Node()
+        self.head.next = self.tail
+        self.tail.prev = self.head
+
+    def get(self, key: int) -> int:
+        if key not in self.map:
+            return -1
+        node = self.map[key]
+        self._remove(node)
+        self._add_front(node)  # 提升为最新
+        return node.val
+
+    def put(self, key: int, value: int) -> None:
+        if key in self.map:
+            node = self.map[key]
+            node.val = value
+            self._remove(node)
+            self._add_front(node)
+            return
+        if len(self.map) >= self.cap:
+            eldest = self.tail.prev  # 最久未使用
+            self._remove(eldest)
+            del self.map[eldest.key]
+        node = self.Node(key, value)
+        self.map[key] = node
+        self._add_front(node)
+
+    def _remove(self, node):
+        node.prev.next = node.next
+        node.next.prev = node.prev
+
+    def _add_front(self, node):
+        node.next = self.head.next
+        node.prev = self.head
+        self.head.next.prev = node
+        self.head.next = node
+@@SOLUTION: 方法三：单链表 + 哈希记前驱（O(n) 最坏，作对照）
+@@IDEA
+简化对照：单链表/列表按访问时间排序 + 哈希查值，命中后移动到尾部。定位要遍历，最坏 O(n)，仅用于理解「顺序维护」的本质。
+@@JAVA
+class LRUCache {
+    private static class Node {
+        int key, val;
+        Node next;
+        Node(int k, int v) { key = k; val = v; }
+    }
+    private final int cap;
+    private final Node dummy = new Node(0, 0); // 哨兵头，头部=最久未使用
+    private Node tail = dummy;
+    private int size = 0;
+    private final Map<Integer, Node> prevMap = new HashMap<>(); // key -> 前驱节点
+
+    public LRUCache(int capacity) {
+        this.cap = capacity;
+    }
+
+    public int get(int key) {
+        if (!prevMap.containsKey(key)) return -1;
+        promote(key);   // 移到尾部=最新
+        return tail.val;
+    }
+
+    public void put(int key, int value) {
+        if (prevMap.containsKey(key)) {
+            promote(key);
+            tail.val = value;
+            return;
+        }
+        if (size == cap) {
+            Node eldest = dummy.next;              // 淘汰头部
+            prevMap.remove(eldest.key);
+            if (eldest.next != null) {
+                prevMap.put(eldest.next.key, dummy); // 新头的前驱=哨兵
+            }
+            dummy.next = eldest.next;
+            size--;
+        }
+        Node node = new Node(key, value);
+        tail.next = node;
+        prevMap.put(key, tail);
+        tail = node;
+        size++;
+    }
+
+    private void promote(int key) { // 摘下节点接到尾部
+        Node prev = prevMap.get(key);
+        Node node = prev.next;
+        if (node == tail) return;
+        prev.next = node.next;
+        prevMap.put(node.next.key, prev); // 更新后继的前驱
+        tail.next = node;
+        prevMap.put(key, tail);
+        tail = node;
+        tail.next = null;
+    }
+}
+@@PY
+class LRUCache:
+    """单链表按访问时间排序 + 哈希记前驱（概念对照版，简化为列表实现）。
+
+    访问时需遍历定位节点（最坏 O(n)），非严格 O(1)；
+    用于理解 LRU 的顺序维护本质，生产实现见方法一/二。
+    """
+
+    def __init__(self, capacity: int):
+        self.cap = capacity
+        self.order = []  # key 列表，尾部=最近使用
+        self.store = {}
+
+    def get(self, key: int) -> int:
+        if key not in self.store:
+            return -1
+        self.order.remove(key)  # 摘除
+        self.order.append(key)  # 标记为最近使用
+        return self.store[key]
+
+    def put(self, key: int, value: int) -> None:
+        if key in self.order:
+            self.order.remove(key)
+        self.order.append(key)
+        self.store[key] = value
+        if len(self.order) > self.cap:  # 淘汰最久未使用
+            eldest = self.order.pop(0)
+            del self.store[eldest]

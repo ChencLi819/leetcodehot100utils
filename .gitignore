@@ -1,0 +1,19 @@
+# 构建产物
+out/
+dist/
+input/
+build/
+manifest.txt
+*.zip
+
+# 运行时生成的用户数据（进度/作答/笔记保存在 ~/.hot100/）
+progress.properties
+
+# IDE / 系统
+.idea/
+.vscode/
+*.iml
+Thumbs.db
+
+# 会话工作区（本地记忆，不属于项目源码）
+.workbuddy/

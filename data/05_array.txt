@@ -1,0 +1,620 @@
+@@PROBLEM
+@@NO: 13
+@@ID: 53
+@@TITLE: 最大子数组和
+@@DIFF: 中等
+@@CATEGORY: 普通数组
+@@TAGS: 数组;分治;动态规划
+@@URL: https://leetcode.cn/problems/maximum-subarray/
+@@DESC
+给你一个整数数组 nums，请你找出一个具有最大和的连续子数组（子数组最少包含一个元素），返回其最大和。
+
+子数组是数组中的一个连续部分。
+
+示例 1：
+输入：nums = [-2,1,-3,4,-1,2,1,-5,4]
+输出：6
+解释：连续子数组 [4,-1,2,1] 的和最大，为 6。
+
+示例 2：
+输入：nums = [1]
+输出：1
+
+示例 3：
+输入：nums = [5,4,-1,7,8]
+输出：23
+
+提示：
+1 <= nums.length <= 10^5
+-10^4 <= nums[i] <= 10^4
+
+进阶：如果你已经实现复杂度为 O(n) 的解法，尝试使用更为精妙的分治法求解。
+给你一个整数数组 nums，找出和最大的连续子数组（至少含一个元素）并返回其和。
+示例：nums = [-2,1,-3,4,-1,2,1,-5,4] → 输出 6（子数组 [4,-1,2,1]）。
+@@SOLUTION: 方法一：Kadane 动态规划（推荐）
+@@IDEA
+Kadane 算法：dp[i] 表示以 i 结尾的最大子数组和，转移 = max(nums[i], dp[i-1]+nums[i])——前面的累计为正就带上，为负就重新开始。滚动变量即可，O(n)/O(1)。
+@@JAVA
+class Solution {
+    public int maxSubArray(int[] nums) {
+        int best = nums[0], cur = nums[0];
+        for (int i = 1; i < nums.length; i++) {
+            cur = Math.max(nums[i], cur + nums[i]); // 延续或重新开始
+            best = Math.max(best, cur);
+        }
+        return best;
+    }
+}
+@@PY
+class Solution:
+    def maxSubArray(self, nums: List[int]) -> int:
+        best = cur = nums[0]
+        for x in nums[1:]:
+            cur = max(x, cur + x)  # 延续或重新开始
+            best = max(best, cur)
+        return best
+@@SOLUTION: 方法二：前缀和（最大差值）
+@@IDEA
+换视角：子数组和 = 两个前缀和之差。遍历时维护历史最小前缀和 minPre，当前前缀和 pre 减它就是以当前结尾的最大子段和。O(n)/O(1)，与 Kadane 等价。
+@@JAVA
+class Solution {
+    public int maxSubArray(int[] nums) {
+        int best = Integer.MIN_VALUE, pre = 0, minPre = 0;
+        for (int x : nums) {
+            pre += x;                                  // 当前前缀和
+            best = Math.max(best, pre - minPre);       // 减历史最小前缀
+            minPre = Math.min(minPre, pre);
+        }
+        return best;
+    }
+}
+@@PY
+class Solution:
+    def maxSubArray(self, nums: List[int]) -> int:
+        best = float('-inf')
+        pre = min_pre = 0
+        for x in nums:
+            pre += x                       # 当前前缀和
+            best = max(best, pre - min_pre)  # 减历史最小前缀
+            min_pre = min(min_pre, pre)
+        return best
+@@SOLUTION: 方法三：分治（线段树思想）
+@@IDEA
+分治：每个区间维护（总和、最大前缀、最大后缀、最大子段和）四元组，合并时跨中点情况 = 左后缀 + 右前缀。O(n)，可扩展成支持单点修改的线段树做法。
+@@JAVA
+class Solution {
+    public int maxSubArray(int[] nums) {
+        return divide(nums, 0, nums.length - 1)[3];
+    }
+    // 返回 {区间和, 最大前缀, 最大后缀, 最大子段和}
+    private int[] divide(int[] a, int l, int r) {
+        if (l == r) return new int[]{a[l], a[l], a[l], a[l]};
+        int mid = (l + r) / 2;
+        int[] L = divide(a, l, mid), R = divide(a, mid + 1, r);
+        int[] res = new int[4];
+        res[0] = L[0] + R[0];                                  // 总和
+        res[1] = Math.max(L[1], L[0] + R[1]);                  // 前缀
+        res[2] = Math.max(R[2], R[0] + L[2]);                  // 后缀
+        res[3] = Math.max(Math.max(L[3], R[3]), L[2] + R[1]);  // 跨中点
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def maxSubArray(self, nums: List[int]) -> int:
+        # 返回 (区间和, 最大前缀, 最大后缀, 最大子段和)
+        def divide(l, r):
+            if l == r:
+                return nums[l], nums[l], nums[l], nums[l]
+            mid = (l + r) // 2
+            ls, lp, lsf, lb = divide(l, mid)
+            rs, rp, rsf, rb = divide(mid + 1, r)
+            return (ls + rs,
+                    max(lp, ls + rp),
+                    max(rsf, rs + lsf),
+                    max(lb, rb, lsf + rp))
+        return divide(0, len(nums) - 1)[3]
+@@PROBLEM
+@@NO: 14
+@@ID: 56
+@@TITLE: 合并区间
+@@DIFF: 中等
+@@CATEGORY: 普通数组
+@@TAGS: 数组;排序
+@@URL: https://leetcode.cn/problems/merge-intervals/
+@@DESC
+以数组 intervals 表示若干个区间的集合，其中单个区间为 intervals[i] = [start_i, end_i]。请你合并所有重叠的区间，并返回一个不重叠的区间数组，该数组需恰好覆盖输入中的所有区间。
+
+示例 1：
+输入：intervals = [[1,3],[2,6],[8,10],[15,18]]
+输出：[[1,6],[8,10],[15,18]]
+解释：区间 [1,3] 和 [2,6] 重叠, 将它们合并为 [1,6]。
+
+示例 2：
+输入：intervals = [[1,4],[4,5]]
+输出：[[1,5]]
+解释：区间 [1,4] 和 [4,5] 可被视为重叠区间。
+
+提示：
+1 <= intervals.length <= 10^4
+intervals[i].length == 2
+0 <= start_i <= end_i <= 10^4
+以数组 intervals 表示若干区间的集合，其中单个区间为 [start, end]。请合并所有重叠的区间，返回不重叠的区间数组。
+示例：intervals = [[1,3],[2,6],[8,10],[15,18]] → 输出 [[1,6],[8,10],[15,18]]。
+@@SOLUTION: 方法一：按左端点排序 + 线性扫描（推荐）
+@@IDEA
+按左端点排序后扫描：当前区间左端 ≤ 上一结果右端就合并（右端取 max），否则新开一段。排序保证只需比较相邻结果。O(n log n)。
+@@JAVA
+class Solution {
+    public int[][] merge(int[][] intervals) {
+        Arrays.sort(intervals, (a, b) -> a[0] - b[0]); // 按左端点排序
+        List<int[]> res = new ArrayList<>();
+        for (int[] cur : intervals) {
+            if (!res.isEmpty() && cur[0] <= res.get(res.size() - 1)[1]) {
+                int[] last = res.get(res.size() - 1);
+                last[1] = Math.max(last[1], cur[1]); // 合并
+            } else {
+                res.add(cur);
+            }
+        }
+        return res.toArray(new int[0][]);
+    }
+}
+@@PY
+class Solution:
+    def merge(self, intervals: List[List[int]]) -> List[List[int]]:
+        intervals.sort(key=lambda x: x[0])  # 按左端点排序
+        res = []
+        for cur in intervals:
+            if res and cur[0] <= res[-1][1]:
+                res[-1][1] = max(res[-1][1], cur[1])  # 合并
+            else:
+                res.append(cur[:])
+        return res
+@@SOLUTION: 方法二：按左端点排序 + 原地双指针写回
+@@IDEA
+排序后不额外开结果列表，用慢指针 idx 表示已归并段末尾，把结果原地写回输入数组，最后截取前缀。O(n log n) 时间、O(1) 额外空间（不计输出）。
+@@JAVA
+class Solution {
+    public int[][] merge(int[][] intervals) {
+        Arrays.sort(intervals, (a, b) -> a[0] - b[0]);
+        int idx = -1; // 已归并段末尾
+        for (int[] cur : intervals) {
+            if (idx >= 0 && cur[0] <= intervals[idx][1]) {
+                intervals[idx][1] = Math.max(intervals[idx][1], cur[1]);
+            } else {
+                intervals[++idx] = cur; // 新段写回原数组
+            }
+        }
+        return Arrays.copyOf(intervals, idx + 1);
+    }
+}
+@@PY
+class Solution:
+    def merge(self, intervals: List[List[int]]) -> List[List[int]]:
+        intervals.sort(key=lambda x: x[0])
+        res = []
+        for cur in intervals:
+            if res and cur[0] <= res[-1][1]:  # 重叠则扩尾
+                res[-1][1] = max(res[-1][1], cur[1])
+            else:                              # 新段
+                res.append(cur)
+        return res
+@@SOLUTION: 方法三：扫描线（差分思想）
+@@IDEA
+扫描线：每个区间产生「起点 +1、终点+1 位置 -1」两个事件，按坐标排序扫描，覆盖数从 0 变正开段、归零闭段。可自然推广到多个区间的并/交问题。O(n log n)。
+@@JAVA
+class Solution {
+    public int[][] merge(int[][] intervals) {
+        // 事件：起点 +1，终点下一位 -1
+        List<int[]> events = new ArrayList<>();
+        for (int[] it : intervals) {
+            events.add(new int[]{it[0], 1});
+            events.add(new int[]{it[1] + 1, -1});
+        }
+        events.sort((a, b) -> a[0] != b[0] ? a[0] - b[0] : a[1] - b[1]);
+        List<int[]> res = new ArrayList<>();
+        int cover = 0, start = 0;
+        for (int[] e : events) {
+            if (cover == 0) start = e[0]; // 从 0 变正：开段
+            cover += e[1];
+            if (cover == 0) {             // 归零：闭段
+                res.add(new int[]{start, e[0] - 1});
+            }
+        }
+        return res.toArray(new int[0][]);
+    }
+}
+@@PY
+class Solution:
+    def merge(self, intervals: List[List[int]]) -> List[List[int]]:
+        events = []  # 起点增量 +1，终点后一位 -1
+        for s, e in intervals:
+            events.append((s, 1))
+            events.append((e + 1, -1))
+        events.sort()
+        res, cover, start = [], 0, 0
+        for x, d in events:
+            if cover == 0:
+                start = x     # 从 0 变正：开段
+            cover += d
+            if cover == 0:    # 归零：闭段
+                res.append([start, x - 1])
+        return res
+@@PROBLEM
+@@NO: 15
+@@ID: 189
+@@TITLE: 轮转数组
+@@DIFF: 中等
+@@CATEGORY: 普通数组
+@@TAGS: 数组;数学;双指针
+@@URL: https://leetcode.cn/problems/rotate-array/
+@@DESC
+给定一个整数数组 nums，将数组中的元素向右轮转 k 个位置，其中 k 是非负数。
+
+示例 1：
+输入：nums = [1,2,3,4,5,6,7], k = 3
+输出：[5,6,7,1,2,3,4]
+解释：
+向右轮转 1 步: [7,1,2,3,4,5,6]
+向右轮转 2 步: [6,7,1,2,3,4,5]
+向右轮转 3 步: [5,6,7,1,2,3,4]
+
+示例 2：
+输入：nums = [-1,-100,3,99], k = 2
+输出：[3,99,-1,-100]
+
+提示：
+1 <= nums.length <= 10^5
+-2^31 <= nums[i] <= 2^31 - 1
+0 <= k <= 10^5
+
+进阶：尽可能想出更多的解决方案，至少有三种不同的方法可以解决这个问题。你可以使用空间复杂度为 O(1) 的原地算法解决这个问题吗？
+给定一个整数数组 nums，将数组中的元素向右轮转 k 个位置，其中 k 是非负数。要求使用空间复杂度为 O(1) 的原地算法。
+示例：nums = [1,2,3,4,5,6,7], k = 3 → 输出 [5,6,7,1,2,3,4]。
+@@SOLUTION: 方法一：三次反转（推荐）
+@@IDEA
+经典三次反转：先整体反转，再分别反转前 k 个和后 n-k 个。正确性基于「轮转 = 两段交换位置」，先 k %= n 防越界。O(n) 时间、O(1) 空间的标准解。
+@@JAVA
+class Solution {
+    public void rotate(int[] nums, int k) {
+        int n = nums.length;
+        k %= n;
+        reverse(nums, 0, n - 1); // 整体反转
+        reverse(nums, 0, k - 1); // 前 k 个
+        reverse(nums, k, n - 1); // 后 n-k 个
+    }
+    private void reverse(int[] nums, int l, int r) {
+        while (l < r) {
+            int t = nums[l]; nums[l] = nums[r]; nums[r] = t;
+            l++; r--;
+        }
+    }
+}
+@@PY
+class Solution:
+    def rotate(self, nums: List[int], k: int) -> None:
+        n = len(nums)
+        k %= n
+
+        def reverse(l, r):
+            while l < r:
+                nums[l], nums[r] = nums[r], nums[l]
+                l += 1
+                r -= 1
+
+        reverse(0, n - 1)  # 整体反转
+        reverse(0, k - 1)  # 前 k 个
+        reverse(k, n - 1)  # 后 n-k 个
+@@SOLUTION: 方法二：环形替换
+@@IDEA
+环形替换：从起点出发把元素一步搬到 (i+k)%n 的位置，被顶掉的元素继续搬，回到起点后换下一个环，直到搬完 n 个元素。O(n)/O(1)，易错点是环的个数要数对。
+@@JAVA
+class Solution {
+    public void rotate(int[] nums, int k) {
+        int n = nums.length;
+        k %= n;
+        int count = 0; // 已搬移的元素个数
+        for (int start = 0; count < n; start++) {
+            int cur = start, prevVal = nums[start];
+            do {
+                int next = (cur + k) % n;
+                int t = nums[next];
+                nums[next] = prevVal; // 一步到位
+                prevVal = t;
+                cur = next;
+                count++;
+            } while (cur != start); // 回到起点换下一个环
+        }
+    }
+}
+@@PY
+class Solution:
+    def rotate(self, nums: List[int], k: int) -> None:
+        n = len(nums)
+        k %= n
+        count = 0                 # 已搬移的元素个数
+        start = 0
+        while count < n:
+            cur = start
+            prev = nums[start]
+            while True:
+                nxt = (cur + k) % n
+                nums[nxt], prev = prev, nums[nxt]  # 一步到位
+                cur = nxt
+                count += 1
+                if cur == start:  # 回到起点换下一个环
+                    break
+            start += 1
+@@SOLUTION: 方法三：切片拼接（利用语言特性）
+@@IDEA
+直接利用切片：结果 = 后 k 段 + 前 n-k 段。Python 用 nums[:] 原地赋值，Java 用两次 arraycopy。O(n) 时间但 O(n) 空间，最直观的写法。
+@@JAVA
+class Solution {
+    public void rotate(int[] nums, int k) {
+        int n = nums.length;
+        k %= n;
+        int[] copy = nums.clone();
+        // 后 k 段放前面，前 n-k 段放后面
+        System.arraycopy(copy, n - k, nums, 0, k);
+        System.arraycopy(copy, 0, nums, k, n - k);
+    }
+}
+@@PY
+class Solution:
+    def rotate(self, nums: List[int], k: int) -> None:
+        n = len(nums)
+        k %= n
+        nums[:] = nums[n - k:] + nums[:n - k]  # 后 k 段 + 前 n-k 段
+@@PROBLEM
+@@NO: 16
+@@ID: 238
+@@TITLE: 除自身以外数组的乘积
+@@DIFF: 中等
+@@CATEGORY: 普通数组
+@@TAGS: 数组;前缀和
+@@URL: https://leetcode.cn/problems/product-of-array-except-self/
+@@DESC
+给你一个整数数组 nums，返回 数组 answer，其中 answer[i] 等于 nums 中除 nums[i] 之外其余各元素的乘积。
+
+题目数据保证数组 nums 之中任意元素的全部前缀元素和后缀的乘积都在 32 位整数范围内。
+
+请勿使用除法，且在 O(n) 时间内解决此问题。
+
+示例 1：
+输入：nums = [1,2,3,4]
+输出：[24,12,8,6]
+
+示例 2：
+输入：nums = [-1,1,0,-3,3]
+输出：[0,0,9,0,0]
+
+提示：
+2 <= nums.length <= 10^5
+-30 <= nums[i] <= 30
+保证数组 nums 之中任意元素的全部前缀元素和后缀的乘积都在 32 位整数范围内
+
+进阶：你可以在 O(1) 的额外空间复杂度内完成这个题目吗？（出于对空间复杂度分析的目的，输出数组不被视为额外空间。）
+给你一个整数数组 nums，返回数组 answer，其中 answer[i] 等于 nums 中除 nums[i] 之外其余各元素的乘积。
+要求 O(n) 且不使用除法，并在 O(1) 额外空间（输出数组除外）内完成。
+示例：nums = [1,2,3,4] → 输出 [24,12,8,6]。
+@@SOLUTION: 方法一：前缀乘积 + 后缀滚动变量（推荐）
+@@IDEA
+answer 先存「i 左侧全部乘积」（一遍正序），再从右往左用滚动变量 suffix 累乘右侧乘积乘进去。两遍扫描、不用除法。O(n) 时间、O(1) 额外空间。
+@@JAVA
+class Solution {
+    public int[] productExceptSelf(int[] nums) {
+        int n = nums.length;
+        int[] answer = new int[n];
+        answer[0] = 1;
+        for (int i = 1; i < n; i++) {       // 左侧前缀乘积
+            answer[i] = answer[i - 1] * nums[i - 1];
+        }
+        int suffix = 1;
+        for (int i = n - 1; i >= 0; i--) {  // 乘上右侧后缀乘积
+            answer[i] *= suffix;
+            suffix *= nums[i];
+        }
+        return answer;
+    }
+}
+@@PY
+class Solution:
+    def productExceptSelf(self, nums: List[int]) -> List[int]:
+        n = len(nums)
+        answer = [1] * n
+        for i in range(1, n):        # 左侧前缀乘积
+            answer[i] = answer[i - 1] * nums[i - 1]
+        suffix = 1
+        for i in range(n - 1, -1, -1):  # 乘上右侧后缀乘积
+            answer[i] *= suffix
+            suffix *= nums[i]
+        return answer
+@@SOLUTION: 方法二：前后缀数组（不省空间版）
+@@IDEA
+显式开 prefix 和 suffix 两个数组分别存左右乘积，answer[i] = prefix[i] × suffix[i]。O(n) 时间、O(n) 空间，公式一目了然，适合先写这版再优化空间。
+@@JAVA
+class Solution {
+    public int[] productExceptSelf(int[] nums) {
+        int n = nums.length;
+        int[] prefix = new int[n], suffix = new int[n];
+        prefix[0] = 1;
+        for (int i = 1; i < n; i++) prefix[i] = prefix[i - 1] * nums[i - 1];
+        suffix[n - 1] = 1;
+        for (int i = n - 2; i >= 0; i--) suffix[i] = suffix[i + 1] * nums[i + 1];
+        int[] answer = new int[n];
+        for (int i = 0; i < n; i++) {
+            answer[i] = prefix[i] * suffix[i]; // 左乘积 × 右乘积
+        }
+        return answer;
+    }
+}
+@@PY
+class Solution:
+    def productExceptSelf(self, nums: List[int]) -> List[int]:
+        n = len(nums)
+        prefix = [1] * n
+        for i in range(1, n):
+            prefix[i] = prefix[i - 1] * nums[i - 1]
+        suffix = [1] * n
+        for i in range(n - 2, -1, -1):
+            suffix[i] = suffix[i + 1] * nums[i + 1]
+        return [prefix[i] * suffix[i] for i in range(n)]  # 左乘积 × 右乘积
+@@SOLUTION: 方法三：总乘积 + 零计数分类（不满足进阶但可作拓展）
+@@IDEA
+数学思路：统计零的个数与非零总乘积——无零用除法直除；恰一个零则只有零位是乘积；多个零全为 0。注意题目禁用除法，此解仅作思维拓展。
+@@JAVA
+class Solution {
+    public int[] productExceptSelf(int[] nums) {
+        int n = nums.length, zeros = 0, total = 1;
+        for (int x : nums) {
+            if (x == 0) zeros++;
+            else total *= x; // 非零数乘积
+        }
+        int[] answer = new int[n];
+        if (zeros >= 2) return answer;             // 全 0
+        for (int i = 0; i < n; i++) {
+            if (zeros == 1) {
+                answer[i] = (nums[i] == 0) ? total : 0; // 唯一零位
+            } else {
+                answer[i] = total / nums[i];       // 用除法（题目禁用）
+            }
+        }
+        return answer;
+    }
+}
+@@PY
+class Solution:
+    def productExceptSelf(self, nums: List[int]) -> List[int]:
+        zeros = nums.count(0)
+        total = 1
+        for x in nums:   # 非零数乘积
+            if x != 0:
+                total *= x
+        if zeros >= 2:   # 全 0
+            return [0] * len(nums)
+        if zeros == 1:   # 唯一零位
+            return [total if x == 0 else 0 for x in nums]
+        return [total // x for x in nums]  # 用除法（题目禁用，思维拓展）
+@@PROBLEM
+@@NO: 17
+@@ID: 41
+@@TITLE: 缺失的第一个正数
+@@DIFF: 困难
+@@CATEGORY: 普通数组
+@@TAGS: 数组;哈希表
+@@URL: https://leetcode.cn/problems/first-missing-positive/
+@@DESC
+给你一个未排序的整数数组 nums，请你找出其中没有出现的最小的正整数。
+
+请你实现时间复杂度为 O(n) 并且只使用常数级别额外空间的解决方案。
+
+示例 1：
+输入：nums = [1,2,0]
+输出：3
+
+示例 2：
+输入：nums = [3,4,-1,1]
+输出：2
+
+示例 3：
+输入：nums = [7,8,9,11,12]
+输出：1
+
+提示：
+1 <= nums.length <= 10^5
+-2^31 <= nums[i] <= 2^31 - 1
+给你一个未排序的整数数组 nums，请找出其中没有出现的最小正整数。要求实现 O(n) 时间、O(1) 空间。
+示例：nums = [3,4,-1,1] → 输出 2；nums = [7,8,9,11,12] → 输出 1。
+@@SOLUTION: 方法一：原地哈希（鸽笼置换，推荐）
+@@IDEA
+鸽笼原理：答案必在 [1, n+1] 内。把每个值 v∈[1,n] 循环交换到下标 v-1（原地哈希），最后第一个 nums[i] != i+1 的位置就是答案。O(n) 时间、O(1) 空间。
+@@JAVA
+class Solution {
+    public int firstMissingPositive(int[] nums) {
+        int n = nums.length;
+        for (int i = 0; i < n; i++) {
+            // 把值 v 放到下标 v-1，循环处理链上交换
+            while (nums[i] >= 1 && nums[i] <= n && nums[nums[i] - 1] != nums[i]) {
+                int j = nums[i] - 1;
+                int t = nums[j]; nums[j] = nums[i]; nums[i] = t;
+            }
+        }
+        for (int i = 0; i < n; i++) {
+            if (nums[i] != i + 1) return i + 1; // 第一个未归位处
+        }
+        return n + 1;
+    }
+}
+@@PY
+class Solution:
+    def firstMissingPositive(self, nums: List[int]) -> int:
+        n = len(nums)
+        for i in range(n):
+            while 1 <= nums[i] <= n and nums[nums[i] - 1] != nums[i]:
+                j = nums[i] - 1
+                nums[i], nums[j] = nums[j], nums[i]  # 归位
+        for i in range(n):
+            if nums[i] != i + 1:  # 第个未归位处
+                return i + 1
+        return n + 1
+@@SOLUTION: 方法二：打标记（正负号作布尔数组）
+@@IDEA
+两遍打标记：先把非正数替换成 n+1；再对每个 |v|≤n 的值把 nums[v-1] 取负作为「v 出现过」的标记；第一个仍为正的位置即答案。O(n)/O(1)。
+@@JAVA
+class Solution {
+    public int firstMissingPositive(int[] nums) {
+        int n = nums.length;
+        for (int i = 0; i < n; i++) {
+            if (nums[i] <= 0) nums[i] = n + 1; // 无关值统一置大
+        }
+        for (int i = 0; i < n; i++) {
+            int v = Math.abs(nums[i]);
+            if (v <= n && nums[v - 1] > 0) {
+                nums[v - 1] = -nums[v - 1];    // 标记 v 出现过
+            }
+        }
+        for (int i = 0; i < n; i++) {
+            if (nums[i] > 0) return i + 1;     // 未被标记处
+        }
+        return n + 1;
+    }
+}
+@@PY
+class Solution:
+    def firstMissingPositive(self, nums: List[int]) -> int:
+        n = len(nums)
+        for i in range(n):
+            if nums[i] <= 0:
+                nums[i] = n + 1  # 无关值统一置大
+        for i in range(n):
+            v = abs(nums[i])
+            if v <= n and nums[v - 1] > 0:
+                nums[v - 1] = -nums[v - 1]  # 标记 v 出现过
+        for i in range(n):
+            if nums[i] > 0:   # 未被标记处
+                return i + 1
+        return n + 1
+@@SOLUTION: 方法三：哈希集合（满足时间不满足空间）
+@@IDEA
+把所有正数放进 HashSet，从 1 开始向上问「在不在集合里」，第一个不在的就是答案。O(n)/O(n)，最易理解，但不满足 O(1) 空间要求。
+@@JAVA
+class Solution {
+    public int firstMissingPositive(int[] nums) {
+        Set<Integer> set = new HashSet<>();
+        for (int x : nums) {
+            if (x > 0) set.add(x); // 只关心正数
+        }
+        int ans = 1;
+        while (set.contains(ans)) ans++; // 从 1 向上找
+        return ans;
+    }
+}
+@@PY
+class Solution:
+    def firstMissingPositive(self, nums: List[int]) -> int:
+        s = {x for x in nums if x > 0}  # 只关心正数
+        ans = 1
+        while ans in s:  # 从 1 向上找
+            ans += 1
+        return ans

@@ -1,0 +1,792 @@
+@@PROBLEM
+@@NO: 51
+@@ID: 200
+@@TITLE: 岛屿数量
+@@DIFF: 中等
+@@CATEGORY: 图论
+@@TAGS: 深度优先搜索;广度优先搜索;并查集;数组;矩阵
+@@URL: https://leetcode.cn/problems/number-of-islands/
+@@DESC
+给你一个由 '1'（陆地）和 '0'（水）组成的的二维网格，请你计算网格中岛屿的数量。
+
+岛屿总是被水包围，并且每座岛屿只能由水平方向和/或竖直方向上相邻的陆地连接形成。
+
+此外，你可以假设该网格的四条边均被水包围。
+
+示例 1：
+输入：grid = [["1","1","1","1","0"],["1","1","0","1","0"],["1","1","0","0","0"],["0","0","0","0","0"]]
+输出：1
+
+示例 2：
+输入：grid = [["1","1","0","0","0"],["1","1","0","0","0"],["0","0","1","0","0"],["0","0","0","1","1"]]
+输出：3
+
+提示：
+m == grid.length, n == grid[i].length
+1 <= m, n <= 300
+grid[i][j] 的值为 '0' 或 '1'
+给你一个由 '1'（陆地）和 '0'（水）组成的二维网格，请你计算网格中岛屿的数量（陆地被水包围，水平/竖直相邻的 '1' 组成岛屿）。
+示例：grid = [["1","1","0"],["1","0","0"],["0","0","1"]] → 输出 2。
+@@SOLUTION: 方法一：DFS 淹岛（推荐）
+@@IDEA
+DFS 淹岛：扫描网格遇到 '1' 计数 +1，并 DFS 把整个连通块标成 '0'（淹掉），避免重复计数。递归深度最坏 O(mn)，可改显式栈。O(mn)/O(mn)。
+@@JAVA
+class Solution {
+    public int numIslands(char[][] grid) {
+        int m = grid.length, n = grid[0].length, count = 0;
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (grid[i][j] == '1') {
+                    count++;
+                    sink(grid, i, j); // 淹掉整块陆地
+                }
+            }
+        }
+        return count;
+    }
+    private void sink(char[][] grid, int i, int j) {
+        if (i < 0 || i >= grid.length || j < 0 || j >= grid[0].length
+                || grid[i][j] != '1') return;
+        grid[i][j] = '0'; // 标记已访问
+        sink(grid, i + 1, j);
+        sink(grid, i - 1, j);
+        sink(grid, i, j + 1);
+        sink(grid, i, j - 1);
+    }
+}
+@@PY
+class Solution:
+    def numIslands(self, grid: List[List[str]]) -> int:
+        m, n = len(grid), len(grid[0])
+
+        def sink(i, j):
+            if not (0 <= i < m and 0 <= j < n) or grid[i][j] != '1':
+                return
+            grid[i][j] = '0'  # 标记已访问
+            sink(i + 1, j)
+            sink(i - 1, j)
+            sink(i, j + 1)
+            sink(i, j - 1)
+
+        count = 0
+        for i in range(m):
+            for j in range(n):
+                if grid[i][j] == '1':
+                    count += 1
+                    sink(i, j)  # 淹掉整块陆地
+        return count
+@@SOLUTION: 方法二：BFS 扩散
+@@IDEA
+BFS 版淹岛：遇到 '1' 计数 +1 入队，BFS 向四方向扩散标记整块。队列空间 O(min(m,n))，比 DFS 递归栈更安全（防深图爆栈）。
+@@JAVA
+class Solution {
+    public int numIslands(char[][] grid) {
+        int m = grid.length, n = grid[0].length, count = 0;
+        int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (grid[i][j] != '1') continue;
+                count++;
+                grid[i][j] = '0';
+                Deque<int[]> queue = new ArrayDeque<>();
+                queue.offer(new int[]{i, j});
+                while (!queue.isEmpty()) {   // BFS 扩散
+                    int[] cell = queue.poll();
+                    for (int[] d : dirs) {
+                        int x = cell[0] + d[0], y = cell[1] + d[1];
+                        if (x >= 0 && x < m && y >= 0 && y < n && grid[x][y] == '1') {
+                            grid[x][y] = '0';
+                            queue.offer(new int[]{x, y});
+                        }
+                    }
+                }
+            }
+        }
+        return count;
+    }
+}
+@@PY
+class Solution:
+    def numIslands(self, grid: List[List[str]]) -> int:
+        m, n = len(grid), len(grid[0])
+        count = 0
+        for i in range(m):
+            for j in range(n):
+                if grid[i][j] != '1':
+                    continue
+                count += 1
+                grid[i][j] = '0'
+                queue = deque([(i, j)])
+                while queue:      # BFS 扩散
+                    x, y = queue.popleft()
+                    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                        nx, ny = x + dx, y + dy
+                        if 0 <= nx < m and 0 <= ny < n and grid[nx][ny] == '1':
+                            grid[nx][ny] = '0'
+                            queue.append((nx, ny))
+        return count
+@@SOLUTION: 方法三：并查集
+@@IDEA
+并查集：每格初始化为独立集合，相邻陆地合并，岛屿数 = 陆地数 - 成功合并次数。O(mn·α)，适合动态加陆地的扩展场景。
+@@JAVA
+class Solution {
+    private int[] parent;
+
+    public int numIslands(char[][] grid) {
+        int m = grid.length, n = grid[0].length;
+        parent = new int[m * n];
+        for (int i = 0; i < m * n; i++) parent[i] = i; // 各自成岛
+        int count = 0;
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (grid[i][j] == '1') count++;
+            }
+        }
+        int[][] dirs = {{1, 0}, {0, 1}};
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (grid[i][j] != '1') continue;
+                for (int[] d : dirs) {
+                    int x = i + d[0], y = j + d[1];
+                    if (x < m && y < n && grid[x][y] == '1') {
+                        if (union(i * n + j, x * n + y)) count--; // 合并成功则岛数-1
+                    }
+                }
+            }
+        }
+        return count;
+    }
+    private int find(int x) {
+        while (parent[x] != x) {
+            parent[x] = parent[parent[x]]; // 路径压缩
+            x = parent[x];
+        }
+        return x;
+    }
+    private boolean union(int a, int b) {
+        int ra = find(a), rb = find(b);
+        if (ra == rb) return false;
+        parent[ra] = rb;
+        return true;
+    }
+}
+@@PY
+class Solution:
+    def numIslands(self, grid: List[List[str]]) -> int:
+        m, n = len(grid), len(grid[0])
+        parent = list(range(m * n))  # 各自成岛
+
+        def find(x):
+            while parent[x] != x:
+                parent[x] = parent[parent[x]]  # 路径压缩
+                x = parent[x]
+            return x
+
+        count = sum(row.count('1') for row in grid)
+        for i in range(m):
+            for j in range(n):
+                if grid[i][j] != '1':
+                    continue
+                for dx, dy in ((1, 0), (0, 1)):
+                    x, y = i + dx, j + dy
+                    if x < m and y < n and grid[x][y] == '1':
+                        ra, rb = find(i * n + j), find(x * n + y)
+                        if ra != rb:      # 合并成功则岛数-1
+                            parent[ra] = rb
+                            count -= 1
+        return count
+@@PROBLEM
+@@NO: 52
+@@ID: 994
+@@TITLE: 腐烂的橘子
+@@DIFF: 中等
+@@CATEGORY: 图论
+@@TAGS: 广度优先搜索;数组;矩阵
+@@URL: https://leetcode.cn/problems/rotting-oranges/
+@@DESC
+你知道这个挫折只是暂时的，你距离成功只差几步。在给定的 m x n 网格 grid 中，每个单元格可以有以下三个值之一：值 0 代表空单元格；值 1 代表新鲜橘子；值 2 代表腐烂的橘子。
+
+每分钟，腐烂的橘子 周围 4 个方向上相邻 的新鲜橘子都会腐烂。
+
+返回 直到单元格中没有新鲜橘子为止所必须经过的最小分钟数。如果不可能，返回 -1。
+
+示例 1：
+输入：grid = [[2,1,1],[1,1,0],[0,1,1]]
+输出：4
+
+示例 2：
+输入：grid = [[2,1,1],[0,1,1],[1,0,1]]
+输出：-1
+解释：左下角的橘子永远不会腐烂。
+
+示例 3：
+输入：grid = [[0,2]]
+输出：0
+
+提示：
+m == grid.length, n == grid[i].length
+1 <= m, n <= 10
+grid[i][j] 仅为 0、1 或 2
+网格中 0=空、1=新鲜橘子、2=腐烂橘子。每分钟腐烂橘子会传染四方向相邻的新鲜橘子。
+返回直到没有新鲜橘子所需的最少分钟数；无法全部腐烂则返回 -1。
+示例：grid = [[2,1,1],[1,1,0],[0,1,1]] → 输出 4。
+@@SOLUTION: 方法一：多源 BFS（推荐）
+@@IDEA
+多源 BFS：所有腐烂橘子同时入队作起点，逐层向四周扩散，每层一分钟；结束后仍有新鲜橘子返回 -1。注意「队列空但 fresh>0」的失败判定。O(mn)。
+@@JAVA
+class Solution {
+    public int orangesRotting(int[][] grid) {
+        int m = grid.length, n = grid[0].length;
+        int fresh = 0, minutes = 0;
+        Deque<int[]> queue = new ArrayDeque<>();
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (grid[i][j] == 2) queue.offer(new int[]{i, j});
+                else if (grid[i][j] == 1) fresh++;
+            }
+        }
+        int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+        while (!queue.isEmpty() && fresh > 0) {
+            int size = queue.size();   // 一轮 = 一分钟
+            for (int k = 0; k < size; k++) {
+                int[] cell = queue.poll();
+                for (int[] d : dirs) {
+                    int x = cell[0] + d[0], y = cell[1] + d[1];
+                    if (x >= 0 && x < m && y >= 0 && y < n && grid[x][y] == 1) {
+                        grid[x][y] = 2;
+                        fresh--;
+                        queue.offer(new int[]{x, y});
+                    }
+                }
+            }
+            minutes++;
+        }
+        return fresh == 0 ? minutes : -1;
+    }
+}
+@@PY
+class Solution:
+    def orangesRotting(self, grid: List[List[int]]) -> int:
+        m, n = len(grid), len(grid[0])
+        queue = deque()
+        fresh = minutes = 0
+        for i in range(m):
+            for j in range(n):
+                if grid[i][j] == 2:
+                    queue.append((i, j))
+                elif grid[i][j] == 1:
+                    fresh += 1
+        while queue and fresh > 0:
+            for _ in range(len(queue)):  # 一轮 = 一分钟
+                x, y = queue.popleft()
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    nx, ny = x + dx, y + dy
+                    if 0 <= nx < m and 0 <= ny < n and grid[nx][ny] == 1:
+                        grid[nx][ny] = 2
+                        fresh -= 1
+                        queue.append((nx, ny))
+            minutes += 1
+        return minutes if fresh == 0 else -1
+@@SOLUTION: 方法二：逐分钟模拟（无队列分层）
+@@IDEA
+逐分钟模拟：每轮全网格扫描，把与腐烂橘子相邻的新鲜橘子收集起来统一标 2，计时 +1；无扩散时结束。O(mn·轮数)，不依赖队列但常数大。
+@@JAVA
+class Solution {
+    public int orangesRotting(int[][] grid) {
+        int m = grid.length, n = grid[0].length, minutes = 0;
+        int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+        while (true) {
+            List<int[]> toRot = new ArrayList<>();
+            for (int i = 0; i < m; i++) {
+                for (int j = 0; j < n; j++) {
+                    if (grid[i][j] != 1) continue;
+                    for (int[] d : dirs) {
+                        int x = i + d[0], y = j + d[1];
+                        if (x >= 0 && x < m && y >= 0 && y < n && grid[x][y] == 2) {
+                            toRot.add(new int[]{i, j}); // 本轮将腐烂
+                            break;
+                        }
+                    }
+                }
+            }
+            if (toRot.isEmpty()) break; // 无扩散，结束
+            for (int[] p : toRot) grid[p[0]][p[1]] = 2;
+            minutes++;
+        }
+        for (int[] row : grid) {        // 检查剩余
+            for (int v : row) {
+                if (v == 1) return -1;
+            }
+        }
+        return minutes;
+    }
+}
+@@PY
+class Solution:
+    def orangesRotting(self, grid: List[List[int]]) -> int:
+        m, n = len(grid), len(grid[0])
+        minutes = 0
+        while True:
+            to_rot = []
+            for i in range(m):
+                for j in range(n):
+                    if grid[i][j] != 1:
+                        continue
+                    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                        x, y = i + dx, j + dy
+                        if 0 <= x < m and 0 <= y < n and grid[x][y] == 2:
+                            to_rot.append((i, j))  # 本轮将腐烂
+                            break
+            if not to_rot:   # 无扩散，结束
+                break
+            for i, j in to_rot:
+                grid[i][j] = 2
+            minutes += 1
+        if any(1 in row for row in grid):  # 检查剩余
+            return -1
+        return minutes
+@@SOLUTION: 方法三：BFS + 橘子总计数替代新鲜计数
+@@IDEA
+多源 BFS 变体：统计橘子总数与腐烂数，BFS 中腐烂数追平总数即返回分钟数；本轮无扩散不计时。与解法一同一思想的另一种结束判定写法。
+@@JAVA
+class Solution {
+    public int orangesRotting(int[][] grid) {
+        int m = grid.length, n = grid[0].length;
+        Deque<int[]> queue = new ArrayDeque<>();
+        int oranges = 0; // 全部橘子数
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (grid[i][j] != 0) oranges++;
+                if (grid[i][j] == 2) queue.offer(new int[]{i, j});
+            }
+        }
+        if (oranges == queue.size()) return 0; // 没有新鲜橘子
+        int rotten = queue.size(), minutes = 0;
+        int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            boolean spread = false;
+            for (int k = 0; k < size; k++) {
+                int[] cell = queue.poll();
+                for (int[] d : dirs) {
+                    int x = cell[0] + d[0], y = cell[1] + d[1];
+                    if (x >= 0 && x < m && y >= 0 && y < n && grid[x][y] == 1) {
+                        grid[x][y] = 2;
+                        rotten++;
+                        queue.offer(new int[]{x, y});
+                        spread = true;
+                    }
+                }
+            }
+            if (spread) minutes++; // 本轮有扩散才计时
+            if (rotten == oranges) return minutes;
+        }
+        return -1;
+    }
+}
+@@PY
+class Solution:
+    def orangesRotting(self, grid: List[List[int]]) -> int:
+        m, n = len(grid), len(grid[0])
+        queue = deque()
+        oranges = 0  # 全部橘子数
+        for i in range(m):
+            for j in range(n):
+                if grid[i][j] != 0:
+                    oranges += 1
+                if grid[i][j] == 2:
+                    queue.append((i, j))
+        if oranges == len(queue):  # 没有新鲜橘子
+            return 0
+        rotten, minutes = len(queue), 0
+        while queue:
+            for _ in range(len(queue)):
+                x, y = queue.popleft()
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    nx, ny = x + dx, y + dy
+                    if 0 <= nx < m and 0 <= ny < n and grid[nx][ny] == 1:
+                        grid[nx][ny] = 2
+                        rotten += 1
+                        queue.append((nx, ny))
+            minutes += 1
+            if rotten == oranges:
+                return minutes
+        return -1
+@@PROBLEM
+@@NO: 53
+@@ID: 207
+@@TITLE: 课程表
+@@DIFF: 中等
+@@CATEGORY: 图论
+@@TAGS: 深度优先搜索;广度优先搜索;图;拓扑排序
+@@URL: https://leetcode.cn/problems/course-schedule/
+@@DESC
+你这个学期必须选修 numCourses 门课程，记为 0 到 numCourses - 1。
+
+在选修某些课程之前需要一些先修课程。先修课程按数组 prerequisites 给出，其中 prerequisites[i] = [a_i, b_i]，表示如果要学习课程 a_i 则必须先学习课程 b_i。
+
+例如，先修课程对 [0, 1] 表示：想要学习课程 0，你需要先完成课程 1。
+请你判断是否可能完成所有课程的学习？如果可以，返回 true；否则，返回 false。
+
+示例 1：
+输入：numCourses = 2, prerequisites = [[1,0]]
+输出：true
+
+示例 2：
+输入：numCourses = 2, prerequisites = [[1,0],[0,1]]
+输出：false
+
+提示：
+1 <= numCourses <= 2000
+0 <= prerequisites.length <= 5000
+prerequisites[i].length == 2
+0 <= a_i, b_i < numCourses
+所有先修课程对 互不相同
+给定 numCourses 门课与先修要求列表 prerequisites（[a, b] 表示先修 b 才能修 a），判断能否完成全部课程（判断有向图是否无环）。
+示例：numCourses = 2, prerequisites = [[1,0]] → true；[[1,0],[0,1]] → false。
+@@SOLUTION: 方法一：Kahn 拓扑排序（BFS 入度，推荐）
+@@IDEA
+拓扑排序（Kahn）：建邻接表统计入度，入度 0 的课先修；每修一门把后继入度减 1，减到 0 入队；修完总数等于课程总数则无环。O(V+E)。
+@@JAVA
+class Solution {
+    public boolean canFinish(int numCourses, int[][] prerequisites) {
+        List<List<Integer>> graph = new ArrayList<>();
+        for (int i = 0; i < numCourses; i++) graph.add(new ArrayList<>());
+        int[] indeg = new int[numCourses];
+        for (int[] p : prerequisites) {
+            graph.get(p[1]).add(p[0]); // b -> a
+            indeg[p[0]]++;
+        }
+        Deque<Integer> queue = new ArrayDeque<>();
+        for (int i = 0; i < numCourses; i++) {
+            if (indeg[i] == 0) queue.offer(i);
+        }
+        int taken = 0;
+        while (!queue.isEmpty()) {
+            int course = queue.poll();
+            taken++;
+            for (int next : graph.get(course)) {
+                if (--indeg[next] == 0) queue.offer(next); // 前驱修完即可修
+            }
+        }
+        return taken == numCourses;
+    }
+}
+@@PY
+class Solution:
+    def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:
+        graph = defaultdict(list)
+        indeg = [0] * numCourses
+        for a, b in prerequisites:
+            graph[b].append(a)  # b -> a
+            indeg[a] += 1
+        queue = deque(i for i in range(numCourses) if indeg[i] == 0)
+        taken = 0
+        while queue:
+            course = queue.popleft()
+            taken += 1
+            for nxt in graph[course]:
+                indeg[nxt] -= 1
+                if indeg[nxt] == 0:  # 前驱修完即可修
+                    queue.append(nxt)
+        return taken == numCourses
+@@SOLUTION: 方法二：DFS 三色标记判环
+@@IDEA
+DFS 三色标记：0 未访问、1 递归中、2 完成；DFS 中遇到标记 1 的节点说明存在回边即有环。O(V+E)，比拓扑排序更直接地「找环」。
+@@JAVA
+class Solution {
+    private List<List<Integer>> graph;
+    private int[] state; // 0 未访问 1 递归中 2 完成
+
+    public boolean canFinish(int numCourses, int[][] prerequisites) {
+        graph = new ArrayList<>();
+        for (int i = 0; i < numCourses; i++) graph.add(new ArrayList<>());
+        for (int[] p : prerequisites) graph.get(p[1]).add(p[0]);
+        state = new int[numCourses];
+        for (int i = 0; i < numCourses; i++) {
+            if (state[i] == 0 && hasCycle(i)) return false;
+        }
+        return true;
+    }
+    private boolean hasCycle(int node) {
+        state[node] = 1; // 进入递归
+        for (int next : graph.get(node)) {
+            if (state[next] == 1) return true;   // 回边 → 环
+            if (state[next] == 0 && hasCycle(next)) return true;
+        }
+        state[node] = 2; // 完成
+        return false;
+    }
+}
+@@PY
+class Solution:
+    def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:
+        graph = defaultdict(list)
+        for a, b in prerequisites:
+            graph[b].append(a)
+        state = [0] * numCourses  # 0 未访问 1 递归中 2 完成
+
+        def has_cycle(node):
+            state[node] = 1  # 进入递归
+            for nxt in graph[node]:
+                if state[nxt] == 1:     # 回边 → 环
+                    return True
+                if state[nxt] == 0 and has_cycle(nxt):
+                    return True
+            state[node] = 2  # 完成
+            return False
+
+        return not any(state[i] == 0 and has_cycle(i) for i in range(numCourses))
+@@SOLUTION: 方法三：DFS 拓扑序 + 计数
+@@IDEA
+DFS 拓扑 + 计数：完成一个节点标记 done 并计数；出现 visiting 节点说明有环。最终完成数等于课程数即可修完。O(V+E)。
+@@JAVA
+class Solution {
+    private List<List<Integer>> graph;
+    private boolean[] visiting, done;
+    private int finished = 0;
+
+    public boolean canFinish(int numCourses, int[][] prerequisites) {
+        graph = new ArrayList<>();
+        for (int i = 0; i < numCourses; i++) graph.add(new ArrayList<>());
+        for (int[] p : prerequisites) graph.get(p[1]).add(p[0]);
+        visiting = new boolean[numCourses];
+        done = new boolean[numCourses];
+        for (int i = 0; i < numCourses; i++) {
+            if (!done[i] && !dfs(i)) return false;
+        }
+        return finished == numCourses;
+    }
+    private boolean dfs(int node) {
+        if (visiting[node]) return false;  // 环
+        if (done[node]) return true;
+        visiting[node] = true;
+        for (int next : graph.get(node)) {
+            if (!dfs(next)) return false;
+        }
+        visiting[node] = false;
+        done[node] = true;
+        finished++;
+        return true;
+    }
+}
+@@PY
+class Solution:
+    def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:
+        graph = defaultdict(list)
+        for a, b in prerequisites:
+            graph[b].append(a)
+        visiting = [False] * numCourses
+        done = [False] * numCourses
+        self.finished = 0
+
+        def dfs(node) -> bool:
+            if visiting[node]:   # 环
+                return False
+            if done[node]:
+                return True
+            visiting[node] = True
+            for nxt in graph[node]:
+                if not dfs(nxt):
+                    return False
+            visiting[node] = False
+            done[node] = True
+            self.finished += 1
+            return True
+
+        return all(done[i] or dfs(i) for i in range(numCourses)) \
+            and self.finished == numCourses
+@@PROBLEM
+@@NO: 54
+@@ID: 208
+@@TITLE: 实现 Trie (前缀树)
+@@DIFF: 中等
+@@CATEGORY: 图论
+@@TAGS: 设计;字典树;哈希表;字符串
+@@URL: https://leetcode.cn/problems/implement-trie-prefix-tree/
+@@DESC
+Trie（发音类似 "try"）或者说 前缀树 是一种树形数据结构，用于高效地存储和检索字符串数据集中的键。这一数据结构有相当多的应用情景，例如自动补全和拼写检查。
+
+请你实现 Trie 类：
+Trie() 初始化前缀树对象。
+void insert(String word) 向前缀树中插入字符串 word。
+boolean search(String word) 如果字符串 word 在前缀树中，返回 true；否则，返回 false。
+boolean startsWith(String prefix) 如果之前已经插入的字符串 word 的前缀之一为 prefix，返回 true；否则，返回 false。
+
+示例：
+输入操作序列后：
+trie.search("apple");   // 返回 True
+trie.search("app");     // 返回 False
+trie.startsWith("app"); // 返回 True
+trie.insert("app");
+trie.search("app");     // 返回 True
+
+提示：
+1 <= word.length, prefix.length <= 2000
+word 和 prefix 仅由小写英文字母组成
+insert、search 和 startsWith 调用次数总计不超过 3 * 10^4 次
+实现 Trie 类：Trie() 初始化；insert(word) 插入；search(word) 精确查找；
+startsWith(prefix) 判断是否存在以该前缀开头的单词。所有输入仅含小写字母。
+@@SOLUTION: 方法一：26 叉数组节点（推荐）
+@@IDEA
+标准 Trie：每个节点含 26 个子指针数组和 isEnd 标记；插入/查找沿字符逐层下走。search 要求 isEnd（完整单词），startsWith 只要路径存在。操作 O(L)。
+@@JAVA
+class Trie {
+    private final Trie[] children = new Trie[26];
+    private boolean isEnd;
+
+    public void insert(String word) {
+        Trie node = this;
+        for (char c : word.toCharArray()) {
+            int i = c - 'a';
+            if (node.children[i] == null) node.children[i] = new Trie();
+            node = node.children[i];
+        }
+        node.isEnd = true;
+    }
+
+    public boolean search(String word) {
+        Trie node = walk(word);
+        return node != null && node.isEnd; // 必须是完整单词
+    }
+
+    public boolean startsWith(String prefix) {
+        return walk(prefix) != null;       // 前缀存在即可
+    }
+
+    private Trie walk(String s) { // 沿字符下走，返回终点或 null
+        Trie node = this;
+        for (char c : s.toCharArray()) {
+            node = node.children[c - 'a'];
+            if (node == null) return null;
+        }
+        return node;
+    }
+}
+@@PY
+class Trie:
+    def __init__(self):
+        self.children = {}   # 字符 -> 子 Trie
+        self.is_end = False
+
+    def insert(self, word: str) -> None:
+        node = self
+        for c in word:
+            if c not in node.children:
+                node.children[c] = Trie()
+            node = node.children[c]
+        node.is_end = True
+
+    def search(self, word: str) -> bool:
+        node = self._walk(word)
+        return node is not None and node.is_end  # 必须是完整单词
+
+    def startsWith(self, prefix: str) -> bool:
+        return self._walk(prefix) is not None    # 前缀存在即可
+
+    def _walk(self, s: str):  # 沿字符下走，返回终点或 None
+        node = self
+        for c in s:
+            if c not in node.children:
+                return None
+            node = node.children[c]
+        return node
+@@SOLUTION: 方法二：哈希表子节点（通用字符集）
+@@IDEA
+哈希子节点版：children 用 HashMap<Character, Trie>，天然支持任意字符集（不限小写字母），按需分配省内存。操作 O(L)。
+@@JAVA
+class Trie {
+    private final Map<Character, Trie> children = new HashMap<>();
+    private boolean isEnd;
+
+    public void insert(String word) {
+        Trie node = this;
+        for (char c : word.toCharArray()) {
+            node = node.children.computeIfAbsent(c, k -> new Trie());
+        }
+        node.isEnd = true;
+    }
+
+    public boolean search(String word) {
+        Trie node = walk(word);
+        return node != null && node.isEnd;
+    }
+
+    public boolean startsWith(String prefix) {
+        return walk(prefix) != null;
+    }
+
+    private Trie walk(String s) {
+        Trie node = this;
+        for (char c : s.toCharArray()) {
+            node = node.children.get(c); // 哈希定位子节点
+            if (node == null) return null;
+        }
+        return node;
+    }
+}
+@@PY
+class Trie:
+    def __init__(self):
+        self.children = {}  # 哈希子节点
+        self.is_end = False
+
+    def insert(self, word: str) -> None:
+        node = self
+        for c in word:
+            node = node.children.setdefault(c, Trie())
+        node.is_end = True
+
+    def search(self, word: str) -> bool:
+        node = self._walk(word)
+        return node is not None and node.is_end
+
+    def startsWith(self, prefix: str) -> bool:
+        return self._walk(prefix) is not None
+
+    def _walk(self, s):
+        node = self
+        for c in s:
+            if c not in node.children:
+                return None
+            node = node.children[c]
+        return node
+@@SOLUTION: 方法三：集合 + 前缀集合双表
+@@IDEA
+双集合版：words 存全部完整单词，prefixes 存插入过程中经过的所有前缀；search 查 words、startsWith 查 prefixes。空间换时间，实现最短。
+@@JAVA
+class Trie {
+    private final Set<String> words = new HashSet<>();
+    private final Set<String> prefixes = new HashSet<>();
+
+    public void insert(String word) {
+        words.add(word);
+        for (int i = 1; i <= word.length(); i++) {
+            prefixes.add(word.substring(0, i)); // 记录所有前缀
+        }
+    }
+
+    public boolean search(String word) {
+        return words.contains(word);      // 完整单词
+    }
+
+    public boolean startsWith(String prefix) {
+        return prefixes.contains(prefix); // 前缀
+    }
+}
+@@PY
+class Trie:
+    def __init__(self):
+        self.words = set()
+        self.prefixes = set()
+
+    def insert(self, word: str) -> None:
+        self.words.add(word)
+        for i in range(1, len(word) + 1):
+            self.prefixes.add(word[:i])  # 记录所有前缀
+
+    def search(self, word: str) -> bool:
+        return word in self.words    # 完整单词
+
+    def startsWith(self, prefix: str) -> bool:
+        return prefix in self.prefixes  # 前缀

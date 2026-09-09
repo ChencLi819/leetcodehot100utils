@@ -1,0 +1,2122 @@
+@@PROBLEM
+@@NO: 36
+@@ID: 94
+@@TITLE: 二叉树的中序遍历
+@@DIFF: 简单
+@@CATEGORY: 二叉树
+@@TAGS: 栈;树;深度优先搜索;二叉树
+@@URL: https://leetcode.cn/problems/binary-tree-inorder-traversal/
+@@DESC
+整数数组 nums 按升序排列，数组中的值 互不相同。
+
+在传递给函数之前，nums 在预先未知的某个下标 k（0 <= k < nums.length）上进行了旋转，使数组变为 [nums[k], nums[k+1], ..., nums[n-1], nums[0], nums[1], ..., nums[k-1]]（下标 从 0 开始 计数）。例如，[0,1,2,4,5,6,7] 在下标 3 处经旋转后可能变为 [4,5,6,7,0,1,2]。
+
+给你旋转后的数组 nums 和一个整数 target，如果 nums 中存在这个目标值 target，则返回它的下标，否则返回 -1。
+
+你必须设计一个时间复杂度为 O(log n) 的算法。
+
+示例 1：
+输入：nums = [4,5,6,7,0,1,2], target = 0
+输出：4
+
+示例 2：
+输入：nums = [4,5,6,7,0,1,2], target = 3
+输出：-1
+
+示例 3：
+输入：nums = [1], target = 0
+输出：-1
+
+提示：
+1 <= nums.length <= 5000
+-10^4 <= nums[i] <= 10^4
+nums 中的每个值都 独一无二
+题目数据保证 nums 在预先未知的某个下标上进行了旋转
+-10^4 <= target <= 10^4
+
+进阶：你可以想出 O(log n) 的解决方案吗？
+给定二叉树的根节点 root，返回它的中序遍历（左 → 根 → 右）。
+示例：root = [1,null,2,3] → 输出 [1,3,2]。
+@@SOLUTION: 方法一：递归（推荐）
+@@IDEA
+递归三行：左子树遍历 → 访问根 → 右子树遍历。中序递归是所有二叉树题的基础模板。O(n)/O(h)。
+@@JAVA
+class Solution {
+    public List<Integer> inorderTraversal(TreeNode root) {
+        List<Integer> res = new ArrayList<>();
+        inorder(root, res);
+        return res;
+    }
+    private void inorder(TreeNode node, List<Integer> res) {
+        if (node == null) return;
+        inorder(node.left, res);  // 左
+        res.add(node.val);        // 根
+        inorder(node.right, res); // 右
+    }
+}
+@@PY
+class Solution:
+    def inorderTraversal(self, root: Optional[TreeNode]) -> List[int]:
+        res = []
+
+        def inorder(node):
+            if not node:
+                return
+            inorder(node.left)   # 左
+            res.append(node.val) # 根
+            inorder(node.right)  # 右
+
+        inorder(root)
+        return res
+@@SOLUTION: 方法二：迭代显式栈
+@@IDEA
+迭代显式栈：一路向左压栈，弹出访问后转向右子树；循环条件 cur != null || 栈非空。模拟系统栈行为，O(n)/O(h)，必须掌握的非递归写法。
+@@JAVA
+class Solution {
+    public List<Integer> inorderTraversal(TreeNode root) {
+        List<Integer> res = new ArrayList<>();
+        Deque<TreeNode> stack = new ArrayDeque<>();
+        TreeNode cur = root;
+        while (cur != null || !stack.isEmpty()) {
+            while (cur != null) {   // 一路向左压栈
+                stack.push(cur);
+                cur = cur.left;
+            }
+            cur = stack.pop();      // 访问栈顶
+            res.add(cur.val);
+            cur = cur.right;        // 转向右子树
+        }
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def inorderTraversal(self, root: Optional[TreeNode]) -> List[int]:
+        res, stack = [], []
+        cur = root
+        while cur or stack:
+            while cur:           # 一路向左压栈
+                stack.append(cur)
+                cur = cur.left
+            cur = stack.pop()    # 访问栈顶
+            res.append(cur.val)
+            cur = cur.right      # 转向右子树
+        return res
+@@SOLUTION: 方法三：Morris 中序遍历（O(1) 空间）
+@@IDEA
+Morris 遍历：为每个节点找左子树的最右节点建立临时回链，访问完拆除，空间 O(1)。第一次到达建链转左、第二次到达拆链访问并转右。O(n)/O(1)。
+@@JAVA
+class Solution {
+    public List<Integer> inorderTraversal(TreeNode root) {
+        List<Integer> res = new ArrayList<>();
+        TreeNode cur = root;
+        while (cur != null) {
+            if (cur.left == null) {
+                res.add(cur.val);       // 无左子树，直接访问
+                cur = cur.right;
+            } else {
+                TreeNode pred = cur.left;
+                while (pred.right != null && pred.right != cur) {
+                    pred = pred.right;  // 左子树最右节点
+                }
+                if (pred.right == null) {
+                    pred.right = cur;   // 建临时回链
+                    cur = cur.left;
+                } else {
+                    pred.right = null;  // 拆链（第二次到达）
+                    res.add(cur.val);
+                    cur = cur.right;
+                }
+            }
+        }
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def inorderTraversal(self, root: Optional[TreeNode]) -> List[int]:
+        res = []
+        cur = root
+        while cur:
+            if not cur.left:
+                res.append(cur.val)  # 无左子树，直接访问
+                cur = cur.right
+            else:
+                pred = cur.left
+                while pred.right and pred.right is not cur:
+                    pred = pred.right  # 左子树最右节点
+                if not pred.right:
+                    pred.right = cur   # 建临时回链
+                    cur = cur.left
+                else:
+                    pred.right = None  # 拆链（第二次到达）
+                    res.append(cur.val)
+                    cur = cur.right
+        return res
+@@PROBLEM
+@@NO: 37
+@@ID: 104
+@@TITLE: 二叉树的最大深度
+@@DIFF: 简单
+@@CATEGORY: 二叉树
+@@TAGS: 树;深度优先搜索;广度优先搜索;二叉树
+@@URL: https://leetcode.cn/problems/maximum-depth-of-binary-tree/
+@@DESC
+已知一个长度为 n 的数组，预先按照升序排列，经由 1 到 n 次 旋转 后，得到输入数组。例如，原数组 nums = [0,1,2,4,5,6,7] 在变化后可能得到：
+若旋转 4 次，则可以得到 [4,5,6,7,0,1,2]
+若旋转 7 次，则可以得到 [0,1,2,4,5,6,7]
+注意，数组 [a[0], a[1], a[2], ..., a[n-1]] 旋转一次 的结果为数组 [a[n-1], a[0], a[1], a[2], ..., a[n-2]]。
+
+给你一个元素值 互不相同 的数组 nums，它原来是一个升序排列的数组，并按上述情形进行了多次旋转。请你找出并返回数组中的 最小元素。
+
+你必须设计一个时间复杂度为 O(log n) 的算法。
+
+示例 1：
+输入：nums = [3,4,5,1,2]
+输出：1
+解释：原数组为 [1,2,3,4,5]，旋转 4 次得到输入数组。
+
+示例 2：
+输入：nums = [4,5,6,7,0,1,2]
+输出：0
+
+示例 3：
+输入：nums = [11,13,15,17]
+输出：11
+
+提示：
+n == nums.length
+1 <= n <= 5000
+-5000 <= nums[i] <= 5000
+nums 中的所有整数 互不相同
+nums 原来是一个升序排序的数组，并进行了 1 至 n 次旋转
+给定二叉树的根节点 root，返回它的最大深度（根到最远叶子节点的最长路径上的节点数）。
+示例：root = [3,9,20,null,null,15,7] → 输出 3。
+@@SOLUTION: 方法一：递归 DFS（推荐）
+@@IDEA
+递归：深度 = 1 + max(左深度, 右深度)，空树返回 0。最简洁的树形 DP 入门。O(n)/O(h)。
+@@JAVA
+class Solution {
+    public int maxDepth(TreeNode root) {
+        if (root == null) return 0;
+        return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));
+    }
+}
+@@PY
+class Solution:
+    def maxDepth(self, root: Optional[TreeNode]) -> int:
+        if not root:
+            return 0
+        return 1 + max(self.maxDepth(root.left), self.maxDepth(root.right))
+@@SOLUTION: 方法二：BFS 层序计数
+@@IDEA
+BFS 层序：每处理完一层深度 +1，队列空时的层数即最大深度。适合已经会层序模板的场景。O(n)/O(宽度)。
+@@JAVA
+class Solution {
+    public int maxDepth(TreeNode root) {
+        if (root == null) return 0;
+        Deque<TreeNode> queue = new ArrayDeque<>();
+        queue.offer(root);
+        int depth = 0;
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            for (int i = 0; i < size; i++) { // 遍历一整层
+                TreeNode node = queue.poll();
+                if (node.left != null) queue.offer(node.left);
+                if (node.right != null) queue.offer(node.right);
+            }
+            depth++;
+        }
+        return depth;
+    }
+}
+@@PY
+class Solution:
+    def maxDepth(self, root: Optional[TreeNode]) -> int:
+        if not root:
+            return 0
+        queue = deque([root])
+        depth = 0
+        while queue:
+            for _ in range(len(queue)):  # 遍历一整层
+                node = queue.popleft()
+                if node.left:
+                    queue.append(node.left)
+                if node.right:
+                    queue.append(node.right)
+            depth += 1
+        return depth
+@@SOLUTION: 方法三：迭代 DFS（显式栈存深度）
+@@IDEA
+迭代 DFS：栈里存 (节点, 深度) 对做前序遍历，过程中记录最大深度。O(n)/O(h)，展示「栈存状态对」的通用技巧。
+@@JAVA
+class Solution {
+    public int maxDepth(TreeNode root) {
+        if (root == null) return 0;
+        Deque<Object[]> stack = new ArrayDeque<>(); // {节点, 深度}
+        stack.push(new Object[]{root, 1});
+        int best = 0;
+        while (!stack.isEmpty()) {
+            Object[] top = stack.pop();
+            TreeNode node = (TreeNode) top[0];
+            int depth = (Integer) top[1];
+            best = Math.max(best, depth);
+            if (node.left != null) stack.push(new Object[]{node.left, depth + 1});
+            if (node.right != null) stack.push(new Object[]{node.right, depth + 1});
+        }
+        return best;
+    }
+}
+@@PY
+class Solution:
+    def maxDepth(self, root: Optional[TreeNode]) -> int:
+        if not root:
+            return 0
+        stack = [(root, 1)]  # (节点, 深度)
+        best = 0
+        while stack:
+            node, depth = stack.pop()
+            best = max(best, depth)
+            if node.left:
+                stack.append((node.left, depth + 1))
+            if node.right:
+                stack.append((node.right, depth + 1))
+        return best
+@@PROBLEM
+@@NO: 38
+@@ID: 226
+@@TITLE: 翻转二叉树
+@@DIFF: 简单
+@@CATEGORY: 二叉树
+@@TAGS: 树;深度优先搜索;广度优先搜索;二叉树
+@@URL: https://leetcode.cn/problems/invert-binary-tree/
+@@DESC
+给定两个大小分别为 m 和 n 的正序（从小到大）数组 nums1 和 nums2。请你找出并返回这两个正序数组的 中位数。
+
+算法的时间复杂度应该为 O(log(m+n))。
+
+示例 1：
+输入：nums1 = [1,3], nums2 = [2]
+输出：2.00000
+解释：合并数组 = [1,2,3]，中位数 2。
+
+示例 2：
+输入：nums1 = [1,2], nums2 = [3,4]
+输出：2.50000
+解释：合并数组 = [1,2,3,4]，中位数 (2 + 3) / 2 = 2.5。
+
+提示：
+0 <= m, n <= 1000
+1 <= m + n <= 2000
+-10^6 <= nums1[i], nums2[i] <= 10^6
+
+进阶：你能设计一个时间复杂度为 O(log(m+n)) 的算法解决此问题吗？
+给你一棵二叉树的根节点 root，翻转这棵二叉树（每个节点的左右子树互换），并返回其根节点。
+示例：[4,2,7,1,3,6,9] → [4,7,2,9,6,3,1]。
+@@SOLUTION: 方法一：递归（推荐）
+@@IDEA
+递归：交换当前节点的左右孩子，再分别翻转两棵子树。注意先用临时变量保存再交换，防止覆盖。O(n)/O(h)。
+@@JAVA
+class Solution {
+    public TreeNode invertTree(TreeNode root) {
+        if (root == null) return null;
+        TreeNode t = root.left;                 // 交换左右孩子
+        root.left = invertTree(root.right);
+        root.right = invertTree(t);
+        return root;
+    }
+}
+@@PY
+class Solution:
+    def invertTree(self, root: Optional[TreeNode]) -> Optional[TreeNode]:
+        if not root:
+            return None
+        root.left, root.right = self.invertTree(root.right), self.invertTree(root.left)
+        return root
+@@SOLUTION: 方法二：BFS 队列迭代
+@@IDEA
+BFS：队列逐层处理，出队即交换该节点左右孩子，再把孩子入队。O(n)/O(宽度)，与递归等价的迭代视角。
+@@JAVA
+class Solution {
+    public TreeNode invertTree(TreeNode root) {
+        if (root == null) return null;
+        Deque<TreeNode> queue = new ArrayDeque<>();
+        queue.offer(root);
+        while (!queue.isEmpty()) {
+            TreeNode node = queue.poll();
+            TreeNode t = node.left;   // 交换左右孩子
+            node.left = node.right;
+            node.right = t;
+            if (node.left != null) queue.offer(node.left);
+            if (node.right != null) queue.offer(node.right);
+        }
+        return root;
+    }
+}
+@@PY
+class Solution:
+    def invertTree(self, root: Optional[TreeNode]) -> Optional[TreeNode]:
+        if not root:
+            return None
+        queue = deque([root])
+        while queue:
+            node = queue.popleft()
+            node.left, node.right = node.right, node.left  # 交换左右孩子
+            if node.left:
+                queue.append(node.left)
+            if node.right:
+                queue.append(node.right)
+        return root
+@@SOLUTION: 方法三：DFS 显式栈迭代
+@@IDEA
+DFS 显式栈：前序顺序出栈交换左右孩子。与 BFS 版本只有容器不同，说明遍历顺序不影响翻转结果。O(n)/O(h)。
+@@JAVA
+class Solution {
+    public TreeNode invertTree(TreeNode root) {
+        if (root == null) return null;
+        Deque<TreeNode> stack = new ArrayDeque<>();
+        stack.push(root);
+        while (!stack.isEmpty()) {
+            TreeNode node = stack.pop();
+            TreeNode t = node.left;   // 交换左右孩子
+            node.left = node.right;
+            node.right = t;
+            if (node.left != null) stack.push(node.left);
+            if (node.right != null) stack.push(node.right);
+        }
+        return root;
+    }
+}
+@@PY
+class Solution:
+    def invertTree(self, root: Optional[TreeNode]) -> Optional[TreeNode]:
+        if not root:
+            return None
+        stack = [root]
+        while stack:
+            node = stack.pop()
+            node.left, node.right = node.right, node.left  # 交换左右孩子
+            if node.left:
+                stack.append(node.left)
+            if node.right:
+                stack.append(node.right)
+        return root
+@@PROBLEM
+@@NO: 39
+@@ID: 101
+@@TITLE: 对称二叉树
+@@DIFF: 简单
+@@CATEGORY: 二叉树
+@@TAGS: 树;深度优先搜索;广度优先搜索;二叉树
+@@URL: https://leetcode.cn/problems/symmetric-tree/
+@@DESC
+给定一个只包括 '('，')'，'{'，'}'，'['，']' 的字符串 s，判断字符串是否有效。
+
+有效字符串需满足：
+左括号必须用相同类型的右括号闭合。
+左括号必须以正确的顺序闭合。
+每个右括号都有一个对应的相同类型的左括号。
+
+示例 1：
+输入：s = "()"
+输出：true
+
+示例 2：
+输入：s = "()[]{}"
+输出：true
+
+示例 3：
+输入：s = "(]"
+输出：false
+
+示例 4：
+输入：s = "([])"
+输出：true
+
+提示：
+1 <= s.length <= 10^4
+s 仅由括号 '()[]{}' 组成
+给你二叉树的根节点 root，检查它是否轴对称（镜像对称）。
+示例：[1,2,2,3,4,4,3] → true；[1,2,2,null,3,null,3] → false。
+@@SOLUTION: 方法一：递归镜像比较（推荐）
+@@IDEA
+递归镜像比较：两棵树同步走，比较「左左 vs 右右」「左右 vs 右左」；空节点组合要分「双空为真、单空为假」两种。O(n)/O(h)。
+@@JAVA
+class Solution {
+    public boolean isSymmetric(TreeNode root) {
+        return mirror(root, root);
+    }
+    private boolean mirror(TreeNode a, TreeNode b) {
+        if (a == null && b == null) return true;
+        if (a == null || b == null) return false;
+        return a.val == b.val
+                && mirror(a.left, b.right)   // 外侧比较
+                && mirror(a.right, b.left);  // 内侧比较
+    }
+}
+@@PY
+class Solution:
+    def isSymmetric(self, root: Optional[TreeNode]) -> bool:
+        def mirror(a, b):
+            if a is None and b is None:
+                return True
+            if a is None or b is None:
+                return False
+            return a.val == b.val and mirror(a.left, b.right) and mirror(a.right, b.left)
+        return mirror(root, root)
+@@SOLUTION: 方法二：BFS 成对入队
+@@IDEA
+BFS 成对入队：队列每次取两个节点比较，按镜像顺序成对入队（左左/右右、左右/右左）。迭代版对称判断，O(n)/O(n)。
+@@JAVA
+class Solution {
+    public boolean isSymmetric(TreeNode root) {
+        Deque<TreeNode> queue = new ArrayDeque<>();
+        queue.offer(root);
+        queue.offer(root);
+        while (!queue.isEmpty()) {
+            TreeNode a = queue.poll(), b = queue.poll();
+            if (a == null && b == null) continue;
+            if (a == null || b == null || a.val != b.val) return false;
+            queue.offer(a.left);  // 镜像成对入队
+            queue.offer(b.right);
+            queue.offer(a.right);
+            queue.offer(b.left);
+        }
+        return true;
+    }
+}
+@@PY
+class Solution:
+    def isSymmetric(self, root: Optional[TreeNode]) -> bool:
+        queue = deque([root, root])
+        while queue:
+            a, b = queue.popleft(), queue.popleft()
+            if a is None and b is None:
+                continue
+            if a is None or b is None or a.val != b.val:
+                return False
+            queue.append(a.left)   # 镜像成对入队
+            queue.append(b.right)
+            queue.append(a.right)
+            queue.append(b.left)
+        return True
+@@SOLUTION: 方法三：中序遍历对称性
+@@IDEA
+序列视角：左子树做中序、右子树做反中序（右→根→左），两个序列完全相等即对称；需要用占位符标记 null 保证结构一致。O(n)/O(n)。
+@@JAVA
+class Solution {
+    public boolean isSymmetric(TreeNode root) {
+        List<Integer> l = new ArrayList<>(), r = new ArrayList<>();
+        inorder(root.left, l, true);   // 左子树：中序
+        inorder(root.right, r, false); // 右子树：反中序
+        return l.equals(r);
+    }
+    private void inorder(TreeNode node, List<Integer> res, boolean normal) {
+        if (node == null) {
+            res.add(null); // 占位保证结构一致
+            return;
+        }
+        if (normal) {
+            inorder(node.left, res, true);
+            res.add(node.val);
+            inorder(node.right, res, true);
+        } else {
+            inorder(node.right, res, false);
+            res.add(node.val);
+            inorder(node.left, res, false);
+        }
+    }
+}
+@@PY
+class Solution:
+    def isSymmetric(self, root: Optional[TreeNode]) -> bool:
+        left_seq, right_seq = [], []
+
+        def inorder(node, res, normal):
+            if not node:
+                res.append(None)  # 占位保证结构一致
+                return
+            nxt = (node.left, node.right) if normal else (node.right, node.left)
+            inorder(nxt[0], res, normal)
+            res.append(node.val)
+            inorder(nxt[1], res, normal)
+
+        inorder(root.left, left_seq, True)     # 左子树：中序
+        inorder(root.right, right_seq, False)  # 右子树：反中序
+        return left_seq == right_seq
+@@PROBLEM
+@@NO: 40
+@@ID: 543
+@@TITLE: 二叉树的直径
+@@DIFF: 简单
+@@CATEGORY: 二叉树
+@@TAGS: 树;深度优先搜索;二叉树
+@@URL: https://leetcode.cn/problems/diameter-of-binary-tree/
+@@DESC
+设计一个支持 push、pop、top 操作，并能在常数时间内检索到最小元素的栈。
+
+实现 MinStack 类：
+MinStack() 初始化堆栈对象。
+void push(int val) 将元素val推入堆栈。
+void pop() 删除堆栈顶部的元素。
+int top() 获取堆栈顶部的元素。
+int getMin() 获取堆栈中的最小元素。
+
+示例 1：
+输入：["MinStack","push","push","push","getMin","pop","top","getMin"]
+[[],[-2],[0],[-3],[],[],[],[]]
+输出：[null,null,null,null,-3,null,0,-2]
+解释：
+MinStack minStack = new MinStack();
+minStack.push(-2);
+minStack.push(0);
+minStack.push(-3);
+minStack.getMin();   --> 返回 -3
+minStack.pop();
+minStack.top();      --> 返回 0
+minStack.getMin();   --> 返回 -2
+
+提示：
+-2^31 <= val <= 2^31 - 1
+pop、top 和 getMin 操作总是在 非空栈 上调用
+push、pop、top 和 getMin 最多被调用 3 * 10^4 次
+给定二叉树的根节点 root，返回该树的直径（任意两节点间最长路径的边数，可能不经过根）。
+示例：[1,2,3,4,5] → 输出 3（路径 4→2→1→3 或 5→2→1→3）。
+@@SOLUTION: 方法一：DFS 深度 + 全局最大（推荐）
+@@IDEA
+树形 DP：DFS 返回「以该节点向下延伸的最大深度」，途中用左深+右深更新全局最大直径（边数）。负数深度不存在，无需截断。O(n)/O(h)。
+@@JAVA
+class Solution {
+    private int best = 0;
+
+    public int diameterOfBinaryTree(TreeNode root) {
+        depth(root);
+        return best;
+    }
+    private int depth(TreeNode node) {
+        if (node == null) return 0;
+        int l = depth(node.left);
+        int r = depth(node.right);
+        best = Math.max(best, l + r);       // 经过 node 的最长路径
+        return Math.max(l, r) + 1;          // 向上贡献深度
+    }
+}
+@@PY
+class Solution:
+    def diameterOfBinaryTree(self, root: Optional[TreeNode]) -> int:
+        best = 0
+
+        def depth(node):
+            nonlocal best
+            if not node:
+                return 0
+            l, r = depth(node.left), depth(node.right)
+            best = max(best, l + r)  # 经过 node 的最长路径
+            return max(l, r) + 1     # 向上贡献深度
+
+        depth(root)
+        return best
+@@SOLUTION: 方法二：递归返回配对值（避免全局变量）
+@@IDEA
+函数式写法：递归返回 (深度, 子树内直径) 二元组逐层向上合并，避免全局变量。O(n)/O(h)，与解法一本质相同。
+@@JAVA
+class Solution {
+    public int diameterOfBinaryTree(TreeNode root) {
+        return dfs(root)[1];
+    }
+    // 返回 {深度, 该子树内的直径}
+    private int[] dfs(TreeNode node) {
+        if (node == null) return new int[]{0, 0};
+        int[] L = dfs(node.left), R = dfs(node.right);
+        int depth = Math.max(L[0], R[0]) + 1;        // 深度
+        int dia = Math.max(L[0] + R[0], Math.max(L[1], R[1])); // 直径
+        return new int[]{depth, dia};
+    }
+}
+@@PY
+class Solution:
+    def diameterOfBinaryTree(self, root: Optional[TreeNode]) -> int:
+        # 返回 (深度, 该子树内的直径)
+        def dfs(node):
+            if not node:
+                return 0, 0
+            ld, lb = dfs(node.left)
+            rd, rb = dfs(node.right)
+            return (max(ld, rd) + 1, max(ld + rd, lb, rb))  # (深度, 直径)
+        return dfs(root)[1]
+@@SOLUTION: 方法三：枚举节点 + 逐点求深（暴力对照）
+@@IDEA
+暴力对照：对每个节点单独求左右深度并计算经过它的路径，深度被重复计算导致 O(n²)。用于理解「直径=某点左深+右深」的定义。
+@@JAVA
+class Solution {
+    public int diameterOfBinaryTree(TreeNode root) {
+        if (root == null) return 0;
+        int through = depth(root.left) + depth(root.right); // 经过 root
+        int left = diameterOfBinaryTree(root.left);         // 左子树内部
+        int right = diameterOfBinaryTree(root.right);       // 右子树内部
+        return Math.max(through, Math.max(left, right));
+    }
+    private int depth(TreeNode node) {
+        if (node == null) return 0;
+        return 1 + Math.max(depth(node.left), depth(node.right));
+    }
+}
+@@PY
+class Solution:
+    def diameterOfBinaryTree(self, root: Optional[TreeNode]) -> int:
+        if not root:
+            return 0
+        through = self._depth(root.left) + self._depth(root.right)  # 经过 root
+        left = self.diameterOfBinaryTree(root.left)   # 左子树内部
+        right = self.diameterOfBinaryTree(root.right) # 右子树内部
+        return max(through, left, right)
+
+    def _depth(self, node):
+        if not node:
+            return 0
+        return 1 + max(self._depth(node.left), self._depth(node.right))
+@@PROBLEM
+@@NO: 41
+@@ID: 102
+@@TITLE: 二叉树的层序遍历
+@@DIFF: 中等
+@@CATEGORY: 二叉树
+@@TAGS: 树;广度优先搜索;二叉树
+@@URL: https://leetcode.cn/problems/binary-tree-level-order-traversal/
+@@DESC
+给你一个字符串 s，请你根据下面的规则解码它：
+
+数字后跟一个方括号，表示方括号内的字符串重复该数字次。例如，3[a] 解码为 aaa。
+你可以按原样输出字符串，例如 2[abc] 解码为 abcabc。
+
+示例 1：
+输入：s = "3[a]2[bc]"
+输出："aaabcbc"
+
+示例 2：
+输入：s = "3[a2[c]]"
+输出："accaccacc"
+
+示例 3：
+输入：s = "2[abc]3[cd]ef"
+输出："abcabccdcdcdef"
+
+提示：
+1 <= s.length <= 30
+s 由小写英文字母、数字和方括号 '[]' 组成
+s 保证是一个 有效 的输入
+s 中所有整数的取值范围为 [1, 300]
+给你二叉树的根节点 root，返回其节点值的层序遍历（逐层地，从左到右访问）。
+示例：[3,9,20,null,null,15,7] → 输出 [[3],[9,20],[15,7]]。
+@@SOLUTION: 方法一：BFS 队列按层出队（推荐）
+@@IDEA
+BFS 模板题：每轮先记录队列当前长度 size（正好是本层节点数），逐个出队收集并把孩子入队。O(n)/O(宽度)。
+@@JAVA
+class Solution {
+    public List<List<Integer>> levelOrder(TreeNode root) {
+        List<List<Integer>> res = new ArrayList<>();
+        if (root == null) return res;
+        Deque<TreeNode> queue = new ArrayDeque<>();
+        queue.offer(root);
+        while (!queue.isEmpty()) {
+            int size = queue.size();       // 本层节点数
+            List<Integer> level = new ArrayList<>();
+            for (int i = 0; i < size; i++) {
+                TreeNode node = queue.poll();
+                level.add(node.val);
+                if (node.left != null) queue.offer(node.left);
+                if (node.right != null) queue.offer(node.right);
+            }
+            res.add(level);
+        }
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def levelOrder(self, root: Optional[TreeNode]) -> List[List[int]]:
+        res = []
+        if not root:
+            return res
+        queue = deque([root])
+        while queue:
+            size = len(queue)  # 本层节点数
+            level = []
+            for _ in range(size):
+                node = queue.popleft()
+                level.append(node.val)
+                if node.left:
+                    queue.append(node.left)
+                if node.right:
+                    queue.append(node.right)
+            res.append(level)
+        return res
+@@SOLUTION: 方法二：递归按深度挂载
+@@IDEA
+递归按深度挂载：DFS 携带 depth 参数，res.size()==depth 时新建一层列表，再把值追加到对应层。O(n)/O(h)，不用队列也能层序。
+@@JAVA
+class Solution {
+    public List<List<Integer>> levelOrder(TreeNode root) {
+        List<List<Integer>> res = new ArrayList<>();
+        dfs(root, 0, res);
+        return res;
+    }
+    private void dfs(TreeNode node, int depth, List<List<Integer>> res) {
+        if (node == null) return;
+        if (res.size() == depth) res.add(new ArrayList<>()); // 新层
+        res.get(depth).add(node.val);
+        dfs(node.left, depth + 1, res);
+        dfs(node.right, depth + 1, res);
+    }
+}
+@@PY
+class Solution:
+    def levelOrder(self, root: Optional[TreeNode]) -> List[List[int]]:
+        res = []
+
+        def dfs(node, depth):
+            if not node:
+                return
+            if len(res) == depth:  # 新层
+                res.append([])
+            res[depth].append(node.val)
+            dfs(node.left, depth + 1)
+            dfs(node.right, depth + 1)
+
+        dfs(root, 0)
+        return res
+@@SOLUTION: 方法三：双列表逐层传递
+@@IDEA
+双列表逐层传递：current 存当前层节点，遍历时把值收进结果、把孩子收进 children，循环交换直到为空。O(n)/O(宽度)。
+@@JAVA
+class Solution {
+    public List<List<Integer>> levelOrder(TreeNode root) {
+        List<List<Integer>> res = new ArrayList<>();
+        if (root == null) return res;
+        List<TreeNode> current = new ArrayList<>();
+        current.add(root);
+        while (!current.isEmpty()) {
+            List<Integer> vals = new ArrayList<>();
+            List<TreeNode> children = new ArrayList<>();
+            for (TreeNode node : current) {        // 当前层
+                vals.add(node.val);
+                if (node.left != null) children.add(node.left);
+                if (node.right != null) children.add(node.right);
+            }
+            res.add(vals);
+            current = children;                    // 进入下一层
+        }
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def levelOrder(self, root: Optional[TreeNode]) -> List[List[int]]:
+        res = []
+        if not root:
+            return res
+        current = [root]
+        while current:
+            vals, children = [], []
+            for node in current:  # 当前层
+                vals.append(node.val)
+                if node.left:
+                    children.append(node.left)
+                if node.right:
+                    children.append(node.right)
+            res.append(vals)
+            current = children    # 进入下一层
+        return res
+@@PROBLEM
+@@NO: 42
+@@ID: 108
+@@TITLE: 将有序数组转换为二叉搜索树
+@@DIFF: 简单
+@@CATEGORY: 二叉树
+@@TAGS: 树;二叉搜索树;数组;分治;二叉树
+@@URL: https://leetcode.cn/problems/convert-sorted-array-to-binary-search-tree/
+@@DESC
+请根据每日 气温 列表 temperatures，重新生成一个列表 answer，其中 answer[i] 是指对于第 i 天，下一个更高温度出现在几天后。如果气温在这之后都不会升高，请在该位置用 0 来代替。
+
+示例 1：
+输入：temperatures = [73,74,75,71,69,72,76,73]
+输出：[1,1,4,2,1,1,0,0]
+
+示例 2：
+输入：temperatures = [30,40,50,60]
+输出：[1,1,1,0]
+
+示例 3：
+输入：temperatures = [30,60,90]
+输出：[1,1,1]
+
+提示：
+1 <= temperatures.length <= 10^5
+30 <= temperatures[i] <= 100
+给你一个升序数组 nums，请将其转换成一棵高度平衡的二叉搜索树（每个节点左右子树高度差 ≤ 1）。
+示例：nums = [-10,-3,0,5,9] → 输出 [0,-3,9,-10,null,5]（答案不唯一）。
+@@SOLUTION: 方法一：取中点递归分治（推荐）
+@@IDEA
+分治：升序数组的中点必是根（保证平衡），左半递归建左子树、右半递归建右子树。O(n)/O(log n)。
+@@JAVA
+class Solution {
+    public TreeNode sortedArrayToBST(int[] nums) {
+        return build(nums, 0, nums.length - 1);
+    }
+    private TreeNode build(int[] nums, int lo, int hi) {
+        if (lo > hi) return null;
+        int mid = lo + (hi - lo) / 2;   // 中点为根
+        TreeNode root = new TreeNode(nums[mid]);
+        root.left = build(nums, lo, mid - 1);
+        root.right = build(nums, mid + 1, hi);
+        return root;
+    }
+}
+@@PY
+class Solution:
+    def sortedArrayToBST(self, nums: List[int]) -> Optional[TreeNode]:
+        def build(lo, hi):
+            if lo > hi:
+                return None
+            mid = (lo + hi) // 2  # 中点为根
+            node = TreeNode(nums[mid])
+            node.left = build(lo, mid - 1)
+            node.right = build(mid + 1, hi)
+            return node
+        return build(0, len(nums) - 1)
+@@SOLUTION: 方法二：取中点偏右 / 偏左变体
+@@IDEA
+变体：mid 取偏右 (lo+hi+1)/2，同样平衡但树形不同——说明本题答案不唯一，任何「中点为根」的分治都合法。O(n)/O(log n)。
+@@JAVA
+class Solution {
+    public TreeNode sortedArrayToBST(int[] nums) {
+        return build(nums, 0, nums.length - 1);
+    }
+    private TreeNode build(int[] nums, int lo, int hi) {
+        if (lo > hi) return null;
+        int mid = (lo + hi + 1) / 2;    // 偏右中点，产生另一种平衡树
+        TreeNode root = new TreeNode(nums[mid]);
+        root.left = build(nums, lo, mid - 1);
+        root.right = build(nums, mid + 1, hi);
+        return root;
+    }
+}
+@@PY
+class Solution:
+    def sortedArrayToBST(self, nums: List[int]) -> Optional[TreeNode]:
+        def build(lo, hi):
+            if lo > hi:
+                return None
+            mid = (lo + hi + 1) // 2  # 偏右中点，产生另一种平衡树
+            node = TreeNode(nums[mid])
+            node.left = build(lo, mid - 1)
+            node.right = build(mid + 1, hi)
+            return node
+        return build(0, len(nums) - 1)
+@@SOLUTION: 方法三：迭代 + 模拟队列（节点与区间配对）
+@@IDEA
+迭代版：队列存（父节点、挂左/右、区间），每次取区间中点建节点挂到父节点，子区间继续入队。O(n)/O(n)，无递归写法。
+@@JAVA
+class Solution {
+    public TreeNode sortedArrayToBST(int[] nums) {
+        int n = nums.length;
+        if (n == 0) return null;
+        // 记录 (父节点, 挂左还是右, lo, hi)
+        Deque<Object[]> queue = new ArrayDeque<>();
+        int lo = 0, hi = n - 1, mid = (lo + hi) / 2;
+        TreeNode root = new TreeNode(nums[mid]);
+        queue.offer(new Object[]{root, 0, lo, mid - 1});
+        queue.offer(new Object[]{root, 1, mid + 1, hi});
+        while (!queue.isEmpty()) {
+            Object[] job = queue.poll();
+            TreeNode parent = (TreeNode) job[0];
+            boolean right = (Integer) job[1] == 1;
+            int l = (Integer) job[2], r = (Integer) job[3];
+            if (l > r) continue;
+            int m = (l + r) / 2;
+            TreeNode node = new TreeNode(nums[m]);
+            if (right) parent.right = node;
+            else parent.left = node;
+            queue.offer(new Object[]{node, 0, l, m - 1});
+            queue.offer(new Object[]{node, 1, m + 1, r});
+        }
+        return root;
+    }
+}
+@@PY
+class Solution:
+    def sortedArrayToBST(self, nums: List[int]) -> Optional[TreeNode]:
+        n = len(nums)
+        if n == 0:
+            return None
+        lo, hi = 0, n - 1
+        mid = (lo + hi) // 2
+        root = TreeNode(nums[mid])
+        # 队列存 (父节点, 挂左还是右, lo, hi)
+        queue = deque([(root, 0, lo, mid - 1), (root, 1, mid + 1, hi)])
+        while queue:
+            parent, is_right, l, r = queue.popleft()
+            if l > r:
+                continue
+            m = (l + r) // 2
+            node = TreeNode(nums[m])
+            if is_right:
+                parent.right = node
+            else:
+                parent.left = node
+            queue.append((node, 0, l, m - 1))
+            queue.append((node, 1, m + 1, r))
+        return root
+@@PROBLEM
+@@NO: 43
+@@ID: 98
+@@TITLE: 验证二叉搜索树
+@@DIFF: 中等
+@@CATEGORY: 二叉树
+@@TAGS: 树;深度优先搜索;二叉搜索树;二叉树
+@@URL: https://leetcode.cn/problems/validate-binary-search-tree/
+@@DESC
+给定 n 个非负整数，用来表示柱状图中各个柱子的高度。每个柱子彼此相邻，且宽度为 1。
+
+求在该柱状图中，能够勾勒出来的矩形的最大面积。
+
+示例 1：
+输入：heights = [2,1,5,6,2,3]
+输出：10
+解释：最大的矩形为图中红色区域，该矩形的面积为 10。
+
+示例 2：
+输入：heights = [2,4]
+输出：4
+
+提示：
+1 <= heights.length <= 10^5
+0 <= heights[i] <= 10^4
+给你一个二叉树的根节点 root，判断其是否是一棵有效的二叉搜索树（中序严格递增；不能只比较父子节点）。
+示例：[5,1,4,null,null,3,6] → false（3 出现在 5 的右子树中）。
+@@SOLUTION: 方法一：递归传上下界（推荐）
+@@IDEA
+递归传上下界：每个节点必须严格落在 (lo, hi) 内；进左子树用当前值收紧上界，进右子树收紧下界。用 Integer/None 表示无界。O(n)/O(h)。
+@@JAVA
+class Solution {
+    public boolean isValidBST(TreeNode root) {
+        return valid(root, null, null);
+    }
+    private boolean valid(TreeNode node, Integer lo, Integer hi) {
+        if (node == null) return true;
+        if (lo != null && node.val <= lo) return false; // 不低于下界
+        if (hi != null && node.val >= hi) return false; // 不超过上界
+        return valid(node.left, lo, node.val)    // 左子树上界收紧
+            && valid(node.right, node.val, hi);  // 右子树下界收紧
+    }
+}
+@@PY
+class Solution:
+    def isValidBST(self, root: Optional[TreeNode]) -> bool:
+        def valid(node, lo, hi):
+            if not node:
+                return True
+            if lo is not None and node.val <= lo:
+                return False
+            if hi is not None and node.val >= hi:
+                return False
+            return valid(node.left, lo, node.val) and valid(node.right, node.val, hi)
+        return valid(root, None, None)
+@@SOLUTION: 方法二：中序遍历严格递增
+@@IDEA
+中序性质：BST 中序严格递增。迭代中序遍历，比较当前值与上一个访问值，用 long 防御 INT_MIN 边界。O(n)/O(h)。
+@@JAVA
+class Solution {
+    public boolean isValidBST(TreeNode root) {
+        Deque<TreeNode> stack = new ArrayDeque<>();
+        TreeNode cur = root;
+        long prev = Long.MIN_VALUE; // 用 long 防御 INT_MIN
+        while (cur != null || !stack.isEmpty()) {
+            while (cur != null) {
+                stack.push(cur);
+                cur = cur.left;
+            }
+            cur = stack.pop();
+            if (cur.val <= prev) return false; // 必须严格递增
+            prev = cur.val;
+            cur = cur.right;
+        }
+        return true;
+    }
+}
+@@PY
+class Solution:
+    def isValidBST(self, root: Optional[TreeNode]) -> bool:
+        stack, cur = [], root
+        prev = float('-inf')
+        while cur or stack:
+            while cur:
+                stack.append(cur)
+                cur = cur.left
+            cur = stack.pop()
+            if cur.val <= prev:  # 必须严格递增
+                return False
+            prev = cur.val
+            cur = cur.right
+        return True
+@@SOLUTION: 方法三：递归中序返回值比较
+@@IDEA
+递归中序 + 成员变量 prev：访问根时与 prev 比较并更新。与解法二同一思想的自顶向下递归写法。O(n)/O(h)。
+@@JAVA
+class Solution {
+    private TreeNode prev;
+
+    public boolean isValidBST(TreeNode root) {
+        if (root == null) return true;
+        if (!isValidBST(root.left)) return false;   // 左
+        if (prev != null && prev.val >= root.val) return false; // 根：递增校验
+        prev = root;
+        return isValidBST(root.right);              // 右
+    }
+}
+@@PY
+class Solution:
+    def isValidBST(self, root: Optional[TreeNode]) -> bool:
+        self.prev = None
+
+        def inorder(node) -> bool:
+            if not node:
+                return True
+            if not inorder(node.left):        # 左
+                return False
+            if self.prev is not None and self.prev.val >= node.val:
+                return False                   # 根：递增校验
+            self.prev = node
+            return inorder(node.right)         # 右
+
+        return inorder(root)
+@@PROBLEM
+@@NO: 44
+@@ID: 230
+@@TITLE: 二叉搜索树中第 K 小的元素
+@@DIFF: 中等
+@@CATEGORY: 二叉树
+@@TAGS: 树;深度优先搜索;二叉搜索树;二叉树
+@@URL: https://leetcode.cn/problems/kth-smallest-element-in-a-bst/
+@@DESC
+给定整数数组 nums 和整数 k，请返回数组中第 k 个最大的元素。
+
+请注意，你需要找的是数组排序后的第 k 个最大的元素，而不是第 k 个不同的元素。
+
+你必须设计并实现时间复杂度为 O(n) 的算法解决此问题。
+
+示例 1：
+输入：nums = [3,2,1,5,6,4], k = 2
+输出：5
+
+示例 2：
+输入：nums = [3,2,3,1,2,4,5,5,6], k = 4
+输出：4
+
+提示：
+1 <= k <= nums.length <= 10^5
+-10^4 <= nums[i] <= 10^4
+给定一个二叉搜索树的根节点 root 和整数 k，请设计算法查找其中第 k 小的元素（1 ≤ k ≤ 节点数）。
+示例：root = [3,1,4,null,2], k = 1 → 输出 1。
+@@SOLUTION: 方法一：迭代中序计数（推荐，可提前终止）
+@@IDEA
+BST 中序即升序：迭代中序遍历数到第 k 个直接返回，不需要遍历完整棵树。O(h+k)，本题推荐的复杂度。
+@@JAVA
+class Solution {
+    public int kthSmallest(TreeNode root, int k) {
+        Deque<TreeNode> stack = new ArrayDeque<>();
+        TreeNode cur = root;
+        while (cur != null || !stack.isEmpty()) {
+            while (cur != null) {   // 一路向左
+                stack.push(cur);
+                cur = cur.left;
+            }
+            cur = stack.pop();
+            if (--k == 0) return cur.val; // 第 k 小
+            cur = cur.right;
+        }
+        return -1;
+    }
+}
+@@PY
+class Solution:
+    def kthSmallest(self, root: Optional[TreeNode], k: int) -> int:
+        stack, cur = [], root
+        while cur or stack:
+            while cur:
+                stack.append(cur)
+                cur = cur.left
+            cur = stack.pop()
+            k -= 1
+            if k == 0:      # 第 k 小
+                return cur.val
+            cur = cur.right
+@@SOLUTION: 方法二：递归中序 + 计数器
+@@IDEA
+递归中序 + 计数器：成员变量计数，到第 k 个记录答案；找到后尽早返回避免无效遍历。O(h+k)/O(h)。
+@@JAVA
+class Solution {
+    private int count = 0, ans = 0;
+
+    public int kthSmallest(TreeNode root, int k) {
+        inorder(root, k);
+        return ans;
+    }
+    private void inorder(TreeNode node, int k) {
+        if (node == null || count >= k) return; // 已找到则快速退出
+        inorder(node.left, k);
+        if (++count == k) { ans = node.val; return; }
+        inorder(node.right, k);
+    }
+}
+@@PY
+class Solution:
+    def kthSmallest(self, root: Optional[TreeNode], k: int) -> int:
+        self.count = 0
+        self.ans = None
+
+        def inorder(node):
+            if not node or self.count >= k:  # 已找到则快速退出
+                return
+            inorder(node.left)
+            self.count += 1
+            if self.count == k:
+                self.ans = node.val
+                return
+            inorder(node.right)
+
+        inorder(root)
+        return self.ans
+@@SOLUTION: 方法三：利用子树大小二分
+@@IDEA
+子树大小二分：预处理每个节点的子树节点数；k 等于左子树大小+1 则答案为根，小于则进左子树，否则减去左子树大小进右子树。适合多次查询场景。
+@@JAVA
+class Solution {
+    private final Map<TreeNode, Integer> size = new HashMap<>();
+
+    public int kthSmallest(TreeNode root, int k) {
+        count(root); // 预处理子树大小
+        TreeNode cur = root;
+        while (cur != null) {
+            int leftSize = size.getOrDefault(cur.left, 0);
+            if (k == leftSize + 1) return cur.val;   // 根即答案
+            if (k <= leftSize) cur = cur.left;       // 在左子树
+            else { k -= leftSize + 1; cur = cur.right; } // 在右子树
+        }
+        return -1;
+    }
+    private int count(TreeNode node) {
+        if (node == null) return 0;
+        int s = 1 + count(node.left) + count(node.right);
+        size.put(node, s);
+        return s;
+    }
+}
+@@PY
+class Solution:
+    def kthSmallest(self, root: Optional[TreeNode], k: int) -> int:
+        size = {}
+
+        def count(node):  # 预处理子树大小
+            if not node:
+                return 0
+            s = 1 + count(node.left) + count(node.right)
+            size[node] = s
+            return s
+
+        count(root)
+        cur = root
+        while cur:
+            left_size = size.get(cur.left, 0)
+            if k == left_size + 1:      # 根即答案
+                return cur.val
+            if k <= left_size:          # 在左子树
+                cur = cur.left
+            else:                        # 在右子树
+                k -= left_size + 1
+                cur = cur.right
+@@PROBLEM
+@@NO: 45
+@@ID: 199
+@@TITLE: 二叉树的右视图
+@@DIFF: 中等
+@@CATEGORY: 二叉树
+@@TAGS: 树;深度优先搜索;广度优先搜索;二叉树
+@@URL: https://leetcode.cn/problems/binary-tree-right-side-view/
+@@DESC
+给定一个数组 nums，编写一个函数将所有 0 移动到数组的末尾，同时保持非零元素的相对顺序。（此题在力扣中亦为 283 题变体；本题为前 K 个高频元素）给定一个整数数组 nums 和一个整数 k，请返回其中出现频率前 k 高的元素。你可以按任意顺序返回答案。
+
+示例 1：
+输入：nums = [1,1,1,2,2,3], k = 2
+输出：[1,2]
+
+示例 2：
+输入：nums = [1], k = 1
+输出：[1]
+
+提示：
+1 <= nums.length <= 10^5
+k 的取值范围是 [1, 数组中不相同的元素的个数]
+题目数据保证答案唯一
+
+进阶：你所设计算法的时间复杂度必须优于 O(n log n)，其中 n 是数组大小。
+给定二叉树的根节点 root，想象自己站在其右侧，按自顶向下返回从右侧能看到的节点值。
+示例：[1,2,3,null,5,null,4] → 输出 [1,3,4]。
+@@SOLUTION: 方法一：BFS 每层最后一个（推荐）
+@@IDEA
+BFS：逐层遍历，每层最后一个出队的节点就是右视图看到的。O(n)/O(宽度)。
+@@JAVA
+class Solution {
+    public List<Integer> rightSideView(TreeNode root) {
+        List<Integer> res = new ArrayList<>();
+        if (root == null) return res;
+        Deque<TreeNode> queue = new ArrayDeque<>();
+        queue.offer(root);
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            for (int i = 0; i < size; i++) {
+                TreeNode node = queue.poll();
+                if (i == size - 1) res.add(node.val); // 本层最后一个
+                if (node.left != null) queue.offer(node.left);
+                if (node.right != null) queue.offer(node.right);
+            }
+        }
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def rightSideView(self, root: Optional[TreeNode]) -> List[int]:
+        res = []
+        if not root:
+            return res
+        queue = deque([root])
+        while queue:
+            size = len(queue)
+            for i in range(size):
+                node = queue.popleft()
+                if i == size - 1:   # 本层最后一个
+                    res.append(node.val)
+                if node.left:
+                    queue.append(node.left)
+                if node.right:
+                    queue.append(node.right)
+        return res
+@@SOLUTION: 方法二：DFS 根右左 + 深度判重
+@@IDEA
+DFS 根右左：按「根→右→左」遍历，每个深度第一次到达的节点即该层最右（用 res.size()==depth 判断）。O(n)/O(h)，无需队列。
+@@JAVA
+class Solution {
+    private final List<Integer> res = new ArrayList<>();
+
+    public List<Integer> rightSideView(TreeNode root) {
+        dfs(root, 0);
+        return res;
+    }
+    private void dfs(TreeNode node, int depth) {
+        if (node == null) return;
+        if (depth == res.size()) res.add(node.val); // 该深度首次到达
+        dfs(node.right, depth + 1); // 先右
+        dfs(node.left, depth + 1);  // 后左
+    }
+}
+@@PY
+class Solution:
+    def rightSideView(self, root: Optional[TreeNode]) -> List[int]:
+        res = []
+
+        def dfs(node, depth):
+            if not node:
+                return
+            if depth == len(res):  # 该深度首次到达
+                res.append(node.val)
+            dfs(node.right, depth + 1)  # 先右
+            dfs(node.left, depth + 1)   # 后左
+
+        dfs(root, 0)
+        return res
+@@SOLUTION: 方法三：BFS 层值收集后取末位
+@@IDEA
+复用层序模板：完整收集每层的值列表，最后取每层最后一个元素组成答案。O(n)/O(n)，模板复用率最高。
+@@JAVA
+class Solution {
+    public List<Integer> rightSideView(TreeNode root) {
+        List<List<Integer>> levels = new ArrayList<>();
+        Deque<TreeNode> queue = new ArrayDeque<>();
+        if (root != null) queue.offer(root);
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            List<Integer> level = new ArrayList<>();
+            for (int i = 0; i < size; i++) {
+                TreeNode node = queue.poll();
+                level.add(node.val);
+                if (node.left != null) queue.offer(node.left);
+                if (node.right != null) queue.offer(node.right);
+            }
+            levels.add(level);
+        }
+        List<Integer> res = new ArrayList<>();
+        for (List<Integer> level : levels) {
+            res.add(level.get(level.size() - 1)); // 每层最后一个
+        }
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def rightSideView(self, root: Optional[TreeNode]) -> List[int]:
+        levels = []
+        queue = deque([root] if root else [])
+        while queue:
+            level = []
+            for _ in range(len(queue)):
+                node = queue.popleft()
+                level.append(node.val)
+                if node.left:
+                    queue.append(node.left)
+                if node.right:
+                    queue.append(node.right)
+            levels.append(level)
+        return [level[-1] for level in levels]  # 每层最后一个
+@@PROBLEM
+@@NO: 46
+@@ID: 114
+@@TITLE: 二叉树展开为链表
+@@DIFF: 中等
+@@CATEGORY: 二叉树
+@@TAGS: 树;深度优先搜索;链表;二叉树
+@@URL: https://leetcode.cn/problems/flatten-binary-tree-to-linked-list/
+@@DESC
+中位数是有序整数列表中的中间值。如果列表的长度是偶数，则中位数是两个中间值的平均值。
+
+例如 [2,3,4] 的中位数是 3；[2,3] 的中位数是 (2 + 3) / 2 = 2.5。
+
+设计一个支持以下两种操作的数据结构：
+void addNum(int num) 从数据流中添加一个整数到数据结构中。
+double findMedian() 返回目前所有元素的中位数。
+
+示例 1：
+输入：["MedianFinder","addNum","addNum","findMedian","addNum","findMedian"]
+[[],[1],[2],[],[3],[]]
+输出：[null,null,null,1.50000,null,2.00000]
+
+示例 2：
+输入：["MedianFinder","addNum","findMedian","addNum","findMedian"]
+[[],[2],[],[3],[]]
+输出：[null,null,2.00000,null,2.50000]
+
+提示：
+-10^5 <= num <= 10^5
+在调用 findMedian 之前，数据结构中至少有一个元素
+最多 5 * 10^4 次调用 addNum 和 findMedian
+
+进阶：如果数据流中 99% 的整数都在 0 到 100 范围内，你将如何优化你的算法？
+给你二叉树的根节点 root，请将它展开为一个单链表（仍用 TreeNode，right 指向下一个，left 为 null），顺序与前序遍历一致。
+示例：[1,2,5,3,4,null,6] → 1→2→3→4→5→6。
+@@SOLUTION: 方法一：寻找前驱原地接链（O(1) 空间，推荐）
+@@IDEA
+O(1) 空间原地解：对每个有左子树的节点，找到左子树的最右节点（前驱），把原右子树挂到前驱.right，再把左子树整体挪到右边、左置空。O(n)/O(1)。
+@@JAVA
+class Solution {
+    public void flatten(TreeNode root) {
+        TreeNode cur = root;
+        while (cur != null) {
+            if (cur.left != null) {
+                TreeNode pred = cur.left;
+                while (pred.right != null) pred = pred.right; // 前驱
+                pred.right = cur.right;  // 原右子树接到前驱
+                cur.right = cur.left;    // 左子树挪到右
+                cur.left = null;
+            }
+            cur = cur.right;
+        }
+    }
+}
+@@PY
+class Solution:
+    def flatten(self, root: Optional[TreeNode]) -> None:
+        cur = root
+        while cur:
+            if cur.left:
+                pred = cur.left
+                while pred.right:     # 前驱
+                    pred = pred.right
+                pred.right = cur.right  # 原右子树接到前驱
+                cur.right = cur.left    # 左子树挪到右
+                cur.left = None
+            cur = cur.right
+@@SOLUTION: 方法二：逆前序递归（全局 prev 头插）
+@@IDEA
+逆前序递归：按「右→左→根」遍历，用全局 prev 记录上一个处理的节点，当前节点 right 指向 prev、left 置空。O(n)/O(h)。
+@@JAVA
+class Solution {
+    private TreeNode prev = null;
+
+    public void flatten(TreeNode root) {
+        if (root == null) return;
+        flatten(root.right);      // 先右
+        flatten(root.left);       // 后左
+        root.right = prev;        // 接到已处理链的头部
+        root.left = null;
+        prev = root;
+    }
+}
+@@PY
+class Solution:
+    def flatten(self, root: Optional[TreeNode]) -> None:
+        self.prev = None
+
+        def dfs(node):
+            if not node:
+                return
+            dfs(node.right)   # 先右
+            dfs(node.left)    # 后左
+            node.right = self.prev  # 接到已处理链的头部
+            node.left = None
+            self.prev = node
+
+        dfs(root)
+@@SOLUTION: 方法三：前序收集 + 依次重挂
+@@IDEA
+迭代前序收集所有节点到列表，再逐个 left 置空、right 串起来。O(n)/O(n)，最直观的「先遍历再重排」。
+@@JAVA
+class Solution {
+    public void flatten(TreeNode root) {
+        List<TreeNode> nodes = new ArrayList<>();
+        Deque<TreeNode> stack = new ArrayDeque<>();
+        if (root != null) stack.push(root);
+        while (!stack.isEmpty()) {        // 迭代前序
+            TreeNode node = stack.pop();
+            nodes.add(node);
+            if (node.right != null) stack.push(node.right);
+            if (node.left != null) stack.push(node.left);
+        }
+        for (int i = 1; i < nodes.size(); i++) { // 重新串链
+            nodes.get(i - 1).left = null;
+            nodes.get(i - 1).right = nodes.get(i);
+        }
+    }
+}
+@@PY
+class Solution:
+    def flatten(self, root: Optional[TreeNode]) -> None:
+        nodes = []
+        stack = [root] if root else []
+        while stack:          # 迭代前序
+            node = stack.pop()
+            nodes.append(node)
+            if node.right:
+                stack.append(node.right)
+            if node.left:
+                stack.append(node.left)
+        for i in range(1, len(nodes)):  # 重新串链
+            nodes[i - 1].left = None
+            nodes[i - 1].right = nodes[i]
+@@PROBLEM
+@@NO: 47
+@@ID: 105
+@@TITLE: 从前序与中序遍历序列构造二叉树
+@@DIFF: 中等
+@@CATEGORY: 二叉树
+@@TAGS: 树;数组;哈希表;分治;二叉树
+@@URL: https://leetcode.cn/problems/construct-binary-tree-from-preorder-and-inorder-traversal/
+@@DESC
+给定一个数组 prices，它的第 i 个元素 prices[i] 表示一支给定股票第 i 天的价格。
+
+你只能选择某一天买入这只股票，并选择在未来的某一个不同的日子卖出该股票。设计一个算法来计算你所能获取的最大利润。
+
+返回你可以从这笔交易中获取的最大利润。如果你不能获取任何利润，返回 0。
+
+示例 1：
+输入：prices = [7,1,5,3,6,4]
+输出：5
+解释：在第 2 天（股票价格 = 1）的时候买入，在第 5 天（股票价格 = 6）的时候卖出，最大利润 = 6-1 = 5。注意利润不能是 7-1 = 6，因为卖出价格需要大于买入价格；同时，你不能在买入前卖出股票。
+
+示例 2：
+输入：prices = [7,6,4,3,1]
+输出：0
+解释：在这种情况下, 没有交易完成，所以最大利润为 0。
+
+提示：
+1 <= prices.length <= 10^5
+0 <= prices[i] <= 10^4
+给定两个整数数组 preorder 和 inorder（无重复元素），构造并返回对应的二叉树。
+示例：preorder=[3,9,20,15,7], inorder=[9,3,15,20,7] → [3,9,20,null,null,15,7]。
+@@SOLUTION: 方法一：哈希定位 + 递归分治（推荐）
+@@IDEA
+分治：前序第一个元素是根；哈希表存「值→中序下标」实现 O(1) 定位根的位置，划分左右区间递归构造；前序用全局指针递增即可。O(n)。
+@@JAVA
+class Solution {
+    private final Map<Integer, Integer> idx = new HashMap<>(); // 值 -> 中序下标
+    private int pre = 0;
+
+    public TreeNode buildTree(int[] preorder, int[] inorder) {
+        for (int i = 0; i < inorder.length; i++) idx.put(inorder[i], i);
+        return build(preorder, 0, inorder.length - 1);
+    }
+    private TreeNode build(int[] preorder, int lo, int hi) {
+        if (lo > hi) return null;
+        int val = preorder[pre++];   // 前序当前元素为根
+        TreeNode root = new TreeNode(val);
+        int mid = idx.get(val);
+        root.left = build(preorder, lo, mid - 1);
+        root.right = build(preorder, mid + 1, hi);
+        return root;
+    }
+}
+@@PY
+class Solution:
+    def buildTree(self, preorder: List[int], inorder: List[int]) -> Optional[TreeNode]:
+        idx = {v: i for i, v in enumerate(inorder)}  # 值 -> 中序下标
+        self.pre = 0
+
+        def build(lo, hi):
+            if lo > hi:
+                return None
+            val = preorder[self.pre]  # 前序当前元素为根
+            self.pre += 1
+            root = TreeNode(val)
+            mid = idx[val]
+            root.left = build(lo, mid - 1)
+            root.right = build(mid + 1, hi)
+            return root
+        return build(0, len(inorder) - 1)
+@@SOLUTION: 方法二：区间切分传递版（无全局指针）
+@@IDEA
+无全局指针版：递归参数同时携带前序区间 (pl, pr) 与中序区间 (il, ir)，左子树规模 = 根在中序的位置 - il，用它在两个序列中同步切分。O(n)。
+@@JAVA
+class Solution {
+    private final Map<Integer, Integer> idx = new HashMap<>();
+
+    public TreeNode buildTree(int[] preorder, int[] inorder) {
+        for (int i = 0; i < inorder.length; i++) idx.put(inorder[i], i);
+        return build(preorder, 0, preorder.length - 1, 0, inorder.length - 1);
+    }
+    private TreeNode build(int[] pre, int pl, int pr, int il, int ir) {
+        if (pl > pr) return null;
+        TreeNode root = new TreeNode(pre[pl]);   // 前序首位为根
+        int mid = idx.get(pre[pl]);
+        int leftSize = mid - il;                 // 左子树节点数
+        root.left = build(pre, pl + 1, pl + leftSize, il, mid - 1);
+        root.right = build(pre, pl + leftSize + 1, pr, mid + 1, ir);
+        return root;
+    }
+}
+@@PY
+class Solution:
+    def buildTree(self, preorder: List[int], inorder: List[int]) -> Optional[TreeNode]:
+        idx = {v: i for i, v in enumerate(inorder)}
+
+        def build(pl, pr, il, ir):
+            if pl > pr:
+                return None
+            root = TreeNode(preorder[pl])  # 前序首位为根
+            mid = idx[preorder[pl]]
+            left_size = mid - il           # 左子树节点数
+            root.left = build(pl + 1, pl + left_size, il, mid - 1)
+            root.right = build(pl + left_size + 1, pr, mid + 1, ir)
+            return root
+        return build(0, len(preorder) - 1, 0, len(inorder) - 1)
+@@SOLUTION: 方法三：迭代 + 栈
+@@IDEA
+迭代 + 栈：栈维护尚未确定右子树的祖先；指针扫前序建左链，一旦前序值等于中序指针值就逐层弹栈找挂右子树的位置。O(n)/O(n)，不易推导但要会。
+@@JAVA
+class Solution {
+    public TreeNode buildTree(int[] preorder, int[] inorder) {
+        if (preorder.length == 0) return null;
+        TreeNode root = new TreeNode(preorder[0]);
+        Deque<TreeNode> stack = new ArrayDeque<>();
+        stack.push(root);
+        int inIdx = 0; // 中序指针
+        for (int i = 1; i < preorder.length; i++) {
+            TreeNode node = new TreeNode(preorder[i]);
+            TreeNode top = stack.peek();
+            if (top.val != inorder[inIdx]) {
+                top.left = node;        // 还在左链上
+                stack.push(node);
+            } else {
+                TreeNode parent = null;
+                while (!stack.isEmpty() && stack.peek().val == inorder[inIdx]) {
+                    parent = stack.pop(); // 左链到头，回溯
+                    inIdx++;
+                }
+                parent.right = node;    // 挂右子树
+                stack.push(node);
+            }
+        }
+        return root;
+    }
+}
+@@PY
+class Solution:
+    def buildTree(self, preorder: List[int], inorder: List[int]) -> Optional[TreeNode]:
+        if not preorder:
+            return None
+        root = TreeNode(preorder[0])
+        stack = [root]
+        in_idx = 0  # 中序指针
+        for val in preorder[1:]:
+            node = TreeNode(val)
+            if stack[-1].val != inorder[in_idx]:
+                stack[-1].left = node  # 还在左链上
+                stack.append(node)
+            else:
+                parent = None
+                while stack and stack[-1].val == inorder[in_idx]:
+                    parent = stack.pop()  # 左链到头，回溯
+                    in_idx += 1
+                parent.right = node   # 挂右子树
+                stack.append(node)
+        return root
+@@PROBLEM
+@@NO: 48
+@@ID: 437
+@@TITLE: 路径总和 III
+@@DIFF: 中等
+@@CATEGORY: 二叉树
+@@TAGS: 树;深度优先搜索;前缀和;二叉树
+@@URL: https://leetcode.cn/problems/path-sum-iii/
+@@DESC
+给你一个非负整数数组 nums，你最初位于数组的第一个下标。数组中的每个元素代表你在该位置可以跳跃的最大长度。
+
+判断你是否能够到达最后一个下标，如果可以，返回 true；否则，返回 false。
+
+示例 1：
+输入：nums = [2,3,1,1,4]
+输出：true
+解释：可以先跳 1 步，从下标 0 到达下标 1，然后再从下标 1 跳 3 步到达最后一个下标。
+
+示例 2：
+输入：nums = [3,2,1,0,4]
+输出：false
+解释：无论怎样，总会到达下标为 3 的位置。但该下标的最大跳跃长度是 0，所以永远不可能到达最后一个下标。
+
+提示：
+1 <= nums.length <= 10^4
+0 <= nums[i] <= 10^5
+给定二叉树的根节点 root 和整数 targetSum，求节点值之和等于 targetSum 的路径数目（路径不需从根开始、到叶结束，但必须向下）。
+示例：root = [10,5,-3,3,2,null,11,3,-2,null,1], targetSum = 8 → 输出 3。
+@@SOLUTION: 方法一：前缀和 + 回溯哈希（推荐）
+@@IDEA
+前缀和 + 回溯哈希：根到当前节点的前缀和 cur，合法路径数 = 哈希表中 cur-target 的次数；递归返回前把当前前缀和计数减一（回溯），避免影响其他分支。O(n)/O(n)。
+@@JAVA
+class Solution {
+    private final Map<Long, Integer> cnt = new HashMap<>();
+    private int ans = 0;
+
+    public int pathSum(TreeNode root, int targetSum) {
+        cnt.put(0L, 1); // 空路径
+        dfs(root, 0L, targetSum);
+        return ans;
+    }
+    private void dfs(TreeNode node, long sum, long target) {
+        if (node == null) return;
+        sum += node.val;
+        ans += cnt.getOrDefault(sum - target, 0); // 以当前结尾的合法路径
+        cnt.merge(sum, 1, Integer::sum);
+        dfs(node.left, sum, target);
+        dfs(node.right, sum, target);
+        cnt.merge(sum, -1, Integer::sum); // 回溯撤销
+    }
+}
+@@PY
+class Solution:
+    def pathSum(self, root: Optional[TreeNode], targetSum: int) -> int:
+        cnt = defaultdict(int)
+        cnt[0] = 1  # 空路径
+        self.ans = 0
+
+        def dfs(node, cur):
+            if not node:
+                return
+            cur += node.val
+            self.ans += cnt[cur - targetSum]  # 以当前结尾的合法路径
+            cnt[cur] += 1
+            dfs(node.left, cur)
+            dfs(node.right, cur)
+            cnt[cur] -= 1  # 回溯撤销
+
+        dfs(root, 0)
+        return self.ans
+@@SOLUTION: 方法二：双层 DFS（枚举起点）
+@@IDEA
+双层 DFS：对每个节点作为路径起点向下统计（路径必须从该点开始），外层遍历所有节点为起点。O(n²) 最坏，直观易懂，先写对再优化。
+@@JAVA
+class Solution {
+    public int pathSum(TreeNode root, int targetSum) {
+        if (root == null) return 0;
+        int fromRoot = countFrom(root, targetSum);  // 从 root 出发
+        return fromRoot
+                + pathSum(root.left, targetSum)     // 左子树为新区
+                + pathSum(root.right, targetSum);   // 右子树为新区
+    }
+    private int countFrom(TreeNode node, long remain) {
+        if (node == null) return 0;
+        int count = (node.val == remain) ? 1 : 0;   // 恰好到达
+        return count
+                + countFrom(node.left, remain - node.val)
+                + countFrom(node.right, remain - node.val);
+    }
+}
+@@PY
+class Solution:
+    def pathSum(self, root: Optional[TreeNode], targetSum: int) -> int:
+        if not root:
+            return 0
+
+        def count_from(node, remain):
+            if not node:
+                return 0
+            count = 1 if node.val == remain else 0  # 恰好到达
+            return (count
+                    + count_from(node.left, remain - node.val)
+                    + count_from(node.right, remain - node.val))
+
+        return (count_from(root, targetSum)
+                + self.pathSum(root.left, targetSum)    # 左子树为新区
+                + self.pathSum(root.right, targetSum))  # 右子树为新区
+@@SOLUTION: 方法三：前缀和数组回溯（避免哈希）
+@@IDEA
+无哈希版：列表 path 记录根到当前的前缀和，逐个检查 cur-path[j] 是否等于 target；回溯时移除末尾。O(n²) 最坏 / O(h) 空间。
+@@JAVA
+class Solution {
+    private final List<Long> path = new ArrayList<>();
+    private int ans = 0;
+
+    public int pathSum(TreeNode root, int targetSum) {
+        dfs(root, targetSum);
+        return ans;
+    }
+    private void dfs(TreeNode node, long target) {
+        if (node == null) return;
+        long cur = path.isEmpty() ? node.val : path.get(path.size() - 1) + node.val;
+        for (long pre : path) {          // 枚举起点前缀
+            if (cur - pre == target) ans++;
+        }
+        if (cur == target) ans++;        // 从根出发
+        path.add(cur);
+        dfs(node.left, target);
+        dfs(node.right, target);
+        path.remove(path.size() - 1);    // 回溯
+    }
+}
+@@PY
+class Solution:
+    def pathSum(self, root: Optional[TreeNode], targetSum: int) -> int:
+        path = []  # 前缀和列表
+        self.ans = 0
+
+        def dfs(node):
+            if not node:
+                return
+            cur = (path[-1] if path else 0) + node.val
+            for pre in path:     # 枚举起点前缀
+                if cur - pre == targetSum:
+                    self.ans += 1
+            if cur == targetSum:  # 从根出发
+                self.ans += 1
+            path.append(cur)
+            dfs(node.left)
+            dfs(node.right)
+            path.pop()           # 回溯
+
+        dfs(root)
+        return self.ans
+@@PROBLEM
+@@NO: 49
+@@ID: 236
+@@TITLE: 二叉树的最近公共祖先
+@@DIFF: 中等
+@@CATEGORY: 二叉树
+@@TAGS: 树;深度优先搜索;二叉树
+@@URL: https://leetcode.cn/problems/lowest-common-ancestor-of-a-binary-tree/
+@@DESC
+给定一个长度为 n 的 0 索引整数数组 nums。初始位置为 nums[0]。
+
+每个元素 nums[i] 表示从索引 i 向后跳转的最大长度。换句话说，如果你在 nums[i] 处，你可以跳转到任意 nums[i + j] 处（0 <= j <= nums[i] 且 i + j < n）。
+返回到达 nums[n - 1] 的最小跳跃次数。生成的测试用例可以到达 nums[n - 1]。
+
+示例 1：
+输入：nums = [2,3,1,1,4]
+输出：2
+解释：跳到最后一个位置的最小跳跃数是 2。从下标为 0 跳到下标为 1 的位置，跳 1 步，然后跳 3 步到达数组的最后一个位置。
+
+示例 2：
+输入：nums = [2,3,0,1,4]
+输出：2
+
+提示：
+1 <= nums.length <= 10^4
+0 <= nums[i] <= 1000
+题目保证可以到达 nums[n-1]
+给定二叉树根节点 root 和两节点 p、q，找出它们的最近公共祖先（祖先节点包含自身）。
+示例：root=[3,5,1,6,2,0,8,null,null,7,4], p=5, q=1 → 输出 3。
+@@SOLUTION: 方法一：后序递归（推荐）
+@@IDEA
+后序递归经典解：左右子树都找到目标时当前节点即 LCA；单侧找到就把结果向上传；p/q 自身也可以是答案。O(n)/O(h)。
+@@JAVA
+class Solution {
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        if (root == null || root == p || root == q) return root;
+        TreeNode left = lowestCommonAncestor(root.left, p, q);
+        TreeNode right = lowestCommonAncestor(root.right, p, q);
+        if (left != null && right != null) return root; // 分居两侧
+        return (left != null) ? left : right;
+    }
+}
+@@PY
+class Solution:
+    def lowestCommonAncestor(self, root: 'TreeNode', p: 'TreeNode', q: 'TreeNode') -> 'TreeNode':
+        if not root or root is p or root is q:
+            return root
+        left = self.lowestCommonAncestor(root.left, p, q)
+        right = self.lowestCommonAncestor(root.right, p, q)
+        if left and right:  # 分居两侧
+            return root
+        return left or right
+@@SOLUTION: 方法二：记录父指针 + 反向追溯
+@@IDEA
+父指针法：DFS 记录每个节点的父节点；从 p 向上收集祖先链到集合，再从 q 向上走，第一个命中集合的即 LCA。O(n)/O(n)，不用递归推导。
+@@JAVA
+class Solution {
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        Map<TreeNode, TreeNode> parent = new HashMap<>();
+        Deque<TreeNode> stack = new ArrayDeque<>();
+        parent.put(root, null);
+        stack.push(root);
+        while (!parent.containsKey(p) || !parent.containsKey(q)) { // 记录父指针
+            TreeNode node = stack.pop();
+            if (node.left != null) { parent.put(node.left, node); stack.push(node.left); }
+            if (node.right != null) { parent.put(node.right, node); stack.push(node.right); }
+        }
+        Set<TreeNode> ancestors = new HashSet<>();
+        for (TreeNode a = p; a != null; a = parent.get(a)) {
+            ancestors.add(a); // p 的祖先链
+        }
+        for (TreeNode a = q; a != null; a = parent.get(a)) {
+            if (ancestors.contains(a)) return a; // 首个公共祖先
+        }
+        return null;
+    }
+}
+@@PY
+class Solution:
+    def lowestCommonAncestor(self, root: 'TreeNode', p: 'TreeNode', q: 'TreeNode') -> 'TreeNode':
+        parent = {root: None}
+        stack = [root]
+        while p not in parent or q not in parent:  # 记录父指针
+            node = stack.pop()
+            if node.left:
+                parent[node.left] = node
+                stack.append(node.left)
+            if node.right:
+                parent[node.right] = node
+                stack.append(node.right)
+        ancestors = set()
+        a = p
+        while a:                 # p 的祖先链
+            ancestors.add(a)
+            a = parent[a]
+        a = q
+        while a:                 # q 链上首个公共祖先
+            if a in ancestors:
+                return a
+            a = parent[a]
+        return None
+@@SOLUTION: 方法三：同时找路径再比对
+@@IDEA
+路径比对：分别 DFS 求根到 p、根到 q 的路径（回溯保存），从前往后最后一个相同的节点即 LCA。O(n)/O(n)，思路最直白。
+@@JAVA
+class Solution {
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        List<TreeNode> pathP = new ArrayList<>(), pathQ = new ArrayList<>();
+        findPath(root, p, pathP); // 根到 p 的路径
+        findPath(root, q, pathQ); // 根到 q 的路径
+        TreeNode lca = null;
+        int n = Math.min(pathP.size(), pathQ.size());
+        for (int i = 0; i < n; i++) {
+            if (pathP.get(i) == pathQ.get(i)) lca = pathP.get(i); // 最后相同节点
+            else break;
+        }
+        return lca;
+    }
+    private boolean findPath(TreeNode node, TreeNode target, List<TreeNode> path) {
+        if (node == null) return false;
+        path.add(node);
+        if (node == target) return true;
+        if (findPath(node.left, target, path) || findPath(node.right, target, path)) {
+            return true;
+        }
+        path.remove(path.size() - 1); // 回溯
+        return false;
+    }
+}
+@@PY
+class Solution:
+    def lowestCommonAncestor(self, root: 'TreeNode', p: 'TreeNode', q: 'TreeNode') -> 'TreeNode':
+        def find_path(node, target, path):
+            if not node:
+                return False
+            path.append(node)
+            if node is target:
+                return True
+            if find_path(node.left, target, path) or find_path(node.right, target, path):
+                return True
+            path.pop()  # 回溯
+            return False
+
+        path_p, path_q = [], []
+        find_path(root, p, path_p)  # 根到 p 的路径
+        find_path(root, q, path_q)  # 根到 q 的路径
+        lca = None
+        for a, b in zip(path_p, path_q):
+            if a is b:
+                lca = a  # 最后相同节点
+            else:
+                break
+        return lca
+@@PROBLEM
+@@NO: 50
+@@ID: 124
+@@TITLE: 二叉树中的最大路径和
+@@DIFF: 困难
+@@CATEGORY: 二叉树
+@@TAGS: 树;深度优先搜索;动态规划;二叉树
+@@URL: https://leetcode.cn/problems/binary-tree-maximum-path-sum/
+@@DESC
+二叉树中的 路径 被定义为一条节点序列，序列中每对相邻节点之间都存在一条边。同一个节点在一条路径序列中 至多出现一次。该路径 至少包含一个 节点，且不一定经过根节点。
+
+路径和 是路径中各节点值的总和。
+
+给你一个二叉树的根节点 root，返回其 最大路径和。
+
+示例 1：
+输入：root = [1,2,3]
+输出：6
+解释：最优路径是 2 -> 1 -> 3，路径和为 2 + 1 + 3 = 6。
+
+示例 2：
+输入：root = [-10,9,20,null,null,15,7]
+输出：42
+解释：最优路径是 15 -> 20 -> 7，路径和为 15 + 20 + 7 = 42。
+
+提示：
+树中节点数目范围是 [1, 3 * 10^4]
+-1000 <= Node.val <= 1000
+给定二叉树的根节点 root，返回其最大路径和（路径中节点值之和；路径至少含一个节点，可不到根/叶，但方向只能父→子，每节点至多访问一次）。
+示例：root = [-10,9,20,null,null,15,7] → 输出 42（15→20→7）。
+@@SOLUTION: 方法一：DFS 贡献值 + 全局最大（推荐）
+@@IDEA
+树形 DP：DFS 返回「以该节点为端点向下的最大贡献」（子贡献为负则按 0 截断），途中用 node+左+右更新全局最大路径和。注意向上传递只能选一侧。O(n)/O(h)。
+@@JAVA
+class Solution {
+    private int best = Integer.MIN_VALUE;
+
+    public int maxPathSum(TreeNode root) {
+        dfs(root);
+        return best;
+    }
+    private int dfs(TreeNode node) {
+        if (node == null) return 0;
+        int l = Math.max(dfs(node.left), 0);   // 负贡献截断
+        int r = Math.max(dfs(node.right), 0);
+        best = Math.max(best, node.val + l + r); // 以 node 为顶的路径
+        return node.val + Math.max(l, r);        // 向上只能选一侧
+    }
+}
+@@PY
+class Solution:
+    def maxPathSum(self, root: Optional[TreeNode]) -> int:
+        best = float('-inf')
+
+        def dfs(node):
+            nonlocal best
+            if not node:
+                return 0
+            l = max(dfs(node.left), 0)    # 负贡献截断
+            r = max(dfs(node.right), 0)
+            best = max(best, node.val + l + r)  # 以 node 为顶的路径
+            return node.val + max(l, r)         # 向上只能选一侧
+
+        dfs(root)
+        return best
+@@SOLUTION: 方法二：返回元组（无全局变量）
+@@IDEA
+函数式版本：递归返回 (最大单侧贡献, 子树内最大路径和) 二元组，逐层合并不用全局变量。O(n)/O(h)。
+@@JAVA
+class Solution {
+    public int maxPathSum(TreeNode root) {
+        return dfs(root)[1];
+    }
+    // 返回 {最大单侧贡献, 子树内最大路径和}
+    private int[] dfs(TreeNode node) {
+        if (node == null) return new int[]{0, Integer.MIN_VALUE};
+        int[] L = dfs(node.left), R = dfs(node.right);
+        int gain = Math.max(0, node.val + Math.max(L[0], R[0])); // 本节点贡献
+        int best = Math.max(
+                Math.max(L[1], R[1]),                                // 子树内部
+                node.val + Math.max(0, L[0]) + Math.max(0, R[0]));   // 跨本节点
+        return new int[]{gain, best};
+    }
+}
+@@PY
+class Solution:
+    def maxPathSum(self, root: Optional[TreeNode]) -> int:
+        # 返回 (最大单侧贡献, 子树内最大路径和)
+        def dfs(node):
+            if not node:
+                return 0, float('-inf')
+            lg, lb = dfs(node.left)
+            rg, rb = dfs(node.right)
+            gain = max(0, node.val + max(lg, rg))  # 本节点贡献
+            best = max(lb, rb,                      # 子树内部
+                       node.val + max(0, lg) + max(0, rg))  # 跨本节点
+            return gain, best
+        return dfs(root)[1]
+@@SOLUTION: 方法三：枚举拐点 + 独立求链贡献（对照版）
+@@IDEA
+对照版：对每个节点作为「拐点」，单独计算左右两侧最大向下链（重复计算），更新经过它的路径和。O(n²) 最坏，帮助理解定义，实际用解法一。
+@@JAVA
+class Solution {
+    private int best = Integer.MIN_VALUE;
+
+    public int maxPathSum(TreeNode root) {
+        walk(root);
+        return best;
+    }
+    private void walk(TreeNode node) { // 枚举每个拐点
+        if (node == null) return;
+        int l = Math.max(0, chain(node.left));  // 左侧最大链
+        int r = Math.max(0, chain(node.right)); // 右侧最大链
+        best = Math.max(best, node.val + l + r);
+        walk(node.left);
+        walk(node.right);
+    }
+    private int chain(TreeNode node) { // 从 node 向下的最大链和（至少含 node）
+        if (node == null) return Integer.MIN_VALUE;
+        int bestChild = Math.max(chain(node.left), chain(node.right));
+        return node.val + Math.max(0, bestChild);
+    }
+}
+@@PY
+class Solution:
+    def maxPathSum(self, root: Optional[TreeNode]) -> int:
+        self.best = float('-inf')
+
+        def chain(node):  # 从 node 向下的最大链和（至少含 node）
+            if not node:
+                return float('-inf')
+            best_child = max(chain(node.left), chain(node.right))
+            return node.val + max(0, best_child)
+
+        def walk(node):  # 枚举拐点
+            if not node:
+                return
+            l = max(0, chain(node.left))
+            r = max(0, chain(node.right))
+            self.best = max(self.best, node.val + l + r)
+            walk(node.left)
+            walk(node.right)
+
+        walk(root)
+        return self.best

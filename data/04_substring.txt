@@ -1,0 +1,448 @@
+@@PROBLEM
+@@NO: 10
+@@ID: 560
+@@TITLE: 和为 K 的子数组
+@@DIFF: 中等
+@@CATEGORY: 子串
+@@TAGS: 数组;哈希表;前缀和
+@@URL: https://leetcode.cn/problems/subarray-sum-equals-k/
+@@DESC
+给你一个整数数组 nums 和一个整数 k，请你统计并返回该数组中和为 k 的子数组的个数。
+
+子数组是数组中元素的连续非空序列。
+
+示例 1：
+输入：nums = [1,1,1], k = 2
+输出：2
+
+示例 2：
+输入：nums = [1,2,3], k = 3
+输出：2
+
+提示：
+1 <= nums.length <= 2 * 10^4
+-1000 <= nums[i] <= 1000
+-10^7 <= k <= 10^7
+给你一个整数数组 nums 和一个整数 k，请统计并返回该数组中和为 k 的连续子数组的个数。
+示例：nums = [1,1,1], k = 2 → 输出 2（子数组 [1,1] 出现两次）。
+@@SOLUTION: 方法一：前缀和 + 哈希表（推荐）
+@@IDEA
+前缀和 + 哈希表：遍历时维护前缀和 sum，以当前结尾的和为 k 的子数组数 = 之前前缀中 sum-k 出现的次数；别忘了初始化 map[0]=1 表示空前缀。时间 O(n)，空间 O(n)。
+@@JAVA
+class Solution {
+    public int subarraySum(int[] nums, int k) {
+        Map<Integer, Integer> cnt = new HashMap<>();
+        cnt.put(0, 1); // 空前缀
+        int sum = 0, ans = 0;
+        for (int x : nums) {
+            sum += x;
+            ans += cnt.getOrDefault(sum - k, 0); // 以当前结尾的和为 k 子数组数
+            cnt.merge(sum, 1, Integer::sum);
+        }
+        return ans;
+    }
+}
+@@PY
+class Solution:
+    def subarraySum(self, nums: List[int], k: int) -> int:
+        cnt = defaultdict(int)
+        cnt[0] = 1  # 空前缀
+        total = ans = 0
+        for x in nums:
+            total += x
+            ans += cnt[total - k]  # 以当前结尾的和为 k 子数组数
+            cnt[total] += 1
+        return ans
+@@SOLUTION: 方法二：枚举起点 + 前缀累加
+@@IDEA
+枚举每个起点，向右累加并统计等于 k 的次数。不依赖哈希、空间 O(1)，但 O(n²) 在大数组上偏慢。
+@@JAVA
+class Solution {
+    public int subarraySum(int[] nums, int k) {
+        int n = nums.length, ans = 0;
+        for (int start = 0; start < n; start++) {
+            int sum = 0;
+            for (int end = start; end < n; end++) { // 枚举终点
+                sum += nums[end];
+                if (sum == k) ans++;
+            }
+        }
+        return ans;
+    }
+}
+@@PY
+class Solution:
+    def subarraySum(self, nums: List[int], k: int) -> int:
+        n, ans = len(nums), 0
+        for start in range(n):
+            total = 0
+            for end in range(start, n):  # 枚举终点
+                total += nums[end]
+                if total == k:
+                    ans += 1
+        return ans
+@@SOLUTION: 方法三：前缀和数组 + 哈希（先建后查的两遍写法）
+@@IDEA
+先建完整前缀和数组，再第二遍对每个 i 查询之前 pre[i]-k 出现的次数。与解法一本质相同，「先建后查」的两遍结构更利于理解，也方便扩展成离线做法。
+@@JAVA
+class Solution {
+    public int subarraySum(int[] nums, int k) {
+        int n = nums.length;
+        long[] pre = new long[n + 1];
+        for (int i = 0; i < n; i++) pre[i + 1] = pre[i] + nums[i]; // 前缀和
+        Map<Long, Integer> cnt = new HashMap<>();
+        int ans = 0;
+        for (int i = 0; i <= n; i++) {
+            // 之前的某个 pre[j] 满足 pre[i] - pre[j] = k
+            ans += cnt.getOrDefault(pre[i] - k, 0);
+            cnt.merge(pre[i], 1, Integer::sum);
+        }
+        return ans;
+    }
+}
+@@PY
+class Solution:
+    def subarraySum(self, nums: List[int], k: int) -> int:
+        pre = [0]
+        for x in nums:
+            pre.append(pre[-1] + x)  # 前缀和
+        cnt = defaultdict(int)
+        ans = 0
+        for i in range(len(pre)):
+            ans += cnt[pre[i] - k]   # pre[j] = pre[i] - k 的个数
+            cnt[pre[i]] += 1
+        return ans
+@@PROBLEM
+@@NO: 11
+@@ID: 239
+@@TITLE: 滑动窗口最大值
+@@DIFF: 困难
+@@CATEGORY: 子串
+@@TAGS: 队列;数组;滑动窗口;单调队列;堆
+@@URL: https://leetcode.cn/problems/sliding-window-maximum/
+@@DESC
+给你一个整数数组 nums，有一个大小为 k 的滑动窗口从数组的最左侧移动到数组的最右侧。你只可以看到在滑动窗口内的 k 个数字。滑动窗口每次只向右移动一位。
+
+返回滑动窗口中的最大值。
+
+示例 1：
+输入：nums = [1,3,-1,-3,5,3,6,7], k = 3
+输出：[3,3,5,5,6,7]
+解释：
+滑动窗口的位置           最大值
+---------------          -----
+[1  3  -1] -3  5  3  6  7    3
+ 1 [3  -1  -3] 5  3  6  7    3
+ 1  3 [-1  -3  5] 3  6  7    5
+ 1  3  -1 [-3  5  3] 6  7    5
+ 1  3  -1  -3 [5  3  6] 7    6
+ 1  3  -1  -3  5 [3  6  7]   7
+
+示例 2：
+输入：nums = [1], k = 1
+输出：[1]
+
+提示：
+1 <= nums.length <= 10^5
+-10^4 <= nums[i] <= 10^4
+1 <= k <= nums.length
+给你一个整数数组 nums 和滑动窗口大小 k。窗口从最左侧移动到最右侧，每次移动一个位置，返回每个窗口位置的最大值。
+示例：nums = [1,3,-1,-3,5,3,6,7], k = 3 → 输出 [3,3,5,5,6,7]。
+@@SOLUTION: 方法一：单调递减双端队列（推荐）
+@@IDEA
+单调递减双端队列存下标：新元素入队前弹掉队尾所有更小的（它们不可能再成为最大值），队头滑出窗口时从队头删除；队头即当前窗口最大。每个元素最多进出一次，O(n)。
+@@JAVA
+class Solution {
+    public int[] maxSlidingWindow(int[] nums, int k) {
+        int n = nums.length;
+        int[] res = new int[n - k + 1];
+        Deque<Integer> dq = new ArrayDeque<>(); // 下标，值递减
+        for (int i = 0; i < n; i++) {
+            while (!dq.isEmpty() && nums[dq.peekLast()] <= nums[i]) {
+                dq.pollLast(); // 弹掉不可能成为最大的元素
+            }
+            dq.offerLast(i);
+            if (dq.peekFirst() <= i - k) dq.pollFirst(); // 队头滑出窗口
+            if (i >= k - 1) res[i - k + 1] = nums[dq.peekFirst()];
+        }
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def maxSlidingWindow(self, nums: List[int], k: int) -> List[int]:
+        dq = deque()  # 下标，值递减
+        res = []
+        for i, x in enumerate(nums):
+            while dq and nums[dq[-1]] <= x:
+                dq.pop()          # 弹掉不可能成为最大的元素
+            dq.append(i)
+            if dq[0] <= i - k:    # 队头滑出窗口
+                dq.popleft()
+            if i >= k - 1:
+                res.append(nums[dq[0]])
+        return res
+@@SOLUTION: 方法二：大根堆（优先队列）懒删除
+@@IDEA
+大根堆放 (值, 下标)，每步取堆顶；若堆顶下标已滑出窗口就弹出重来（懒删除，不主动清理过期元素）。O(n log n)，实现简单不易错。
+@@JAVA
+class Solution {
+    public int[] maxSlidingWindow(int[] nums, int k) {
+        int n = nums.length;
+        int[] res = new int[n - k + 1];
+        PriorityQueue<int[]> heap = new PriorityQueue<>(
+                (a, b) -> b[0] - a[0]); // {值, 下标} 大根堆
+        for (int i = 0; i < n; i++) {
+            heap.offer(new int[]{nums[i], i});
+            if (i < k - 1) continue;
+            while (heap.peek()[1] <= i - k) heap.poll(); // 懒删除过期堆顶
+            res[i - k + 1] = heap.peek()[0];
+        }
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def maxSlidingWindow(self, nums: List[int], k: int) -> List[int]:
+        heap = [(-x, i) for i, x in enumerate(nums[:k])]
+        heapq.heapify(heap)          # 大根堆（取负）
+        res = [-heap[0][0]]
+        for i in range(k, len(nums)):
+            heapq.heappush(heap, (-nums[i], i))
+            while heap[0][1] <= i - k:   # 懒删除过期堆顶
+                heapq.heappop(heap)
+            res.append(-heap[0][0])
+        return res
+@@SOLUTION: 方法三：分块 + 预处理左右最值（Sparse 分治思想）
+@@IDEA
+按 k 分块预处理：left[i] 是块内到块首的最大值，right[i] 是到块尾的最大值；跨块窗口的最大值 = max(right[i], left[i+k-1])。纯 O(n) 且无队列，适合理解分块思想。
+@@JAVA
+class Solution {
+    public int[] maxSlidingWindow(int[] nums, int k) {
+        int n = nums.length;
+        int[] left = new int[n], right = new int[n];
+        for (int i = 0; i < n; i++) {           // 块内从左到块首的最大
+            left[i] = (i % k == 0) ? nums[i] : Math.max(left[i - 1], nums[i]);
+        }
+        for (int i = n - 1; i >= 0; i--) {      // 块内从右到块尾的最大
+            right[i] = (i == n - 1 || (i + 1) % k == 0)
+                    ? nums[i] : Math.max(right[i + 1], nums[i]);
+        }
+        int[] res = new int[n - k + 1];
+        for (int i = 0; i + k <= n; i++) {
+            // 窗口跨块：右端块尾段 right[i] 与左端块首段 left[i+k-1]
+            res[i] = Math.max(right[i], left[i + k - 1]);
+        }
+        return res;
+    }
+}
+@@PY
+class Solution:
+    def maxSlidingWindow(self, nums: List[int], k: int) -> List[int]:
+        n = len(nums)
+        left, right = [0] * n, [0] * n
+        for i in range(n):              # 块内从左到块首的最大
+            left[i] = nums[i] if i % k == 0 else max(left[i - 1], nums[i])
+        for i in range(n - 1, -1, -1):  # 块内从右到块尾的最大
+            right[i] = nums[i] if i == n - 1 or (i + 1) % k == 0 \
+                else max(right[i + 1], nums[i])
+        return [max(right[i], left[i + k - 1]) for i in range(n - k + 1)]
+@@PROBLEM
+@@NO: 12
+@@ID: 76
+@@TITLE: 最小覆盖子串
+@@DIFF: 困难
+@@CATEGORY: 子串
+@@TAGS: 哈希表;字符串;滑动窗口
+@@URL: https://leetcode.cn/problems/minimum-window-substring/
+@@DESC
+给你一个字符串 s、一个字符串 t。返回 s 中涵盖 t 所有字符的最小子串。如果 s 中不存在涵盖 t 所有字符的子串，则返回空字符串 ""。
+
+注意：
+对于 t 中重复字符，我们寻找的子字符串中该字符数量必须不少于 t 中该字符数量。
+如果 s 中存在这样的子串，我们保证它是唯一的。
+
+示例 1：
+输入：s = "ADOBECODEBANC", t = "ABC"
+输出："BANC"
+解释：最小覆盖子串 "BANC" 包含来自字符串 t 的 'A'、'B' 和 'C'。
+
+示例 2：
+输入：s = "a", t = "a"
+输出："a"
+
+示例 3：
+输入：s = "a", t = "aa"
+输出：""
+解释：t 中两个字符 'a' 均应包含在 s 的子串中，因此没有符合条件的子字符串，返回空字符串。
+
+提示：
+m == s.length, n == t.length
+1 <= m, n <= 10^5
+s 和 t 由英文字母组成
+
+进阶：你能设计一个在 o(m+n) 时间内解决此问题的算法吗？
+给你字符串 s 和 t，返回 s 中涵盖 t 所有字符（含数量）的最小子串。不存在则返回空串 ""。
+示例：s = "ADOBECODEBANC", t = "ABC" → 输出 "BANC"。
+@@SOLUTION: 方法一：滑动窗口 + missing 计数（推荐）
+@@IDEA
+滑动窗口模板题：need 记录 t 的字符需求，missing 记录还缺的字符总数；右指针扩张到 missing=0，再收缩左边界更新最短答案。收缩时移走需要的字符要把 missing 加回 1。时间 O(n)。
+@@JAVA
+class Solution {
+    public String minWindow(String s, String t) {
+        if (s.length() < t.length()) return "";
+        int[] need = new int[128];
+        for (char c : t.toCharArray()) need[c]++;
+        int missing = t.length(), left = 0, bestL = 0, bestLen = Integer.MAX_VALUE;
+        for (int right = 0; right < s.length(); right++) {
+            char c = s.charAt(right);
+            if (need[c] > 0) missing--; // 是需要的字符
+            need[c]--;
+            while (missing == 0) {      // 已覆盖，收缩左边界
+                if (right - left + 1 < bestLen) {
+                    bestLen = right - left + 1;
+                    bestL = left;
+                }
+                char lc = s.charAt(left++);
+                need[lc]++;
+                if (need[lc] > 0) missing++; // 移走了需要的字符
+            }
+        }
+        return bestLen == Integer.MAX_VALUE ? "" : s.substring(bestL, bestL + bestLen);
+    }
+}
+@@PY
+class Solution:
+    def minWindow(self, s: str, t: str) -> str:
+        if len(s) < len(t):
+            return ""
+        need = Counter(t)
+        missing = len(t)
+        left = best_l = 0
+        best_len = float('inf')
+        for right, c in enumerate(s):
+            if need[c] > 0:
+                missing -= 1
+            need[c] -= 1
+            while missing == 0:   # 已覆盖，收缩左边界
+                if right - left + 1 < best_len:
+                    best_len, best_l = right - left + 1, left
+                lc = s[left]
+                need[lc] += 1
+                if need[lc] > 0:
+                    missing += 1  # 移走了需要的字符
+                left += 1
+        return "" if best_len == float('inf') else s[best_l:best_l + best_len]
+@@SOLUTION: 方法二：窗口计数 + check 比较
+@@IDEA
+维护窗口计数与 need 计数，用辅助函数判断窗口是否已覆盖 t（逐字符比较计数），覆盖则收缩左边界。O(128n) 上限，写法直白，适合第一次做。
+@@JAVA
+class Solution {
+    private int[] need = new int[128], window = new int[128];
+
+    public String minWindow(String s, String t) {
+        for (char c : t.toCharArray()) need[c]++;
+        int left = 0, bestL = -1, bestLen = Integer.MAX_VALUE;
+        for (int right = 0; right < s.length(); right++) {
+            window[s.charAt(right)]++;
+            while (covered()) {                    // 窗口已覆盖 t
+                if (right - left + 1 < bestLen) {
+                    bestLen = right - left + 1;
+                    bestL = left;
+                }
+                window[s.charAt(left++)]--;        // 收缩
+            }
+        }
+        return bestL < 0 ? "" : s.substring(bestL, bestL + bestLen);
+    }
+    private boolean covered() {
+        for (int c = 0; c < 128; c++) {
+            if (window[c] < need[c]) return false;
+        }
+        return true;
+    }
+}
+@@PY
+class Solution:
+    def minWindow(self, s: str, t: str) -> str:
+        need = Counter(t)
+        window = Counter()
+        left, best_l, best_len = 0, -1, float('inf')
+
+        def covered():
+            return all(window[c] >= v for c, v in need.items())
+
+        for right, c in enumerate(s):
+            window[c] += 1
+            while covered():              # 窗口已覆盖 t
+                if right - left + 1 < best_len:
+                    best_len, best_l = right - left + 1, left
+                window[s[left]] -= 1      # 收缩
+                left += 1
+        return "" if best_l < 0 else s[best_l:best_l + best_len]
+@@SOLUTION: 方法三：枚举右端点 + 二分最短左端
+@@IDEA
+预处理前缀计数后，对每个右端点二分最小的左端点，使窗口覆盖 t（覆盖判断 O(字符集)）。O(n log n × 字符集)，展示「滑动窗口也能用二分替代」的思路。
+@@JAVA
+class Solution {
+    public String minWindow(String s, String t) {
+        int n = s.length();
+        int[][] pre = new int[n + 1][128]; // pre[i][c]: 前 i 个字符 c 的个数
+        for (int i = 0; i < n; i++) {
+            pre[i + 1] = pre[i].clone();
+            pre[i + 1][s.charAt(i)]++;
+        }
+        int[] need = new int[128];
+        for (char c : t.toCharArray()) need[c]++;
+        String best = "";
+        for (int r = 0; r < n; r++) {
+            int lo = 0, hi = r + 1; // 在 [0, r] 内二分最小 l
+            while (lo < hi) {
+                int mid = (lo + hi) / 2;
+                if (covers(pre[mid], pre[r + 1], need)) hi = mid;
+                else lo = mid + 1;
+            }
+            if (lo <= r && covers(pre[lo], pre[r + 1], need)) {
+                if (best.isEmpty() || r - lo + 1 < best.length()) {
+                    best = s.substring(lo, r + 1);
+                }
+            }
+        }
+        return best;
+    }
+    private boolean covers(int[] a, int[] b, int[] need) {
+        for (int c = 0; c < 128; c++) {
+            if (b[c] - a[c] < need[c]) return false;
+        }
+        return true;
+    }
+}
+@@PY
+class Solution:
+    def minWindow(self, s: str, t: str) -> str:
+        n = len(s)
+        pre = [[0] * 128]
+        for c in s:  # 前缀计数
+            row = pre[-1][:]
+            row[ord(c)] += 1
+            pre.append(row)
+        need = [0] * 128
+        for c in t:
+            need[ord(c)] += 1
+
+        def covers(l, r):  # s[l..r-1] 是否覆盖 t
+            return all(pre[r][c] - pre[l][c] >= need[c] for c in range(128) if need[c])
+
+        best = ""
+        for r in range(n):
+            lo, hi = 0, r + 1  # 二分最小 l
+            while lo < hi:
+                mid = (lo + hi) // 2
+                if covers(mid, r + 1):
+                    hi = mid
+                else:
+                    lo = mid + 1
+            if lo <= r and covers(lo, r + 1):
+                if not best or r - lo + 1 < len(best):
+                    best = s[lo:r + 1]
+        return best
